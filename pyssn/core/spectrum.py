@@ -984,11 +984,11 @@ class spectrum(object):
             ax.set_xlim(self.get_conf('x_plot_lims'))
         else:
             ax.set_xlim(xlims)
-        if self.get_conf('y1_plot_lims') is None:
+        if self.get_conf('y1_plot_lims') is not None:
+            ax.set_ylim(self.get_conf('y1_plot_lims'))
+        else:
             mask = (self.w_ori > ax.get_xlim()[0]) & (self.w_ori < ax.get_xlim()[1]) 
             ax.set_ylim((np.min(self.sp_synth_lr[mask]), np.max(self.sp_synth_lr[mask])))
-        else:
-            ax.set_ylim(self.get_conf('y1_plot_lims'))
         ax.legend(loc=self.legend_loc)
         if self.ax1 is None:
             self.ax1 = ax
@@ -996,7 +996,6 @@ class spectrum(object):
         
     def plot_ax2(self, ax):        
         
-        i_max = np.max(self.liste_raies['i_rel'])
         for line in self.liste_raies:
             wl = line['lambda'] + line['l_shift'] + self.conf['lambda_shift']
             i_rel = line['i_rel']

@@ -13,6 +13,6 @@ setup(name='pySSN',
       url='',
       py_modules=[],
       packages=['pyssn','pyssn.core','pyssn.utils','pyssn.qt'],
-      package_data={'pyssn':['data/*']}
+      package_data={'pyssn':['data/*']},
+      entry_points={'console_scripts': ['pySSN = pyssn_qt:main']},
      )
-
