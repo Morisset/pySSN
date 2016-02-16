@@ -158,13 +158,13 @@ class spectrum(object):
         self.sp_synth_tot = self.convol_synth(self.cont, self.sp_synth)
         self.cont_lr, self.sp_synth_lr = self.rebin_on_obs()
                 
-    def do_profile_dict(self):
+    def do_profile_dict(self, return_res=False):
         
         self.fic_profs = self.get_conf('fic_profile', execution_path('./')+'../data/default_profiles.dat')
         if not os.path.isfile(self.fic_profs):
             pyssn.log_.error('File not found {}'.format(self.fic_profs), calling=self.calling)
-        self.emis_profiles = {}
-        self.emis_profiles['1'] = {'T4': 0.0, 'vel':0.0, 'params': [['G', '1.00', '0.0', '20.0']]}
+        emis_profiles = {}
+        emis_profiles['1'] = {'T4': 0.0, 'vel':0.0, 'params': [['G', '1.00', '0.0', '20.0']]}
         prof_params = None
         with open(self.fic_profs) as f:
             for l in f:
@@ -175,9 +175,9 @@ class spectrum(object):
                         l = l.split(';')[0]
                     if ':' in l:
                         if prof_params is not None:
-                            self.emis_profiles[key] = {'T4': T4,
-                                                       'vel': vel,
-                                                       'params' : prof_params}
+                            emis_profiles[key] = {'T4': T4,
+                                                  'vel': vel,
+                                                  'params' : prof_params}
                         key, T4_vel = l.split(':')
                         T4_vel = T4_vel.split()
                         T4 = np.float(T4_vel[0].strip())
@@ -191,9 +191,30 @@ class spectrum(object):
                             params = l.split()
                             params[1::] = [np.float(p.strip()) for p in params[1::]]
                             prof_params.append(params)
-        self.emis_profiles[key] = {'T4': T4, 
-                                   'vel': vel,
-                                   'params' : prof_params}
+        emis_profiles[key] = {'T4': T4, 
+                              'vel': vel,
+                              'params' : prof_params}
+        if return_res:
+            return emis_profiles
+        self.emis_profiles = emis_profiles
+        
+    def compare_profiles(self):
+        
+        ref_diff = []
+        new_profile = self.do_profile_dict(return_res=True)
+        for k in new_profile.keys():
+            if k not in self.emis_profiles.keys():
+                ref_diff.append(k)
+            if new_profile[k]['T4'] != self.emis_profiles[k]['T4']:
+                ref_diff.append(k)
+            if new_profile[k]['vel'] != self.emis_profiles[k]['vel']:
+                ref_diff.append(k)
+            for lo, ln in zip(self.emis_profiles[k]['params'], new_profile[k]['params']):
+                for llo,lln in zip(lo, ln):
+                    if llo != lln:
+                        ref_diff.append(k)
+            return np.unique(ref_diff)
+
                 
     def get_profile(self, raie):
         
@@ -787,6 +808,11 @@ class spectrum(object):
         for key in ('lambda', 'l_shift', 'i_rel', 'i_cor', 'vitesse', 'profile'):
             mask_diff = mask_diff | (new_liste_raies[key] != self.liste_raies[key])
         
+        ref_diff = self.compare_profiles()
+        for im, l in enumerate(new_liste_raies):
+            if l['profile'] in ref_diff:
+                mask_diff[im] = True  
+        
         if mask_diff.sum() > 0:
             old_sp_theo = self.sp_theo.copy()
             if len(new_sp_theo) != len(old_sp_theo):
@@ -795,7 +821,9 @@ class spectrum(object):
             
             liste_old_diff = self.liste_raies[mask_diff]
             old_sp_theo, old_sp_synth = self.make_synth(liste_old_diff, old_sp_theo)
-
+            if len(ref_diff) > 0:
+                self.do_profile_dict()
+                
             liste_new_diff = new_liste_raies[mask_diff]
             new_sp_theo, new_sp_synth = self.make_synth(liste_new_diff, new_sp_theo)
             if pyssn.log_.level >= 3:
