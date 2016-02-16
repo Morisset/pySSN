@@ -809,7 +809,8 @@ class spectrum(object):
             mask_diff = mask_diff | (new_liste_raies[key] != self.liste_raies[key])
         
         ref_diff = self.compare_profiles()
-        pyssn.log_.message('{} differences in profile'.format(len(ref_diff)))
+        pyssn.log_.message('{} differences in profile'.format(len(ref_diff)),
+                           calling=self.calling + ' adjust')
         for im, l in enumerate(new_liste_raies):
             if str(l.profile) in ref_diff:
                 mask_diff[im] = True
