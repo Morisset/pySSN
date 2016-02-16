@@ -1,0 +1,13 @@
+*.pyc
+*.svn-base
+*.*~
+**/.settings
+**/.ipynb_checkpoints/**
+**/.svn/**
+dist/
+.project
+.pydevproject
+.dropbox
+.directory
+
+2400.tar.gz
