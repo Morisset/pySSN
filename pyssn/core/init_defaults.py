@@ -173,6 +173,12 @@ y1_plot_lims = None
 y2_plot_lims = (-1.5, 1.)
 y3_plot_lims = None
 
+# Color lines
+plot_magenta = None
+label_magenta = ''
+plot_cyan = None
+label_cyan = ''
+
 # Scale factor for the plot of the theoretical (individual) spectra:
 fact_multi_synth =  1.
 

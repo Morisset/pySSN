@@ -110,6 +110,7 @@ class AppForm(QtGui.QMainWindow):
         self.init_file_name = None
         self.call_on_draw = True
         self.cursor_on = False
+        self.line_info_ref = 0
         
         self.create_menu()
         self.create_main_frame()
@@ -194,29 +195,41 @@ class AppForm(QtGui.QMainWindow):
 
         self.sp_norm_box = QtGui.QLineEdit()
         self.sp_norm_box.setMinimumWidth(50)
-        self.connect(self.sp_norm_box, QtCore.SIGNAL('editingFinished ()'), self.sp_norm)
+        self.connect(self.sp_norm_box, QtCore.SIGNAL('returnPressed()'), self.sp_norm)
 
         self.obj_velo_box = QtGui.QLineEdit()
         self.obj_velo_box.setMinimumWidth(50)
-        self.connect(self.obj_velo_box, QtCore.SIGNAL('editingFinished ()'), self.obj_velo)
+        self.connect(self.obj_velo_box, QtCore.SIGNAL('returnPressed()'), self.obj_velo)
 
         self.ebv_box = QtGui.QLineEdit()
         self.ebv_box.setMinimumWidth(50)
-        self.connect(self.ebv_box, QtCore.SIGNAL('editingFinished ()'), self.ebv)
+        self.connect(self.ebv_box, QtCore.SIGNAL('returnPressed()'), self.ebv)
         
         self.resol_box = QtGui.QLineEdit()
         self.resol_box.setMinimumWidth(50)
-        self.connect(self.resol_box, QtCore.SIGNAL('editingFinished ()'), self.resol)
+        self.connect(self.resol_box, QtCore.SIGNAL('returnPressed()'), self.resol)
         
         self.cut2_box = QtGui.QLineEdit()
         self.cut2_box.setMinimumWidth(50)
-        self.connect(self.cut2_box, QtCore.SIGNAL('editingFinished ()'), self.cut2)
+        self.connect(self.cut2_box, QtCore.SIGNAL('returnPressed()'), self.cut2)
         
+        self.line_info_box = QtGui.QLineEdit()
+        self.line_info_box.setMinimumWidth(50)
+        self.connect(self.line_info_box, QtCore.SIGNAL('returnPressed()'), self.line_info)
+
+        self.magenta_box = QtGui.QLineEdit()
+        self.magenta_box.setMinimumWidth(50)
+        self.connect(self.magenta_box, QtCore.SIGNAL('returnPressed()'), self.magenta_line)
+
+        self.cyan_box = QtGui.QLineEdit()
+        self.cyan_box.setMinimumWidth(50)
+        self.connect(self.cyan_box, QtCore.SIGNAL('returnPressed()'), self.cyan_line)
         #
         # Layout with box sizers
         # 
         hbox = QtGui.QHBoxLayout()
         hbox2 = QtGui.QHBoxLayout()
+        hbox3 = QtGui.QHBoxLayout()
          
         for w in [self.select_init_button, self.draw_button, self.pl_ax2_cb, self.pl_ax3_cb, self.fix_axes_cb, self.adjust_button]:
             hbox.addWidget(w)
@@ -226,12 +239,17 @@ class AppForm(QtGui.QMainWindow):
             hbox2.addWidget(w)
             hbox2.setAlignment(w, QtCore.Qt.AlignVCenter)
         
+        for w in [self.line_info_box, self.magenta_box, self.cyan_box]:
+            hbox3.addWidget(w)
+            hbox3.setAlignment(w, QtCore.Qt.AlignVCenter)
+
         vbox = QtGui.QVBoxLayout()
         
         vbox.addWidget(self.canvas)
         vbox.addWidget(self.mpl_toolbar)
         vbox.addLayout(hbox)
         vbox.addLayout(hbox2)
+        vbox.addLayout(hbox3)
         
         self.main_frame.setLayout(vbox)
         self.setCentralWidget(self.main_frame)
@@ -334,8 +352,11 @@ class AppForm(QtGui.QMainWindow):
         self.axes = self.fig.add_subplot(n_subplots, 1, 1)
         if self.pl_ax2_cb.isChecked():
             self.axes2 = self.fig.add_subplot(n_subplots, 1, i_ax2, sharex=self.axes)
+            self.axes.get_xaxis().set_visible(False)
         if self.pl_ax3_cb.isChecked():
             self.axes3 = self.fig.add_subplot(n_subplots, 1, i_ax3, sharex=self.axes)
+            if self.pl_ax2_cb.isChecked():
+                self.axes2.get_xaxis().set_visible(False)
         if self.sp.fixed_axes:
             self.sp.restore_axes()
         self.fig.subplots_adjust(hspace=0.0)
@@ -364,7 +385,9 @@ class AppForm(QtGui.QMainWindow):
         self.obj_velo_box.setText('{}'.format(self.sp.get_conf('obj_velo')))   
         self.ebv_box.setText('{}'.format(self.sp.get_conf('e_bv')))   
         self.resol_box.setText('{}'.format(self.sp.get_conf('resol')))   
-        self.cut2_box.setText('{}'.format(self.sp.cut_plot2))   
+        self.cut2_box.setText('{}'.format(self.sp.cut_plot2))
+        self.magenta_box.setText('{}'.format(self.sp.plot_magenta))
+        self.cyan_box.setText('{}'.format(self.sp.plot_cyan))
     
     def fix_axes(self):
         if self.sp is None:
@@ -443,6 +466,32 @@ class AppForm(QtGui.QMainWindow):
         self.sp.cut_plot2 = np.float(self.cut2_box.text())
         self.on_draw()
 
+    def line_info(self):
+        if self.sp is None:
+            return
+        new_ref = np.int(self.line_info_box.text())
+        if new_ref != self.line_info_ref:
+            self.line_info_ref = new_ref
+            self.sp.line_info(new_ref)
+        
+    def magenta_line(self):
+        if self.sp is None:
+            return
+        new_ref = np.int(self.magenta_box.text())
+        if new_ref != self.sp.plot_magenta:
+            self.sp.plot_magenta = new_ref
+            self.on_draw()
+        
+    def cyan_line(self):
+        if self.sp is None:
+            return
+        new_ref = np.int(self.cyan_box.text())
+        if new_ref != self.sp.plot_cyan:
+            self.sp.plot_cyan = new_ref
+            self.on_draw()
+        
+        
+        
 def main():
     app = QtGui.QApplication(sys.argv)
     form = AppForm()

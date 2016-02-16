@@ -5,6 +5,7 @@ Created on 16/01/2014
 '''
 import os
 import sys
+import re
 from scipy import interpolate
 import numpy as np
 import pyssn
@@ -173,4 +174,7 @@ def rebin_tapas(file_ = None, cut=1e-5):
     with open(fout, 'w') as f:
         for r in res:
             f.write('{} {}\n'.format(r[0]*10., r[1]))
+
+def clean_label(str_):
+    return(re.sub("_", " ", str_))
     

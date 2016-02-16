@@ -6,7 +6,7 @@ from scipy import interpolate
 import pyneb as pn
 import pyssn
 from pyssn.utils.physics import CST, Planck, make_cont_Ercolano, gff
-from pyssn.utils.misc import execution_path, change_size, convol, rebin, is_absorb, no_red_corr, gauss, carre, lorentz, convolgauss, vactoair
+from pyssn.utils.misc import execution_path, change_size, convol, rebin, is_absorb, no_red_corr, gauss, carre, lorentz, convolgauss, vactoair, clean_label
 from pyssn.core.profiles import profil_instr
 try:
     from PyQt4 import QtCore, QtGui
@@ -86,7 +86,7 @@ class spectrum(object):
         self.ax1 = None
         self.ax2 = None
         self.ax3 = None
-        self.cursor_width = 0.01
+        self.cursor_width = 0.02
         self.aire_ref = 1.0
         self.zoom_fact = 0.1
         self._cid = None
@@ -103,10 +103,6 @@ class spectrum(object):
         self.cut_plot2 = 1.
         self.ax2_fontsize = 12
         self.legend_loc = 1
-        self.magenta_ref = None
-        self.magenta_lab = None
-        self.cyan_ref = None
-        self.cyan_lab = None
         self.fixed_axes = False
  
     def init_obs(self, spectr_obs=None, sp_norm=None, obj_velo=None, limit_sp=None):
@@ -888,7 +884,7 @@ class spectrum(object):
         print('{0[num]:>14d} {0[id]:9s}{0[lambda]:11.3f}{0[l_shift]:6.3f}{0[i_rel]:10.3e}{0[i_cor]:7.3f}'\
               ' {0[ref]:>14d}{0[profile]:5d}{0[vitesse]:7.2f}{0[comment]:25s}'.format(line))
        
-    def line_info(self, line_num, sat_info=True, print_header=True):
+    def line_info(self, line_num, sat_info=True, print_header=True, sort='lambda'):
         
         if print_header:
             print('-------- INFO LINES --------')
@@ -899,7 +895,7 @@ class spectrum(object):
         to_print = (self.liste_raies['num'] == line_num)
         if to_print.sum() == 1:
             raie = self.liste_raies[to_print][0]
-            self.print_line(raie)
+            self.print_line(raie, sort=sort)
             if raie['ref'] != 0 and sat_info:
                 print('Satellite line of:')
                 self.line_info(raie['ref'])
@@ -907,14 +903,14 @@ class spectrum(object):
         to_print = (self.sp_theo['raie_ref']['num'] == line_num)
         if to_print.sum() > 0 and sat_info:
             raie = self.sp_theo['raie_ref'][to_print][0]
-            self.print_line(raie)
+            self.print_line(raie, sort=sort)
             print('Reference line')
             satellites_tab = (self.liste_raies['ref'] == raie['num'])
             Nsat = satellites_tab.sum()
             if Nsat > 0:
                 print('{0} satellites'.format(Nsat))
                 for raie in self.liste_raies[satellites_tab]:
-                    self.print_line(raie)
+                    self.print_line(raie, sort=sort)
             if self.sp_theo['correc'][to_print][0] != 1.0:
                 print('Intensity corrected by {0}'.format(self.sp_theo['correc'][to_print][0]))
             
@@ -939,17 +935,19 @@ class spectrum(object):
             self.cut_plot2 = cut
         self.ax2_fontsize = fontsize
         self.legend_loc = legend_loc
-        self.magenta_ref = magenta_ref
-        self.magenta_lab = magenta_lab
-        self.cyan_ref = cyan_ref
-        self.cyan_lab = cyan_lab
 
         if magenta_ref is not None:
             self.plot_magenta = magenta_ref
             self.label_magenta = magenta_lab
+        else:
+            self.plot_magenta = self.get_conf('plot_magenta')
+            self.label_magenta = self.get_conf('label_magenta')      
         if cyan_ref is not None:
             self.plot_cyan   = cyan_ref
             self.label_cyan = cyan_lab
+        else:
+            self.plot_cyan = self.get_conf('plot_cyan')
+            self.label_cyan = self.get_conf('label_cyan')      
         
         if fig is None:
             self.fig1 = plt.figure()
@@ -999,17 +997,21 @@ class spectrum(object):
         if self.plot_magenta is not None:
             i_magenta = np.where(self.sp_theo['raie_ref']['num'] == self.plot_magenta)[0]
             if self.label_magenta is None:
-                self.label_magenta = self.sp_theo['raie_ref'][i_magenta]['id']
+                label_magenta = clean_label(self.sp_theo['raie_ref'][i_magenta]['id'][0])
+            else:
+                label_magenta = self.label_magenta
             if len(i_magenta) == 1:
                 self.ax1_line_magenta = ax.step(self.w, self.cont+self.sp_theo['spectr'][i_magenta][0], c='magenta', 
-                              label=self.label_magenta, linestyle='--')[0]
+                              label=label_magenta, linestyle='--')[0]
         if self.plot_cyan is not None:
             i_cyan = np.where(self.sp_theo['raie_ref']['num'] == self.plot_cyan)[0]
             if self.label_cyan is None:
-                self.label_cyan = self.sp_theo['raie_ref'][i_cyan]['id']
+                label_cyan = clean_label(self.sp_theo['raie_ref'][i_cyan]['id'][0])
+            else:
+                label_cyan = self.label_cyan
             if len(i_cyan) == 1:
                 self.ax1_line_cyan = ax.step(self.w, self.cont+self.sp_theo['spectr'][i_cyan][0], c='cyan', 
-                              label=self.label_cyan, linestyle='-')[0]
+                              label=label_cyan, linestyle='-')[0]
         if xlims is None:
             ax.set_xlim(self.get_conf('x_plot_lims'))
         else:
