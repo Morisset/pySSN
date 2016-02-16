@@ -218,7 +218,7 @@ class AppForm(QtGui.QMainWindow):
         hbox = QtGui.QHBoxLayout()
         hbox2 = QtGui.QHBoxLayout()
          
-        for w in [self.select_init_button, self.draw_button, self.pl_ax2_cb, self.pl_ax3_cb, self.fix_axes_cb, self.adjust_button, self.update_profile_button]:
+        for w in [self.select_init_button, self.draw_button, self.pl_ax2_cb, self.pl_ax3_cb, self.fix_axes_cb, self.adjust_button]:
             hbox.addWidget(w)
             hbox.setAlignment(w, QtCore.Qt.AlignVCenter)
 
@@ -415,7 +415,6 @@ class AppForm(QtGui.QMainWindow):
         if self.sp is None:
             return
         self.sp.adjust()
-        self.make_axes()
         self.on_draw()
 
     def resol(self):

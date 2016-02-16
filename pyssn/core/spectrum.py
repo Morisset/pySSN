@@ -213,7 +213,7 @@ class spectrum(object):
                 for llo,lln in zip(lo, ln):
                     if llo != lln:
                         ref_diff.append(k)
-            return np.unique(ref_diff)
+        return np.unique(ref_diff)
 
                 
     def get_profile(self, raie):
@@ -809,9 +809,10 @@ class spectrum(object):
             mask_diff = mask_diff | (new_liste_raies[key] != self.liste_raies[key])
         
         ref_diff = self.compare_profiles()
+        pyssn.log_.message('{} differences in profile'.format(len(ref_diff)))
         for im, l in enumerate(new_liste_raies):
-            if l['profile'] in ref_diff:
-                mask_diff[im] = True  
+            if str(l.profile) in ref_diff:
+                mask_diff[im] = True
         
         if mask_diff.sum() > 0:
             old_sp_theo = self.sp_theo.copy()
