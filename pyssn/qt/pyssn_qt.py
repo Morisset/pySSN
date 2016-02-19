@@ -498,10 +498,10 @@ class AppForm(QtGui.QMainWindow):
         old_obj_velo = self.sp.get_conf('obj_velo')
         new_obj_velo = np.float(self.obj_velo_box.text())
         pyssn.log_.message('Entering obj_velo. Old: {}, New: {}'.format(old_obj_velo, new_obj_velo), calling=self.calling)
-        if np.abs(new_obj_velo - old_obj_velo)/old_obj_velo > 1e-6:
+        if np.abs((new_obj_velo - old_obj_velo)/old_obj_velo) > 1e-6:
             self.sp.init_obs(obj_velo=new_obj_velo)
-            self.sp.make_continuum()
-            self.sp.run()
+            #self.sp.make_continuum()
+            #self.sp.run(do_synth = True, do_read_liste = True, do_profiles=False)
             self.on_draw()
 
     def ebv(self):
