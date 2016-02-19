@@ -1012,20 +1012,8 @@ class spectrum(object):
             if len(i_cyan) == 1:
                 self.ax1_line_cyan = ax.step(self.w, self.cont+self.sp_theo['spectr'][i_cyan][0], c='cyan', 
                               label=label_cyan, linestyle='-')[0]
-        """
-        if xlims is None:
-            ax.set_xlim(self.get_conf('x_plot_lims'))
-        else:
-            ax.set_xlim(xlims)
-            
-        if self.get_conf('y1_plot_lims') is not None:
-            ax.set_ylim(self.get_conf('y1_plot_lims'))
-        else:
-            mask = (self.w_ori > ax.get_xlim()[0]) & (self.w_ori < ax.get_xlim()[1]) 
-            ax.set_ylim((np.min(self.sp_synth_lr[mask]), np.max(self.sp_synth_lr[mask])))
-        """
         ax.legend(loc=self.legend_loc)
-        pyssn.log_.message('ax1 drawn on fig ID {}'.format(id(plt.gcf())), calling=self.calling)
+        pyssn.log_.message('ax1 drawn on ax ID {}'.format(id(ax)), calling=self.calling)
         
     def plot_ax2(self, ax):        
         
@@ -1040,7 +1028,7 @@ class spectrum(object):
         ax.set_xlim(self.get_conf('x_plot_lims'))
         ax.set_ylim(self.get_conf('y2_plot_lims'))
         """
-        pyssn.log_.message('ax2 drawn', calling=self.calling)
+        pyssn.log_.message('ax2 drawn on ax ID {}'.format(id(ax)), calling=self.calling)
         
 
     def plot_ax3(self, ax):     
@@ -1057,7 +1045,7 @@ class spectrum(object):
         else:
             ax.set_ylim(self.get_conf('y3_plot_lims'))
         """
-        pyssn.log_.message('ax3 drawn', calling=self.calling)
+        pyssn.log_.message('ax3 drawn on ax ID {}'.format(id(ax)), calling=self.calling)
         
     def update_plot2(self):
         

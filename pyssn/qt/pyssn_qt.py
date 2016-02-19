@@ -111,6 +111,11 @@ class AppForm(QtGui.QMainWindow):
         self.call_on_draw = True
         self.cursor_on = False
         self.line_info_ref = 0
+        self.x_plot_lims = None
+        self.y1_plot_lims = None
+        self.y2_plot_lims = None
+        self.y3_plot_lims = None
+        self.do_save = True
         
         self.create_menu()
         self.create_main_frame()
@@ -313,41 +318,38 @@ class AppForm(QtGui.QMainWindow):
             pyssn.log_.message('Np sp in on_drawn', calling=self.calling)
             return
         
-        if self.sp.ax1 is None:
+        if self.axes is None:
             pyssn.log_.message('Calling make_axes from on_draw', calling=self.calling)
             self.call_on_draw=False
-            time.sleep(2)
             self.make_axes()
-            time.sleep(2)
+            self.init_axes()
             pyssn.log_.message('back from make_axes from on_draw', calling=self.calling)
             self.call_on_draw=True
-
-        self.sp.save_axes()
-        self.sp.ax1.cla()
-        self.sp.plot_ax1(self.sp.ax1)
+        
+        if self.do_save:
+            pass
+            #self.save_axes()
+        self.axes.cla()
+        self.sp.plot_ax1(self.axes)
         
         if self.pl_ax2_cb.isChecked():
-            self.sp.ax2.cla()
-            self.sp.plot_ax2(self.sp.ax2)
-        else:
-            self.sp.ax2 = None
+            self.axes2.cla()
+            self.sp.plot_ax2(self.axes2)
         
         if self.pl_ax3_cb.isChecked():
-            self.sp.ax3.cla()
-            self.sp.plot_ax3(self.sp.ax3)
-        else:
-            self.sp.ax3 = None
+            self.axes3.cla()
+            self.sp.plot_ax3(self.axes3)
         
-        self.sp.restore_axes()
+        self.restore_axes()
         
         self.canvas.draw()
         pyssn.log_.message('Exit on_drawn', calling=self.calling)
         
-    def make_axes_old(self):
+    def make_axes(self):
         
         pyssn.log_.message('Entering make_axes', calling=self.calling)
         if self.call_on_draw: 
-            self.sp.save_axes()
+            self.save_axes()
         self.fig.clf()
 
         n_subplots = 1
@@ -362,20 +364,89 @@ class AppForm(QtGui.QMainWindow):
         if self.pl_ax2_cb.isChecked():
             self.axes2 = self.fig.add_subplot(n_subplots, 1, i_ax2, sharex=self.axes)
             self.axes.get_xaxis().set_visible(False)
+        else:
+            self.axes2 = None
         if self.pl_ax3_cb.isChecked():
             self.axes3 = self.fig.add_subplot(n_subplots, 1, i_ax3, sharex=self.axes)
             if self.pl_ax2_cb.isChecked():
                 self.axes2.get_xaxis().set_visible(False)
+        else:
+            self.axes3 = None
         self.fig.subplots_adjust(hspace=0.0)
         if self.call_on_draw: 
             pyssn.log_.message('Calling on_draw from make_axes', calling=self.calling)
+            self.do_save = False
             self.on_draw()
-        print('pyssn_qt.axes: {}, spectrum.ax1: {}'.format(id(self.axes), id(self.sp.ax1)))
-        print('pyssn_qt.axes2: {}, spectrum.ax2: {}'.format(id(self.axes2), id(self.sp.ax2)))
-        print('pyssn_qt.axes3: {}, spectrum.ax3: {}'.format(id(self.axes3), id(self.sp.ax3)))
+            self.do_save = True
         pyssn.log_.message('Exit make_axes', calling=self.calling)
 
-    def make_axes(self):
+    def init_axes(self):
+        self.x_plot_lims = self.sp.get_conf('x_plot_lims')
+        if self.x_plot_lims is None:
+            self.x_plot_lims = (np.min(self.sp.w), np.max(self.sp.w))
+            
+        self.y1_plot_lims = self.sp.get_conf('y1_plot_lims')
+        if self.y1_plot_lims is None:
+            mask = (self.sp.w_ori > self.x_plot_lims[0]) & (self.sp.w_ori < self.x_plot_lims[1]) 
+            self.y1_plot_lims = (np.min(self.sp.sp_synth_lr[mask]), np.max(self.sp.sp_synth_lr[mask]))      
+        
+        self.y2_plot_lims = self.sp.get_conf('y2_plot_lims')
+        if self.y2_plot_lims is None:
+            self.y2_plot_lims = (-1.5, 1)
+        
+        self.y3_plot_lims = self.sp.get_conf('y3_plot_lims')
+        if self.y3_plot_lims is None:
+            mask = (self.sp.w_ori > self.x_plot_lims[0]) & (self.sp.w_ori < self.x_plot_lims[1])
+            self.y3_plot_lims = (np.min((self.sp.f - self.sp.cont)[mask]), np.max((self.sp.f - self.sp.cont)[mask]))
+        pyssn.log_.message('Axes initialized. IDs {} {} {}'.format(id(self.axes), id(self.axes2), id(self.axes3)), calling=self.calling)
+        self.print_axes()
+
+    def save_axes(self):
+        if self.axes is not None:
+            self.x_plot_lims = self.axes.get_xlim()
+            self.y1_plot_lims = self.axes.get_ylim()
+        else:
+            self.x_plot_lims = None
+            self.y1_plot_lims = None
+        if self.axes2 is not None:
+            self.y2_plot_lims = self.axes2.get_ylim()
+        else:
+            self.y2_plot_lims = None
+        if self.axes3 is not None:
+            self.y3_plot_lims = self.axes3.get_ylim()
+        else:
+            self.y3_plot_lims = None
+        pyssn.log_.message('Axes saved. IDs {} {} {}'.format(id(self.axes), id(self.axes2), id(self.axes3)), calling=self.calling)
+        self.print_axes()
+        
+    def restore_axes(self):
+        if self.x_plot_lims is not None:
+            if self.axes is not None:
+                self.axes.set_xlim(self.x_plot_lims)
+                pyssn.log_.message('X-axes restored to {}'.format(self.axes.get_xlim()), calling=self.calling)
+            else:
+                pyssn.log_.message('axes is None', calling=self.calling)
+        else:
+            pyssn.log_.message('x_plot_lims is None', calling=self.calling)
+        if self.y1_plot_lims is not None:
+            if self.axes is not None:
+                self.axes.set_ylim(self.y1_plot_lims)
+        if self.y2_plot_lims is not None:
+            if self.axes2 is not None:
+                self.axes2.set_ylim(self.y2_plot_lims)
+        if self.y3_plot_lims is not None:
+            if self.axes3 is not None:
+                self.axes3.set_ylim(self.y3_plot_lims)
+        
+        pyssn.log_.message('Axes restored. IDs {} {} {}'.format(id(self.axes), id(self.axes2), id(self.axes3)), calling=self.calling)
+        self.print_axes()
+        
+    def print_axes(self):
+        print('{} {} {} {}'.format(self.x_plot_lims, self.y1_plot_lims, self.y2_plot_lims, self.y3_plot_lims))
+        pyssn.log_.message('Axes IDs {} {} {}'.format(id(self.axes), id(self.axes2), id(self.axes3)), calling=self.calling)
+        pyssn.log_.message(' IDs {} {} {}'.format(id(self.axes), id(self.axes2), id(self.axes3)), calling=self.calling)
+
+    def make_axes_new(self):
         
         pyssn.log_.message('Entering make_axes', calling=self.calling)
         if self.call_on_draw: 
@@ -412,11 +483,9 @@ class AppForm(QtGui.QMainWindow):
         else:
             self.init_file_name = init_file_name
         self.start_spectrum()
-        """
+        
         self.on_draw()
-        self.sp.init_axes()
-        self.sp.restore_axes()
-        """
+        self.restore_axes()
         
     def start_spectrum(self):
         self.sp = pyssn.spectrum(config_file=unicode(self.init_file_name))
@@ -433,7 +502,6 @@ class AppForm(QtGui.QMainWindow):
         self.cut2_box.setText('{}'.format(self.sp.cut_plot2))
         self.magenta_box.setText('{}'.format(self.sp.plot_magenta))
         self.cyan_box.setText('{}'.format(self.sp.plot_cyan))
-    
             
     def sp_norm(self):
         
