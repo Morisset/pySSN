@@ -418,17 +418,10 @@ class AppForm(QtGui.QMainWindow):
         if self.axes is not None:
             self.x_plot_lims = self.axes.get_xlim()
             self.y1_plot_lims = self.axes.get_ylim()
-        else:
-            self.x_plot_lims = None
-            self.y1_plot_lims = None
         if self.axes2 is not None:
             self.y2_plot_lims = self.axes2.get_ylim()
-        else:
-            self.y2_plot_lims = None
         if self.axes3 is not None:
             self.y3_plot_lims = self.axes3.get_ylim()
-        else:
-            self.y3_plot_lims = None
         pyssn.log_.message('Axes saved. IDs {} {} {}'.format(id(self.axes), id(self.axes2), id(self.axes3)), calling=self.calling)
         self.print_axes()
         
