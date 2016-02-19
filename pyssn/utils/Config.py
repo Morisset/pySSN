@@ -50,6 +50,12 @@ class _Config(object):
             self.INSTALLED['mp'] = False
             self.log_.message('multiprocessing not available', calling=self.calling)
             self.Nprocs = 1
+        try:
+            from PyQt4 import QtCore, QtGui
+            self.INSTALLED['Qt4'] = True
+        except:
+            self.INSTALLED['Qt4'] = False
+            self.log_.message('pySSN Qt not available', calling=self.calling)
         
         self.DataPaths = []
         self.addDataFilePath('../data/', inpySSN=True)

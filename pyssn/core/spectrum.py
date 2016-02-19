@@ -8,14 +8,6 @@ import pyssn
 from pyssn.utils.physics import CST, Planck, make_cont_Ercolano, gff
 from pyssn.utils.misc import execution_path, change_size, convol, rebin, is_absorb, no_red_corr, gauss, carre, lorentz, convolgauss, vactoair, clean_label
 from pyssn.core.profiles import profil_instr
-try:
-    from PyQt4 import QtCore, QtGui
-    from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
-    from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
-    from matplotlib.figure import Figure
-    QT_installed = True
-except:
-    QT_installed = False
 
 """
 ToDo:
@@ -77,7 +69,6 @@ class spectrum(object):
             self.phyat_file = self.get_conf('phyat_file', 'liste_phyat.dat')
         if do_run:
             self.run(do_synth = do_synth, do_read_liste = do_read_liste)
-        self.ax1 = None
 
     def init_vars(self):
         self.fig1 = None
@@ -103,7 +94,11 @@ class spectrum(object):
         self.cut_plot2 = 1.
         self.ax2_fontsize = 12
         self.legend_loc = 1
-        self.fixed_axes = False
+
+        self.x_plot_lims = None
+        self.y1_plot_lims = None
+        self.y2_plot_lims = None
+        self.y3_plot_lims = None
  
     def init_obs(self, spectr_obs=None, sp_norm=None, obj_velo=None, limit_sp=None):
         
@@ -117,8 +112,6 @@ class spectrum(object):
             self.limit_sp = self.get_conf('limit_sp')
         else:
             self.limit_sp = limit_sp
-        if self.fixed_axes:
-            self.restore_axes()
 
         self.read_obs()
         
@@ -739,8 +732,8 @@ class spectrum(object):
         
         if self.get_conf('fic_atm') is not None:
             if type(self.get_conf('fic_atm')) not in (list, tuple):
-                 self.conf['fic_atm'] = (self.conf['fic_atm'],)
-                 self.conf['coeff_atm'] = (self.conf['coeff_atm'],)
+                self.conf['fic_atm'] = (self.conf['fic_atm'],)
+                self.conf['coeff_atm'] = (self.conf['coeff_atm'],)
             if len(self.get_conf('fic_atm')) != len(self.get_conf('coeff_atm')):
                 pyssn.log_.error('fic_atm number {} != coeff_atm number {}'.format(len(self.get_conf('fic_atm')), len(self.get_conf('coeff_atm'))), 
                                       calling = self.calling)
@@ -924,8 +917,10 @@ class spectrum(object):
     def plot2(self, hr=False, cut=None, split=False, do_ax2 = True, do_ax3 = True,
               do_buttons=True, xlims=None, fontsize=12, legend_loc=1, fig=None, 
               magenta_ref=None, magenta_lab=None,
-              cyan_ref = None, cyan_lab=None):
+              cyan_ref = None, cyan_lab=None, call_init_axes=True):
         
+        
+        pyssn.log_.message('entering plots, ID(ax1)'.format(id(self.fig1)), calling=self.calling)
         self.hr = hr
         self.split = split
         self.do_ax2 = do_ax2
@@ -951,8 +946,11 @@ class spectrum(object):
         
         if fig is None:
             self.fig1 = plt.figure()
+            pyssn.log_.message('creating new figure ID {}'.format(id(self.fig1)), calling=self.calling)
         else:
             self.fig1 = fig
+            self.fig1.clf()
+            pyssn.log_.message('using argument figure ID: {} {}'.format(id(self.fig1), id(fig)), calling=self.calling)
         if split:
             if do_ax2:
                 self.fig2 = plt.figure()
@@ -985,7 +983,9 @@ class spectrum(object):
             self.plot_ax3(self.ax3)
         if do_buttons:
             self._make_buttons(split=split)
-        
+        if call_init_axes:
+            self.init_axes()
+        self.restore_axes()
         plt.subplots_adjust(hspace=0.0)
                
     def plot_ax1(self, ax, xlims=None):
@@ -1012,19 +1012,20 @@ class spectrum(object):
             if len(i_cyan) == 1:
                 self.ax1_line_cyan = ax.step(self.w, self.cont+self.sp_theo['spectr'][i_cyan][0], c='cyan', 
                               label=label_cyan, linestyle='-')[0]
+        """
         if xlims is None:
             ax.set_xlim(self.get_conf('x_plot_lims'))
         else:
             ax.set_xlim(xlims)
+            
         if self.get_conf('y1_plot_lims') is not None:
             ax.set_ylim(self.get_conf('y1_plot_lims'))
         else:
             mask = (self.w_ori > ax.get_xlim()[0]) & (self.w_ori < ax.get_xlim()[1]) 
             ax.set_ylim((np.min(self.sp_synth_lr[mask]), np.max(self.sp_synth_lr[mask])))
+        """
         ax.legend(loc=self.legend_loc)
-        if self.ax1 is None:
-            self.ax1 = ax
-        pyssn.log_.message('ax1 drawn', calling=self.calling)
+        pyssn.log_.message('ax1 drawn on fig ID {}'.format(id(plt.gcf())), calling=self.calling)
         
     def plot_ax2(self, ax):        
         
@@ -1035,10 +1036,10 @@ class spectrum(object):
                 ax.plot([wl, wl], [0, 1], color='blue')
                 ax.text(wl, -0.2, '{0} {1:7.4f}'.format(line['id'], i_rel), 
                               rotation='vertical', fontsize=self.ax2_fontsize)
+        """
         ax.set_xlim(self.get_conf('x_plot_lims'))
         ax.set_ylim(self.get_conf('y2_plot_lims'))
-        if self.ax2 is None:
-            self.ax2 = ax
+        """
         pyssn.log_.message('ax2 drawn', calling=self.calling)
         
 
@@ -1047,14 +1048,15 @@ class spectrum(object):
         ax.step(self.w, self.f - self.cont, c = 'red', linestyle='--')
         ax.plot((0, 1e10), (0.0, 0.0), c='green')
         ax_line_diff = ax.step(self.w_ori, self.f_ori - self.sp_synth_lr, c='blue')[0]
+
+        """    
         ax.set_xlim(self.get_conf('x_plot_lims'))
         if self.get_conf('y3_plot_lims') is None:
             mask = (self.w > ax.get_xlim()[0]) & (self.w < ax.get_xlim()[1]) 
             ax.set_ylim((np.min((self.f - self.cont)[mask]), np.max((self.f - self.cont)[mask])))            
         else:
             ax.set_ylim(self.get_conf('y3_plot_lims'))
-        if self.ax3 is None:
-            self.ax3 = ax
+        """
         pyssn.log_.message('ax3 drawn', calling=self.calling)
         
     def update_plot2(self):
@@ -1100,61 +1102,89 @@ class spectrum(object):
                 self.ax2.plot([wl, wl], [0, 1], color='blue')
                 self.ax2.text(wl, -0.2, '{0} {1:7.4f}'.format(line['id'], i_rel), 
                                 rotation='vertical', fontsize=self.ax2_fontsize)
-                self.ax2.set_ylim((-1.5, 1))
+                #self.ax2.set_ylim((-1.5, 1))
  
         if self.do_ax3:
             self.ax3_line_diff.remove()
             self.ax3_line_diff = self.ax3.step(self.w_ori, self.f_ori - self.sp_synth_lr, c='blue')[0]
         
         self.fig1.canvas.draw()
-    
-    def fix_axes(self):
-        self.fixed_axes = True
-        self.save_axes()
-        pyssn.log_.message('fixed_axes set to True', calling=self.calling)
+ 
+    def init_axes(self):
+        self.x_plot_lims = self.get_conf('x_plot_lims')
+        if self.x_plot_lims is None:
+            self.x_plot_lims = (np.min(self.w), np.max(self.w))
+            
+        self.y1_plot_lims = self.get_conf('y1_plot_lims')
+        if self.y1_plot_lims is None:
+            mask = (self.w_ori > self.x_plot_lims[0]) & (self.w_ori < self.x_plot_lims[1]) 
+            self.y1_plot_lims = (np.min(self.sp_synth_lr[mask]), np.max(self.sp_synth_lr[mask]))      
         
-    def unfix_axes(self):
-        self.fixed_axes = False
-        pyssn.log_.message('fixed_axes set to false', calling=self.calling)
+        self.y2_plot_lims = self.get_conf('y2_plot_lims')
+        if self.y2_plot_lims is None:
+            self.y2_plot_lims = (-1.5, 1)
         
+        self.y3_plot_lims = self.get_conf('y3_plot_lims')
+        if self.y3_plot_lims is None:
+            mask = (self.w_ori > self.x_plot_lims[0]) & (self.w_ori < self.x_plot_lims[1])
+            self.y3_plot_lims = (np.min((self.f - self.cont)[mask]), np.max((self.f - self.cont)[mask]))
+        pyssn.log_.message('Axes initialized', calling=self.calling)
+        self.print_axes()
+                         
     def save_axes(self):
-        self.set_conf('x_plot_lims', self.ax1.get_xlim())
-        if self.fixed_axes:
-            self.x_plot_lims = self.get_conf('x_plot_lims')
-        self.set_conf('y1_plot_lims', self.ax1.get_ylim())
-        if self.fixed_axes:
-            self.y1_plot_lims = self.get_conf('y1_plot_lims')
+        if self.ax1 is not None:
+            self.x_plot_lims = self.ax1.get_xlim()
+            self.y1_plot_lims = self.ax1.get_ylim()
+        else:
+            self.x_plot_lims = None
+            self.y1_plot_lims = None
         if self.ax2 is not None:
-            self.set_conf('y2_plot_lims', self.ax2.get_ylim())
-            if self.fixed_axes:
-                self.y2_plot_lims = self.get_conf('y2_plot_lims')         
+            self.y2_plot_lims = self.ax2.get_ylim()
+        else:
+            self.y2_plot_lims = None
         if self.ax3 is not None:
-            self.set_conf('y3_plot_lims', self.ax3.get_ylim())
-            if self.fixed_axes:
-                self.y3_plot_lims = self.get_conf('y3_plot_lims')         
+            self.y3_plot_lims = self.ax3.get_ylim()
+        else:
+            self.y3_plot_lims = None
+        pyssn.log_.message('Axes saved', calling=self.calling)
+        self.print_axes()
         
     def restore_axes(self):
-        self.set_conf('x_plot_lims', self.x_plot_lims)
-        self.set_conf('y1_plot_lims', self.y1_plot_lims)
-        self.set_conf('y2_plot_lims', self.y2_plot_lims)
-        self.set_conf('y3_plot_lims', self.y3_plot_lims)
-        pyssn.log_.message('Axes restored', calling=self.calling)
+        if self.x_plot_lims is not None:
+            if self.ax1 is not None:
+                self.ax1.set_xlim(self.x_plot_lims)
+                pyssn.log_.message('X-axes restored to {}'.format(self.ax1.get_xlim()), calling=self.calling)
+            else:
+                pyssn.log_.message('ax1 is None', calling=self.calling)
+        else:
+            pyssn.log_.message('x_plot_lims is None', calling=self.calling)
+        if self.y1_plot_lims is not None:
+            if self.ax1 is not None:
+                self.ax1.set_ylim(self.y1_plot_lims)
+        if self.y2_plot_lims is not None:
+            if self.ax2 is not None:
+                self.ax2.set_ylim(self.y2_plot_lims)
+        if self.y3_plot_lims is not None:
+            if self.ax3 is not None:
+                self.ax3.set_ylim(self.y3_plot_lims)
         
+        pyssn.log_.message('Axes restored', calling=self.calling)
+        self.print_axes()
+        
+    def print_axes(self):
+        print('{} {} {} {}'.format(self.x_plot_lims, self.y1_plot_lims, self.y2_plot_lims, self.y3_plot_lims))
+    
     def rerun(self):
         self.run(do_synth = True, do_read_liste = True, do_profiles=True)
 
     def replot2(self):    
-        xlim = self.ax1.get_xlim()
-        ylim1 = self.ax1.get_ylim()
-        ylim3 = self.ax3.get_ylim()
+        self.save_axes()
         self.ax1.clear()
         self.ax2.clear()
         self.ax3.clear()
         self.plot2(hr=self.hr, cut=self.cut_plot2, split=self.split, 
-                   do_ax2=self.do_ax2, do_ax3=self.do_ax3, do_buttons=False, 
-                   xlims=xlim, fontsize=self.ax2_fontsize, legend_loc=self.legend_loc, fig=self.fig1)
-        self.ax1.set_ylim(ylim1)
-        self.ax3.set_ylim(ylim3)
+                   do_ax2=self.do_ax2, do_ax3=self.do_ax3, do_buttons=self.do_buttons, 
+                   fontsize=self.ax2_fontsize, legend_loc=self.legend_loc, fig=self.fig1, call_init_axes=False)
         self.fig1.canvas.draw()
         
     def _make_buttons(self, split):

@@ -1,6 +1,6 @@
 
 __all__ = []
-__version__ = '0.2.13'
+__version__ = '0.2.14b'
 
 from utils.Config import _Config
 config = _Config()
@@ -11,4 +11,5 @@ log_.message('Starting pySSN.', calling = 'pySSN init')
 
 from core.spectrum import read_data, spectrum
 from utils.physics import CST
-from qt import pyssn_qt
+if config.INSTALLED['Qt4']:
+    from qt import pyssn_qt

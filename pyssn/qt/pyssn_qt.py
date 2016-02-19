@@ -17,6 +17,7 @@ Last modified: 19.01.2009
 """
 import sys, os, random
 import argparse
+import time
 
 from PyQt4 import QtCore, QtGui
 
@@ -28,7 +29,6 @@ from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg
 from matplotlib.figure import Figure
 import numpy as np
 import pyssn
-
 
 #ToDo : 
 
@@ -101,7 +101,7 @@ class NavigationToolbar( NavigationToolbar2QTAgg ):
 class AppForm(QtGui.QMainWindow):
     
     def __init__(self, parent=None):
-        self.calling = 'AppForm'
+        self.calling = 'pySSN GUI'
         QtGui.QMainWindow.__init__(self, parent)
         self.setWindowTitle('pySSN')
         self.sp = None
@@ -154,6 +154,8 @@ class AppForm(QtGui.QMainWindow):
         #
         self.dpi = 100
         self.fig = Figure((20.0, 15.0), dpi=self.dpi)
+        pyssn.log_.message('creating figure {}'.format(id(self.fig)), calling=self.calling)
+        
         #self.fig = Figure()
         self.canvas = FigureCanvas(self.fig)
         self.canvas.setParent(self.main_frame)
@@ -180,10 +182,6 @@ class AppForm(QtGui.QMainWindow):
         self.pl_ax3_cb = QtGui.QCheckBox("Residus")
         self.pl_ax3_cb.setChecked(True)
         self.connect(self.pl_ax3_cb, QtCore.SIGNAL('stateChanged(int)'), self.make_axes)
-
-        self.fix_axes_cb = QtGui.QCheckBox("Fix axes")
-        self.fix_axes_cb.setChecked(False)
-        self.connect(self.fix_axes_cb, QtCore.SIGNAL('stateChanged(int)'), self.fix_axes)
 
         self.adjust_button = QtGui.QPushButton("Update lines")
         self.adjust_button.setChecked(False)
@@ -231,7 +229,7 @@ class AppForm(QtGui.QMainWindow):
         hbox2 = QtGui.QHBoxLayout()
         hbox3 = QtGui.QHBoxLayout()
          
-        for w in [self.select_init_button, self.draw_button, self.pl_ax2_cb, self.pl_ax3_cb, self.fix_axes_cb, self.adjust_button]:
+        for w in [self.select_init_button, self.draw_button, self.pl_ax2_cb, self.pl_ax3_cb, self.adjust_button]:
             hbox.addWidget(w)
             hbox.setAlignment(w, QtCore.Qt.AlignVCenter)
 
@@ -315,30 +313,41 @@ class AppForm(QtGui.QMainWindow):
             pyssn.log_.message('Np sp in on_drawn', calling=self.calling)
             return
         
-        if self.axes is None:
+        if self.sp.ax1 is None:
             pyssn.log_.message('Calling make_axes from on_draw', calling=self.calling)
             self.call_on_draw=False
+            time.sleep(2)
             self.make_axes()
+            time.sleep(2)
+            pyssn.log_.message('back from make_axes from on_draw', calling=self.calling)
             self.call_on_draw=True
 
-        self.axes.cla()
-        self.sp.plot_ax1(self.axes)
+        self.sp.save_axes()
+        self.sp.ax1.cla()
+        self.sp.plot_ax1(self.sp.ax1)
         
         if self.pl_ax2_cb.isChecked():
-            self.axes2.cla()
-            self.sp.plot_ax2(self.axes2)
+            self.sp.ax2.cla()
+            self.sp.plot_ax2(self.sp.ax2)
+        else:
+            self.sp.ax2 = None
         
         if self.pl_ax3_cb.isChecked():
-            self.axes3.cla()
-            self.sp.plot_ax3(self.axes3)
-                 
+            self.sp.ax3.cla()
+            self.sp.plot_ax3(self.sp.ax3)
+        else:
+            self.sp.ax3 = None
+        
+        self.sp.restore_axes()
+        
         self.canvas.draw()
         pyssn.log_.message('Exit on_drawn', calling=self.calling)
         
-    def make_axes(self):
+    def make_axes_old(self):
         
         pyssn.log_.message('Entering make_axes', calling=self.calling)
-        pyssn.log_.message('make_axes call_on_draw value:{}'.format(self.call_on_draw), calling=self.calling)
+        if self.call_on_draw: 
+            self.sp.save_axes()
         self.fig.clf()
 
         n_subplots = 1
@@ -357,12 +366,44 @@ class AppForm(QtGui.QMainWindow):
             self.axes3 = self.fig.add_subplot(n_subplots, 1, i_ax3, sharex=self.axes)
             if self.pl_ax2_cb.isChecked():
                 self.axes2.get_xaxis().set_visible(False)
-        if self.sp.fixed_axes:
-            self.sp.restore_axes()
         self.fig.subplots_adjust(hspace=0.0)
         if self.call_on_draw: 
             pyssn.log_.message('Calling on_draw from make_axes', calling=self.calling)
             self.on_draw()
+        print('pyssn_qt.axes: {}, spectrum.ax1: {}'.format(id(self.axes), id(self.sp.ax1)))
+        print('pyssn_qt.axes2: {}, spectrum.ax2: {}'.format(id(self.axes2), id(self.sp.ax2)))
+        print('pyssn_qt.axes3: {}, spectrum.ax3: {}'.format(id(self.axes3), id(self.sp.ax3)))
+        pyssn.log_.message('Exit make_axes', calling=self.calling)
+
+    def make_axes(self):
+        
+        pyssn.log_.message('Entering make_axes', calling=self.calling)
+        if self.call_on_draw: 
+            self.sp.save_axes()
+        self.fig.clf()
+
+        if self.pl_ax2_cb.isChecked():
+            do_ax2 = True
+        else:
+            do_ax2 = False
+        if self.pl_ax3_cb.isChecked():
+            do_ax3 = True
+        else:
+            do_ax3 = False
+            
+        self.sp.plot2(hr=False, cut=None, split=False, do_ax2 = do_ax2, do_ax3 = do_ax3,
+              do_buttons=False, xlims=None, fontsize=12, legend_loc=1, fig=self.fig, 
+              magenta_ref=None, magenta_lab=None,
+              cyan_ref = None, cyan_lab=None, call_init_axes=True)
+        
+        if self.call_on_draw: 
+            pyssn.log_.message('Calling on_draw from make_axes', calling=self.calling)
+            self.on_draw()
+        """
+        print('pyssn_qt.axes: {}, spectrum.ax1: {}'.format(id(self.axes), id(self.sp.ax1)))
+        print('pyssn_qt.axes2: {}, spectrum.ax2: {}'.format(id(self.axes2), id(self.sp.ax2)))
+        print('pyssn_qt.axes3: {}, spectrum.ax3: {}'.format(id(self.axes3), id(self.sp.ax3)))
+        """
         pyssn.log_.message('Exit make_axes', calling=self.calling)
     
     def select_init(self, init_file_name=None):
@@ -371,8 +412,12 @@ class AppForm(QtGui.QMainWindow):
         else:
             self.init_file_name = init_file_name
         self.start_spectrum()
+        """
         self.on_draw()
-    
+        self.sp.init_axes()
+        self.sp.restore_axes()
+        """
+        
     def start_spectrum(self):
         self.sp = pyssn.spectrum(config_file=unicode(self.init_file_name))
         self.status_text.setText('pySSN, v {}. init file: {}, at. data: {}, model: {}, cosmetic: {}'.format(pyssn.__version__, 
@@ -389,13 +434,6 @@ class AppForm(QtGui.QMainWindow):
         self.magenta_box.setText('{}'.format(self.sp.plot_magenta))
         self.cyan_box.setText('{}'.format(self.sp.plot_cyan))
     
-    def fix_axes(self):
-        if self.sp is None:
-            return
-        if self.fix_axes_cb.isChecked():
-            self.sp.fix_axes()
-        else:
-            self.sp.unfix_axes()
             
     def sp_norm(self):
         
