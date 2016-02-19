@@ -106,6 +106,8 @@ class AppForm(QtGui.QMainWindow):
         self.setWindowTitle('pySSN')
         self.sp = None
         self.axes = None
+        self.axes2 = None
+        self.axes3 = None
         self.fig = None
         self.init_file_name = None
         self.call_on_draw = True
@@ -319,7 +321,7 @@ class AppForm(QtGui.QMainWindow):
             return
         
         if self.axes is None:
-            pyssn.log_.message('Calling make_axes from on_draw', calling=self.calling)
+            pyssn.log_.message('Calling make_axes from on_draw (self.axes is None)', calling=self.calling)
             self.call_on_draw=False
             self.make_axes()
             self.init_axes()
@@ -327,8 +329,7 @@ class AppForm(QtGui.QMainWindow):
             self.call_on_draw=True
         
         if self.do_save:
-            pass
-            #self.save_axes()
+            self.save_axes()
         self.axes.cla()
         self.sp.plot_ax1(self.axes)
         
@@ -360,24 +361,36 @@ class AppForm(QtGui.QMainWindow):
             i_ax3 += 1
         if self.pl_ax3_cb.isChecked():
             n_subplots += 1
+        if self.axes is not None:
+            del(self.axes)
         self.axes = self.fig.add_subplot(n_subplots, 1, 1)
+        self.sp.ax1 = self.axes
         if self.pl_ax2_cb.isChecked():
+            if self.axes2 is not None:
+                del(self.axes2)
             self.axes2 = self.fig.add_subplot(n_subplots, 1, i_ax2, sharex=self.axes)
+            self.sp.ax2 = self.axes2
             self.axes.get_xaxis().set_visible(False)
         else:
             self.axes2 = None
+            self.sp.ax2 = None
         if self.pl_ax3_cb.isChecked():
+            if self.axes3 is not None:
+                del(self.axes3)
             self.axes3 = self.fig.add_subplot(n_subplots, 1, i_ax3, sharex=self.axes)
+            self.sp.ax3 = self.axes3
             if self.pl_ax2_cb.isChecked():
                 self.axes2.get_xaxis().set_visible(False)
         else:
             self.axes3 = None
+            self.sp.ax3 = self.axes3
         self.fig.subplots_adjust(hspace=0.0)
         if self.call_on_draw: 
             pyssn.log_.message('Calling on_draw from make_axes', calling=self.calling)
             self.do_save = False
             self.on_draw()
             self.do_save = True
+        
         pyssn.log_.message('Exit make_axes', calling=self.calling)
 
     def init_axes(self):
@@ -446,36 +459,6 @@ class AppForm(QtGui.QMainWindow):
         pyssn.log_.message('Axes IDs {} {} {}'.format(id(self.axes), id(self.axes2), id(self.axes3)), calling=self.calling)
         pyssn.log_.message(' IDs {} {} {}'.format(id(self.axes), id(self.axes2), id(self.axes3)), calling=self.calling)
 
-    def make_axes_new(self):
-        
-        pyssn.log_.message('Entering make_axes', calling=self.calling)
-        if self.call_on_draw: 
-            self.sp.save_axes()
-        self.fig.clf()
-
-        if self.pl_ax2_cb.isChecked():
-            do_ax2 = True
-        else:
-            do_ax2 = False
-        if self.pl_ax3_cb.isChecked():
-            do_ax3 = True
-        else:
-            do_ax3 = False
-            
-        self.sp.plot2(hr=False, cut=None, split=False, do_ax2 = do_ax2, do_ax3 = do_ax3,
-              do_buttons=False, xlims=None, fontsize=12, legend_loc=1, fig=self.fig, 
-              magenta_ref=None, magenta_lab=None,
-              cyan_ref = None, cyan_lab=None, call_init_axes=True)
-        
-        if self.call_on_draw: 
-            pyssn.log_.message('Calling on_draw from make_axes', calling=self.calling)
-            self.on_draw()
-        """
-        print('pyssn_qt.axes: {}, spectrum.ax1: {}'.format(id(self.axes), id(self.sp.ax1)))
-        print('pyssn_qt.axes2: {}, spectrum.ax2: {}'.format(id(self.axes2), id(self.sp.ax2)))
-        print('pyssn_qt.axes3: {}, spectrum.ax3: {}'.format(id(self.axes3), id(self.sp.ax3)))
-        """
-        pyssn.log_.message('Exit make_axes', calling=self.calling)
     
     def select_init(self, init_file_name=None):
         if init_file_name is None:
@@ -483,8 +466,9 @@ class AppForm(QtGui.QMainWindow):
         else:
             self.init_file_name = init_file_name
         self.start_spectrum()
-        
+        self.do_save = False
         self.on_draw()
+        self.do_save = True
         self.restore_axes()
         
     def start_spectrum(self):
