@@ -161,7 +161,7 @@ class AppForm(QtGui.QMainWindow):
         #
         self.dpi = 100
         self.fig = Figure((20.0, 15.0), dpi=self.dpi)
-        pyssn.log_.message('creating figure {}'.format(id(self.fig)), calling=self.calling)
+        pyssn.log_.debug('creating figure {}'.format(id(self.fig)), calling=self.calling)
         
         #self.fig = Figure()
         self.canvas = FigureCanvas(self.fig)
@@ -229,24 +229,44 @@ class AppForm(QtGui.QMainWindow):
         self.cyan_box = QtGui.QLineEdit()
         self.cyan_box.setMinimumWidth(50)
         self.connect(self.cyan_box, QtCore.SIGNAL('returnPressed()'), self.cyan_line)
+        
+        self.verbosity_sl = QtGui.QSlider(QtCore.Qt.Horizontal)
+        self.verbosity_sl.setRange(0, 4)
+        self.verbosity_sl.setValue(3)
+        self.verbosity_sl.setTracking(True)
+        self.verbosity_sl.setTickPosition(QtGui.QSlider.TicksBothSides)
+        self.connect(self.verbosity_sl, QtCore.SIGNAL('valueChanged(int)'), self.verbosity)
+        
         #
         # Layout with box sizers
         # 
         hbox = QtGui.QHBoxLayout()
         hbox2 = QtGui.QHBoxLayout()
         hbox3 = QtGui.QHBoxLayout()
+        hbox4 = QtGui.QHBoxLayout()
+        hbox5 = QtGui.QHBoxLayout()
          
         for w in [self.select_init_button, self.draw_button, self.pl_ax2_cb, self.pl_ax3_cb, self.adjust_button]:
             hbox.addWidget(w)
             hbox.setAlignment(w, QtCore.Qt.AlignVCenter)
 
-        for w in [self.sp_norm_box, self.obj_velo_box, self.ebv_box, self.resol_box, self.cut2_box]:
+        for l in ['sp norm', 'obj velo', 'E_B-V', 'resol', 'cut2']:
+            w = QtGui.QLabel(l)
             hbox2.addWidget(w)
             hbox2.setAlignment(w, QtCore.Qt.AlignVCenter)
-        
-        for w in [self.line_info_box, self.magenta_box, self.cyan_box]:
+
+        for w in [self.sp_norm_box, self.obj_velo_box, self.ebv_box, self.resol_box, self.cut2_box]:
             hbox3.addWidget(w)
             hbox3.setAlignment(w, QtCore.Qt.AlignVCenter)
+          
+        for l in ['line info', 'magenta', 'cyan', 'verbosity']:
+            w = QtGui.QLabel(l)
+            hbox4.addWidget(w)
+            hbox4.setAlignment(w, QtCore.Qt.AlignVCenter)
+
+        for w in [self.line_info_box, self.magenta_box, self.cyan_box, self.verbosity_sl]:
+            hbox5.addWidget(w)
+            hbox5.setAlignment(w, QtCore.Qt.AlignVCenter)
 
         vbox = QtGui.QVBoxLayout()
         
@@ -255,6 +275,8 @@ class AppForm(QtGui.QMainWindow):
         vbox.addLayout(hbox)
         vbox.addLayout(hbox2)
         vbox.addLayout(hbox3)
+        vbox.addLayout(hbox4)
+        vbox.addLayout(hbox5)
         
         self.main_frame.setLayout(vbox)
         self.setCentralWidget(self.main_frame)
@@ -315,17 +337,17 @@ class AppForm(QtGui.QMainWindow):
     def on_draw(self):
         """ Redraws the figure
         """
-        pyssn.log_.message('Entering on_drawn', calling=self.calling)
+        pyssn.log_.debug('Entering on_drawn', calling=self.calling)
         if self.sp is None:
-            pyssn.log_.message('Np sp in on_drawn', calling=self.calling)
+            pyssn.log_.debug('Np sp in on_drawn', calling=self.calling)
             return
         
         if self.axes is None:
-            pyssn.log_.message('Calling make_axes from on_draw (self.axes is None)', calling=self.calling)
+            pyssn.log_.debug('Calling make_axes from on_draw (self.axes is None)', calling=self.calling)
             self.call_on_draw=False
             self.make_axes()
             self.init_axes()
-            pyssn.log_.message('back from make_axes from on_draw', calling=self.calling)
+            pyssn.log_.debug('back from make_axes from on_draw', calling=self.calling)
             self.call_on_draw=True
         
         if self.do_save:
@@ -344,11 +366,11 @@ class AppForm(QtGui.QMainWindow):
         self.restore_axes()
         
         self.canvas.draw()
-        pyssn.log_.message('Exit on_drawn', calling=self.calling)
+        pyssn.log_.debug('Exit on_drawn', calling=self.calling)
         
     def make_axes(self):
         
-        pyssn.log_.message('Entering make_axes', calling=self.calling)
+        pyssn.log_.debug('Entering make_axes', calling=self.calling)
         if self.call_on_draw: 
             self.save_axes()
         self.fig.clf()
@@ -386,12 +408,12 @@ class AppForm(QtGui.QMainWindow):
             self.sp.ax3 = self.axes3
         self.fig.subplots_adjust(hspace=0.0)
         if self.call_on_draw: 
-            pyssn.log_.message('Calling on_draw from make_axes', calling=self.calling)
+            pyssn.log_.debug('Calling on_draw from make_axes', calling=self.calling)
             self.do_save = False
             self.on_draw()
             self.do_save = True
         
-        pyssn.log_.message('Exit make_axes', calling=self.calling)
+        pyssn.log_.debug('Exit make_axes', calling=self.calling)
 
     def init_axes(self):
         self.x_plot_lims = self.sp.get_conf('x_plot_lims')
@@ -411,7 +433,7 @@ class AppForm(QtGui.QMainWindow):
         if self.y3_plot_lims is None:
             mask = (self.sp.w_ori > self.x_plot_lims[0]) & (self.sp.w_ori < self.x_plot_lims[1])
             self.y3_plot_lims = (np.min((self.sp.f - self.sp.cont)[mask]), np.max((self.sp.f - self.sp.cont)[mask]))
-        pyssn.log_.message('Axes initialized. IDs {} {} {}'.format(id(self.axes), id(self.axes2), id(self.axes3)), calling=self.calling)
+        pyssn.log_.debug('Axes initialized. IDs {} {} {}'.format(id(self.axes), id(self.axes2), id(self.axes3)), calling=self.calling)
         self.print_axes()
 
     def save_axes(self):
@@ -422,18 +444,18 @@ class AppForm(QtGui.QMainWindow):
             self.y2_plot_lims = self.axes2.get_ylim()
         if self.axes3 is not None:
             self.y3_plot_lims = self.axes3.get_ylim()
-        pyssn.log_.message('Axes saved. IDs {} {} {}'.format(id(self.axes), id(self.axes2), id(self.axes3)), calling=self.calling)
+        pyssn.log_.debug('Axes saved. IDs {} {} {}'.format(id(self.axes), id(self.axes2), id(self.axes3)), calling=self.calling)
         self.print_axes()
         
     def restore_axes(self):
         if self.x_plot_lims is not None:
             if self.axes is not None:
                 self.axes.set_xlim(self.x_plot_lims)
-                pyssn.log_.message('X-axes restored to {}'.format(self.axes.get_xlim()), calling=self.calling)
+                pyssn.log_.debug('X-axes restored to {}'.format(self.axes.get_xlim()), calling=self.calling)
             else:
-                pyssn.log_.message('axes is None', calling=self.calling)
+                pyssn.log_.debug('axes is None', calling=self.calling)
         else:
-            pyssn.log_.message('x_plot_lims is None', calling=self.calling)
+            pyssn.log_.debug('x_plot_lims is None', calling=self.calling)
         if self.y1_plot_lims is not None:
             if self.axes is not None:
                 self.axes.set_ylim(self.y1_plot_lims)
@@ -444,13 +466,13 @@ class AppForm(QtGui.QMainWindow):
             if self.axes3 is not None:
                 self.axes3.set_ylim(self.y3_plot_lims)
         
-        pyssn.log_.message('Axes restored. IDs {} {} {}'.format(id(self.axes), id(self.axes2), id(self.axes3)), calling=self.calling)
+        pyssn.log_.debug('Axes restored. IDs {} {} {}'.format(id(self.axes), id(self.axes2), id(self.axes3)), calling=self.calling)
         self.print_axes()
         
     def print_axes(self):
-        print('{} {} {} {}'.format(self.x_plot_lims, self.y1_plot_lims, self.y2_plot_lims, self.y3_plot_lims))
-        pyssn.log_.message('Axes IDs {} {} {}'.format(id(self.axes), id(self.axes2), id(self.axes3)), calling=self.calling)
-        pyssn.log_.message(' IDs {} {} {}'.format(id(self.axes), id(self.axes2), id(self.axes3)), calling=self.calling)
+        pyssn.log_.debug('{} {} {} {}'.format(self.x_plot_lims, self.y1_plot_lims, self.y2_plot_lims, self.y3_plot_lims), calling=self.calling)
+        pyssn.log_.debug('Axes IDs {} {} {}'.format(id(self.axes), id(self.axes2), id(self.axes3)), calling=self.calling)
+        pyssn.log_.debug(' IDs {} {} {}'.format(id(self.axes), id(self.axes2), id(self.axes3)), calling=self.calling)
 
     
     def select_init(self, init_file_name=None):
@@ -573,7 +595,10 @@ class AppForm(QtGui.QMainWindow):
             self.sp.plot_cyan = new_ref
             self.on_draw()
         
-        
+    def verbosity(self):
+        verbosity = self.verbosity_sl.value()
+        if verbosity in (0,1,2,3,4):
+            pyssn.log_.level = verbosity
         
 def main():
     app = QtGui.QApplication(sys.argv)
