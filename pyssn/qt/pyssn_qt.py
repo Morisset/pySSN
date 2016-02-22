@@ -484,8 +484,12 @@ class AppForm(QtGui.QMainWindow):
             self.init_file_name = QtGui.QFileDialog.getOpenFileName(self, 'Open file', '', '*init.py')
         else:
             self.init_file_name = init_file_name
-        if init_file_name is None:
-            raise ValueError('A filename must be given')
+        if self.init_file_name is None:
+            if self.sp is None:
+                raise ValueError('A filename must be given')
+            else:
+                pyssn.log_.warn('A filename must be given', calling=self.calling)
+                return
         self.start_spectrum()
         self.do_save = False
         self.on_draw()
