@@ -490,11 +490,12 @@ class AppForm(QtGui.QMainWindow):
             else:
                 pyssn.log_.warn('A filename must be given', calling=self.calling)
                 return
-        self.start_spectrum()
-        self.do_save = False
-        self.on_draw()
-        self.do_save = True
-        self.restore_axes()
+        else:
+            self.start_spectrum()
+            self.do_save = False
+            self.on_draw()
+            self.do_save = True
+            self.restore_axes()
         
     def start_spectrum(self):
         self.sp = pyssn.spectrum(config_file=unicode(self.init_file_name))
