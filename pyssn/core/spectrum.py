@@ -305,7 +305,7 @@ class spectrum(object):
                                 calling = self.calling)
             except:
                 pass
-        if phyat_arr == []:
+        if len(phyat_arr) == 0:
             pyssn.log_.error('No phyat file read', calling = self.calling)
             return None
         return phyat_arr, len(phyat_arr)
@@ -797,8 +797,10 @@ class spectrum(object):
         for key in ('lambda', 'l_shift', 'i_rel', 'i_cor', 'vitesse', 'profile'):
             mask_diff = mask_diff | (new_liste_raies[key] != self.liste_raies[key])
         
+        pyssn.log_.debug('{} differences in lines from files'.format(mask_diff.sum()),
+                           calling=self.calling + ' adjust')
         ref_diff = self.compare_profiles()
-        pyssn.log_.message('{} differences in profile'.format(len(ref_diff)),
+        pyssn.log_.debug('{} differences in profile'.format(len(ref_diff)),
                            calling=self.calling + ' adjust')
         for im, l in enumerate(new_liste_raies.profile):
             if np.str(l) in ref_diff:
@@ -845,6 +847,10 @@ class spectrum(object):
             self.liste_raies = new_liste_raies
             self.sp_synth_tot = self.convol_synth(self.cont, self.sp_synth)
             self.cont_lr, self.sp_synth_lr = self.rebin_on_obs()
+        pyssn.log_.message('{} differences'.format(mask_diff.sum()), calling=self.calling + ' adjust')
+
+        return mask_diff.sum()
+        
         #self.update_plot2()
             
 #     def modif_intens(self, raie_num, fact):
@@ -1317,7 +1323,8 @@ class spectrum(object):
                 print('---------------------------------------------')
 
     def _call_adjust(self, event=None):
-        self.adjust()        
+        self.adjust()
+        self.update_plot2()
 
     def _call_rerun(self, event=None):
         self.rerun()

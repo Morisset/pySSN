@@ -509,7 +509,7 @@ class AppForm(QtGui.QMainWindow):
             return
         old_sp_norm = self.sp.get_conf('sp_norm')
         new_sp_norm = np.float(self.sp_norm_box.text())
-        pyssn.log_.message('Entering sp_norm. Old: {}, New: {}'.format(old_sp_norm, new_sp_norm), calling=self.calling)
+        pyssn.log_.message('Changing sp_norm. Old: {}, New: {}'.format(old_sp_norm, new_sp_norm), calling=self.calling)
         if np.abs(new_sp_norm - old_sp_norm)/old_sp_norm > 1e-6:
             self.sp.renorm(new_sp_norm)
             self.on_draw()
@@ -520,7 +520,7 @@ class AppForm(QtGui.QMainWindow):
             return
         old_obj_velo = self.sp.get_conf('obj_velo')
         new_obj_velo = np.float(self.obj_velo_box.text())
-        pyssn.log_.message('Entering obj_velo. Old: {}, New: {}'.format(old_obj_velo, new_obj_velo), calling=self.calling)
+        pyssn.log_.message('Changing obj_velo. Old: {}, New: {}'.format(old_obj_velo, new_obj_velo), calling=self.calling)
         if np.abs((new_obj_velo - old_obj_velo)/old_obj_velo) > 1e-6:
             self.sp.init_obs(obj_velo=new_obj_velo)
             #self.sp.make_continuum()
@@ -532,7 +532,7 @@ class AppForm(QtGui.QMainWindow):
             return
         old_ebv = self.sp.get_conf('e_bv')
         new_ebv = np.float(self.ebv_box.text())
-        pyssn.log_.message('Entering ebv. Old: {}, New: {}'.format(old_ebv, new_ebv), calling=self.calling)
+        pyssn.log_.message('Changing E B-V. Old: {}, New: {}'.format(old_ebv, new_ebv), calling=self.calling)
         if np.abs(new_ebv - old_ebv)/old_ebv > 1e-6:
             self.sp.set_conf('e_bv', new_ebv)
             self.sp.init_red_corr()
@@ -543,15 +543,16 @@ class AppForm(QtGui.QMainWindow):
     def adjust(self):
         if self.sp is None:
             return
-        self.sp.adjust()
-        self.on_draw()
+        N_diff = self.sp.adjust()
+        if N_diff > 0:
+            self.on_draw()
 
     def resol(self):
         if self.sp is None:
             return
         old_resol = self.sp.get_conf('resol')
         new_resol = np.int(self.resol_box.text())
-        pyssn.log_.message('Entering resol. Old: {}, New: {}'.format(old_resol, new_resol), calling=self.calling)
+        pyssn.log_.message('Changing resol. Old: {}, New: {}'.format(old_resol, new_resol), calling=self.calling)
         if np.abs(new_resol - old_resol) > 0.5:
             self.sp.set_conf('resol', new_resol)
             self.sp.init_obs()
@@ -598,7 +599,7 @@ class AppForm(QtGui.QMainWindow):
     
     def verbosity(self):
         verbosity = self.verbosity_cb.currentIndex()
-        pyssn.log_.debug('Change verbosity from {} to {}'.format(pyssn.log_.level, verbosity))
+        pyssn.log_.debug('Change verbosity from {} to {}'.format(pyssn.log_.level, verbosity), calling=self.calling)
         pyssn.log_.level = verbosity
         
 def main():
