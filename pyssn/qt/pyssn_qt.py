@@ -29,10 +29,9 @@ from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg
 from matplotlib.figure import Figure
 import numpy as np
 import pyssn
+pyssn.log_.level = 3
 
 #ToDo : 
-
-pyssn.log_.level = 3
 
 class NavigationToolbar( NavigationToolbar2QTAgg ):
 
@@ -230,12 +229,14 @@ class AppForm(QtGui.QMainWindow):
         self.cyan_box.setMinimumWidth(50)
         self.connect(self.cyan_box, QtCore.SIGNAL('returnPressed()'), self.cyan_line)
         
-        self.verbosity_sl = QtGui.QSlider(QtCore.Qt.Horizontal)
-        self.verbosity_sl.setRange(0, 4)
-        self.verbosity_sl.setValue(3)
-        self.verbosity_sl.setTracking(True)
-        self.verbosity_sl.setTickPosition(QtGui.QSlider.TicksBothSides)
-        self.connect(self.verbosity_sl, QtCore.SIGNAL('valueChanged(int)'), self.verbosity)
+        self.verbosity_cb = QtGui.QComboBox()
+        self.verbosity_cb.addItem('0: nothing')
+        self.verbosity_cb.addItem('1: Errors')
+        self.verbosity_cb.addItem('2: Errs + Warnings')
+        self.verbosity_cb.addItem('3: Errs + Warns + Messages')
+        self.verbosity_cb.addItem('4: All + Debug messages')
+        self.verbosity_cb.setCurrentIndex(pyssn.log_.level)
+        self.connect(self.verbosity_cb, QtCore.SIGNAL('activated(QString)'), self.verbosity)
         
         #
         # Layout with box sizers
@@ -264,7 +265,7 @@ class AppForm(QtGui.QMainWindow):
             hbox4.addWidget(w)
             hbox4.setAlignment(w, QtCore.Qt.AlignVCenter)
 
-        for w in [self.line_info_box, self.magenta_box, self.cyan_box, self.verbosity_sl]:
+        for w in [self.line_info_box, self.magenta_box, self.cyan_box, self.verbosity_cb]:
             hbox5.addWidget(w)
             hbox5.setAlignment(w, QtCore.Qt.AlignVCenter)
 
@@ -594,11 +595,11 @@ class AppForm(QtGui.QMainWindow):
         if new_ref != self.sp.plot_cyan:
             self.sp.plot_cyan = new_ref
             self.on_draw()
-        
+    
     def verbosity(self):
-        verbosity = self.verbosity_sl.value()
-        if verbosity in (0,1,2,3,4):
-            pyssn.log_.level = verbosity
+        verbosity = self.verbosity_cb.currentIndex()
+        pyssn.log_.debug('Change verbosity from {} to {}'.format(pyssn.log_.level, verbosity))
+        pyssn.log_.level = verbosity
         
 def main():
     app = QtGui.QApplication(sys.argv)

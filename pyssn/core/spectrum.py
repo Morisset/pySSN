@@ -1013,7 +1013,7 @@ class spectrum(object):
                 self.ax1_line_cyan = ax.step(self.w, self.cont+self.sp_theo['spectr'][i_cyan][0], c='cyan', 
                               label=label_cyan, linestyle='-')[0]
         ax.legend(loc=self.legend_loc)
-        pyssn.log_.message('ax1 drawn on ax ID {}'.format(id(ax)), calling=self.calling)
+        pyssn.log_.debug('ax1 drawn on ax ID {}'.format(id(ax)), calling=self.calling)
         
     def plot_ax2(self, ax):        
         
@@ -1028,7 +1028,7 @@ class spectrum(object):
         ax.set_xlim(self.get_conf('x_plot_lims'))
         ax.set_ylim(self.get_conf('y2_plot_lims'))
         """
-        pyssn.log_.message('ax2 drawn on ax ID {}'.format(id(ax)), calling=self.calling)
+        pyssn.log_.debug('ax2 drawn on ax ID {}'.format(id(ax)), calling=self.calling)
         
 
     def plot_ax3(self, ax):     
@@ -1045,7 +1045,7 @@ class spectrum(object):
         else:
             ax.set_ylim(self.get_conf('y3_plot_lims'))
         """
-        pyssn.log_.message('ax3 drawn on ax ID {}'.format(id(ax)), calling=self.calling)
+        pyssn.log_.debug('ax3 drawn on ax ID {}'.format(id(ax)), calling=self.calling)
         
     def update_plot2(self):
         
