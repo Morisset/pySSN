@@ -484,18 +484,18 @@ class AppForm(QtGui.QMainWindow):
             self.init_file_name = QtGui.QFileDialog.getOpenFileName(self, 'Open file', '', '*init.py')
         else:
             self.init_file_name = init_file_name
-        if self.init_file_name is None:
-            if self.sp is None:
-                raise ValueError('A filename must be given')
-            else:
-                pyssn.log_.warn('A filename must be given', calling=self.calling)
-                return
-        else:
+        if self.init_file_name:
             self.start_spectrum()
             self.do_save = False
             self.on_draw()
             self.do_save = True
             self.restore_axes()
+        else:
+            if self.sp is None:
+                raise ValueError('A filename must be given')
+            else:
+                pyssn.log_.warn('A filename must be given', calling=self.calling)
+                return
         
     def start_spectrum(self):
         self.sp = pyssn.spectrum(config_file=unicode(self.init_file_name))
