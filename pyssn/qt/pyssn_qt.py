@@ -121,8 +121,10 @@ class AppForm(QtGui.QMainWindow):
         self.create_menu()
         self.create_main_frame()
         self.create_status_bar()
-
-        self.select_init()
+        if sys.argv[1] != '':
+            self.select_init(sys.argv[1])
+        else:
+            self.select_init()
         
     def save_plot(self):
         file_choices = "PDF (*.pdf)|*.pdf"
