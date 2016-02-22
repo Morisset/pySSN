@@ -1,6 +1,6 @@
 
 __all__ = []
-__version__ = '0.2.21b2'
+__version__ = '0.2.22'
 
 from utils.Config import _Config
 config = _Config()
