@@ -15,13 +15,10 @@ Eli Bendersky (eliben@gmail.com)
 License: this code is in the public domain
 Last modified: 19.01.2009
 """
-import sys, os, random
+import sys, os
 import argparse
-import time
 
 from PyQt4 import QtCore, QtGui
-
-import matplotlib
 
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 #from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
@@ -32,6 +29,13 @@ import pyssn
 pyssn.log_.level = 3
 
 #ToDo : 
+
+def get_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-f", "--file", help="init file .")
+    parser.add_argument("-V", "--version", action="version", version=pyssn.__version__,
+                        help="Display version information and exit.")
+    return parser
 
 class NavigationToolbar( NavigationToolbar2QTAgg ):
 
@@ -99,7 +103,7 @@ class NavigationToolbar( NavigationToolbar2QTAgg ):
 
 class AppForm(QtGui.QMainWindow):
     
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, init_filename=None):
         self.calling = 'pySSN GUI'
         QtGui.QMainWindow.__init__(self, parent)
         self.setWindowTitle('pySSN')
@@ -121,12 +125,8 @@ class AppForm(QtGui.QMainWindow):
         self.create_menu()
         self.create_main_frame()
         self.create_status_bar()
-        """
-        if sys.argv[1] != '':
-            self.select_init(sys.argv[1])
-        else:
-            self.select_init()
-        """
+        self.select_init(init_filename)
+        
     def save_plot(self):
         file_choices = "PDF (*.pdf)|*.pdf"
         
@@ -484,11 +484,18 @@ class AppForm(QtGui.QMainWindow):
             self.init_file_name = QtGui.QFileDialog.getOpenFileName(self, 'Open file', '', '*init.py')
         else:
             self.init_file_name = init_file_name
-        self.start_spectrum()
-        self.do_save = False
-        self.on_draw()
-        self.do_save = True
-        self.restore_axes()
+        if self.init_file_name:
+            self.start_spectrum()
+            self.do_save = False
+            self.on_draw()
+            self.do_save = True
+            self.restore_axes()
+        else:
+            if self.sp is None:
+                raise ValueError('A filename must be given')
+            else:
+                pyssn.log_.warn('A filename must be given', calling=self.calling)
+                return
         
     def start_spectrum(self):
         self.sp = pyssn.spectrum(config_file=unicode(self.init_file_name))
@@ -604,10 +611,18 @@ class AppForm(QtGui.QMainWindow):
         verbosity = self.verbosity_cb.currentIndex()
         pyssn.log_.debug('Change verbosity from {} to {}'.format(pyssn.log_.level, verbosity), calling=self.calling)
         pyssn.log_.level = verbosity
-        
-def main():
+
+def main_loc():
     app = QtGui.QApplication(sys.argv)
     form = AppForm()
+    form.show()
+    app.exec_()
+        
+def main():
+    parser = get_parser()
+    args = parser.parse_args()    
+    app = QtGui.QApplication(sys.argv)
+    form = AppForm(init_filename=args.file)
     form.show()
     app.exec_()
     
