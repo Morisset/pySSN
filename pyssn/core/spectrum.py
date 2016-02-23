@@ -1167,7 +1167,7 @@ class spectrum(object):
         self.print_axes()
         
     def print_axes(self):
-        print('{} {} {} {}'.format(self.x_plot_lims, self.y1_plot_lims, self.y2_plot_lims, self.y3_plot_lims))
+        pyssn.log_.debug('{} {} {} {}'.format(self.x_plot_lims, self.y1_plot_lims, self.y2_plot_lims, self.y3_plot_lims), calling=self.calling)
     
     def rerun(self):
         self.run(do_synth = True, do_read_liste = True, do_profiles=True)
