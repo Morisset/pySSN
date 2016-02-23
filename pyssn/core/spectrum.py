@@ -1379,6 +1379,7 @@ def main_loc(config_file):
     fig = plt.figure(figsize=(20, 7))
     sp.plot2(fig=fig)
     sp.save_axes()
+    plt.show()
     return sp
 
 def main():
@@ -1392,5 +1393,5 @@ def main():
     sp = pyssn.spectrum(config_file=args.file)
     fig = plt.figure(figsize=(20, 7))
     sp.plot2(fig=fig)
-    
+    plt.show()
 
