@@ -3,10 +3,10 @@
 # to be used with python setup.py dist
 
 from distutils.core import setup
-import pyssn
+from pyssn.version import __version__
 
 setup(name='pySSN', 
-      version=pyssn.__version__,
+      version=__version__,
       description='Python Spectral Synthesis for Nebulae',
       author='Christophe Morisset, Daniel Pequignot',
       author_email='chris.morisset@gmail.com',
