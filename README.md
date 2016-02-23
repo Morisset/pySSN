@@ -9,6 +9,7 @@ The init file is optional. If not given, the program will first ask you for one.
 You can also call pySSN from within a python session:
 
 `from pyssn.qt.pyssn_qt import main_loc`
+
 `sp = main_loc('./s6302_n_c_init.py')`
 
 You can interact with sp.
