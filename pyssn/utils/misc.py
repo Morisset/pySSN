@@ -6,6 +6,7 @@ Created on 16/01/2014
 import os
 import sys
 import re
+import argparse
 from scipy import interpolate
 import numpy as np
 import pyssn
@@ -177,4 +178,13 @@ def rebin_tapas(file_ = None, cut=1e-5):
 
 def clean_label(str_):
     return(re.sub("_", " ", str_))
+
+
+def get_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-f", "--file", help="init file .")
+    parser.add_argument("-V", "--version", action="version", version=pyssn.__version__,
+                        help="Display version information and exit.")
+    return parser
+
     
