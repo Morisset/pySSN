@@ -26,16 +26,11 @@ from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg
 from matplotlib.figure import Figure
 import numpy as np
 import pyssn
+from pyssn.utils.misc import get_parser
+
 pyssn.log_.level = 3
 
 #ToDo : 
-
-def get_parser():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-f", "--file", help="init file .")
-    parser.add_argument("-V", "--version", action="version", version=pyssn.__version__,
-                        help="Display version information and exit.")
-    return parser
 
 class NavigationToolbar( NavigationToolbar2QTAgg ):
 
@@ -612,11 +607,12 @@ class AppForm(QtGui.QMainWindow):
         pyssn.log_.debug('Change verbosity from {} to {}'.format(pyssn.log_.level, verbosity), calling=self.calling)
         pyssn.log_.level = verbosity
 
-def main_loc():
+def main_loc(init_filename=None):
     app = QtGui.QApplication(sys.argv)
-    form = AppForm()
+    form = AppForm(init_filename=init_filename)
     form.show()
     app.exec_()
+    return form.sp
         
 def main():
     parser = get_parser()

@@ -8,6 +8,7 @@ import pyssn
 from pyssn.utils.physics import CST, Planck, make_cont_Ercolano, gff
 from pyssn.utils.misc import execution_path, change_size, convol, rebin, is_absorb, no_red_corr, gauss, carre, lorentz, convolgauss, vactoair, clean_label
 from pyssn.core.profiles import profil_instr
+from pyssn.utils.misc import get_parser
 
 """
 ToDo:
@@ -1367,5 +1368,29 @@ class spectrum(object):
         self.fig_prof = plt.figure()
         self.ax_prof = plt.semilogy(self.filter_)
         
+def main_loc(config_file):
+    """
+    In case of not having Qt4.
+    Usage:
+    from pyssn.core.spectrum import main_loc
+    sp = main_loc('./s6302_n_c_init.py')
+    """
+    sp = pyssn.spectrum(config_file=config_file)
+    fig = plt.figure(figsize=(20, 7))
+    sp.plot2(fig=fig)
+    sp.save_axes()
+    return sp
 
+def main():
+    """
+    Not working, exiting at the end...
+    """
+    parser = get_parser()
+    args = parser.parse_args()
+    if args.file is None:
+        pyssn.log_.error('A file name is needed, use option -f')
+    sp = pyssn.spectrum(config_file=args.file)
+    fig = plt.figure(figsize=(20, 7))
+    sp.plot2(fig=fig)
+    
 

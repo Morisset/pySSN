@@ -1,7 +1,6 @@
 
 __all__ = []
-__version__ = '0.2.22'
-
+from .version import __version__
 from utils.Config import _Config
 config = _Config()
 log_ = config.log_
