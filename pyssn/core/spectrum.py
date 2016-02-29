@@ -4,11 +4,12 @@ import matplotlib.pyplot as plt
 from matplotlib.widgets import Button
 from scipy import interpolate
 import pyneb as pn
-import pyssn
-from pyssn.utils.physics import CST, Planck, make_cont_Ercolano, gff
-from pyssn.utils.misc import execution_path, change_size, convol, rebin, is_absorb, no_red_corr, gauss, carre, lorentz, convolgauss, vactoair, clean_label
-from pyssn.core.profiles import profil_instr
-from pyssn.utils.misc import get_parser
+
+from pyssn import log_, config
+from ..utils.physics import CST, Planck, make_cont_Ercolano, gff
+from ..utils.misc import execution_path, change_size, convol, rebin, is_absorb, no_red_corr, gauss, carre, lorentz, convolgauss, vactoair, clean_label
+from ..core.profiles import profil_instr
+from ..utils.misc import get_parser
 
 """
 ToDo:
@@ -28,15 +29,15 @@ def read_data(filename, NF=True):
     dd = np.genfromtxt(filename, dtype=dtype, delimiter=delimiter, names = names, usecols = usecols)
 
     if np.isnan(dd['num']).sum() > 0:
-        pyssn.log_.error('Some line ID are not defined {}'.format(dd['id'][np.isnan(dd['num'])]))
+        log_.error('Some line ID are not defined {}'.format(dd['id'][np.isnan(dd['num'])]))
     if np.isnan(dd['lambda']).sum() > 0:
-        pyssn.log_.error('Some wavelengths are not defined {}'.format(dd['num'][np.isnan(dd['lambda'])]))
+        log_.error('Some wavelengths are not defined {}'.format(dd['num'][np.isnan(dd['lambda'])]))
     if np.isnan(dd['l_shift']).sum() > 0:
-        pyssn.log_.error('Some wavelengths shifts are not defined {}'.format(dd['num'][np.isnan(dd['l_shift'])]))
+        log_.error('Some wavelengths shifts are not defined {}'.format(dd['num'][np.isnan(dd['l_shift'])]))
     if np.isnan(dd['i_cor']).sum() > 0:
-        pyssn.log_.error('Some intensity corrections are not defined {}'.format(dd['num'][np.isnan(dd['i_cor'])]))
+        log_.error('Some intensity corrections are not defined {}'.format(dd['num'][np.isnan(dd['i_cor'])]))
     if np.isnan(dd['i_rel']).sum() > 0:
-        pyssn.log_.error('Some relative intensities are not defined {}'.format(dd['num'][np.isnan(dd['i_rel'])]))
+        log_.error('Some relative intensities are not defined {}'.format(dd['num'][np.isnan(dd['i_rel'])]))
     
     return dd.view(np.recarray)
 
@@ -152,7 +153,7 @@ class spectrum(object):
         
         self.fic_profs = self.get_conf('fic_profile', execution_path('./')+'../data/default_profiles.dat')
         if not os.path.isfile(self.fic_profs):
-            pyssn.log_.error('File not found {}'.format(self.fic_profs), calling=self.calling)
+            log_.error('File not found {}'.format(self.fic_profs), calling=self.calling)
         emis_profiles = {}
         emis_profiles['1'] = {'T4': 0.0, 'vel':0.0, 'params': [['G', '1.00', '0.0', '20.0']]}
         prof_params = None
@@ -232,10 +233,10 @@ class spectrum(object):
         for param in params_str:
             profile_type = param[0]
             if profile_type not in basic_profiles_dic:
-                pyssn.log_.error('Wrong number profile reference{}'.format(profile_type), calling=self.calling)
+                log_.error('Wrong number profile reference{}'.format(profile_type), calling=self.calling)
             params = param[1::]
             if len(params) != basic_profiles_dic[profile_type][0]:
-                pyssn.log_.error('Wrong number of parameters {} for profile {}'.format(len(params), profile_type), calling=self.calling)
+                log_.error('Wrong number of parameters {} for profile {}'.format(len(params), profile_type), calling=self.calling)
             profile += basic_profiles_dic[profile_type][1](w_norm, params[0], params[1]*largeur, params[2]*largeur)
         if T4 > 0.0:
             fwhm_therm = 21.4721 * np.sqrt(T4 / masse) * lambda_0 / CST.CLIGHT * 1e5 #km/s
@@ -255,10 +256,10 @@ class spectrum(object):
         if self.config_file is not None:
             try:
                 execfile(self.config_file, self.conf)
-                pyssn.log_.message('configuration read from {0}'.format(self.config_file), 
+                log_.message('configuration read from {0}'.format(self.config_file), 
                                    calling = self.calling)
             except:
-                pyssn.log_.warn('configuration NOT read from {0}'.format(self.config_file),
+                log_.warn('configuration NOT read from {0}'.format(self.config_file),
                                 calling = self.calling)
         
             
@@ -274,11 +275,11 @@ class spectrum(object):
         
         if key not in self.conf:
             if message == 'warn':
-                pyssn.log_.warn('{0} not defined in configuration file'.format(key), calling=self.calling)
+                log_.warn('{0} not defined in configuration file'.format(key), calling=self.calling)
             elif message == 'message':
-                pyssn.log_.message('{0} not defined in configuration file'.format(key), calling=self.calling)
+                log_.message('{0} not defined in configuration file'.format(key), calling=self.calling)
             elif message == 'error':
-                pyssn.log_.error('{0} not defined in configuration file'.format(key), calling=self.calling)
+                log_.error('{0} not defined in configuration file'.format(key), calling=self.calling)
             else:
                 pass
             return undefined
@@ -286,7 +287,7 @@ class spectrum(object):
             return self.conf[key]
                     
         if 'fic_modele' not in self.conf:
-            pyssn.log_.warn('fic_model not defined in configuration file', calling=self.calling)
+            log_.warn('fic_model not defined in configuration file', calling=self.calling)
             return None        
                     
     def set_conf(self, key, value):
@@ -299,15 +300,15 @@ class spectrum(object):
         
         self.phyat_file = phyat_file
         phyat_arr = []
-        for dir_ in pyssn.config.DataPaths:
+        for dir_ in config.DataPaths:
             try:
                 phyat_arr = read_data('{0}/{1}'.format(dir_, self.phyat_file))
-                pyssn.log_.message('data read from {0}/{1}'.format(dir_, self.phyat_file),
+                log_.message('data read from {0}/{1}'.format(dir_, self.phyat_file),
                                 calling = self.calling)
             except:
                 pass
         if len(phyat_arr) == 0:
-            pyssn.log_.error('No phyat file read', calling = self.calling)
+            log_.error('No phyat file read', calling = self.calling)
             return None
         return phyat_arr, len(phyat_arr)
         
@@ -319,15 +320,15 @@ class spectrum(object):
             model_arr = self.phyat_arr.copy()[mask]
             model_arr['num'] -= 90000000000000
             model_arr['vitesse'] = 10
-            pyssn.log_.message('data initialized from phyat'.format(model_file),
+            log_.message('data initialized from phyat'.format(model_file),
                                 calling = self.calling) 
         else:
             try:
                 model_arr = read_data('{0}'.format(model_file))
-                pyssn.log_.message('data read from {0}'.format(model_file),
+                log_.message('data read from {0}'.format(model_file),
                                     calling = self.calling)
             except:
-                pyssn.log_.warn('unable to read from {0}'.format(model_file),
+                log_.warn('unable to read from {0}'.format(model_file),
                                     calling = self.calling)
         model_arr['ref'] = 0
         return model_arr
@@ -337,10 +338,10 @@ class spectrum(object):
         cosmetik_arr = []
         try:
             cosmetik_arr = read_data('{0}'.format(cosmetik_file))
-            pyssn.log_.message('cosmetik read from {0}'.format(cosmetik_file),
+            log_.message('cosmetik read from {0}'.format(cosmetik_file),
                                 calling = self.calling)
         except:
-            pyssn.log_.warn('unable to read from {0}'.format(cosmetik_file),
+            log_.warn('unable to read from {0}'.format(cosmetik_file),
                                 calling = self.calling)
         return cosmetik_arr
 
@@ -356,7 +357,7 @@ class spectrum(object):
                 obs_file = self.conf['spectr_obs']+'.spr'
             try:                
                 self.obs = np.loadtxt(obs_file)
-                pyssn.log_.message('Observations read from {0}'.format(obs_file),
+                log_.message('Observations read from {0}'.format(obs_file),
                                     calling = self.calling)
                 if bool(self.get_conf('data_incl_w', undefined = False)):
                     self.w = self.obs[:,0]
@@ -365,7 +366,7 @@ class spectrum(object):
                     self.f = self.obs 
             except:
                 self.f = None
-                pyssn.log_.warn('Observations NOT read from {0}'.format(obs_file),
+                log_.warn('Observations NOT read from {0}'.format(obs_file),
                                     calling = self.calling)
                 self.n_lambda = 0.
                 return None
@@ -385,16 +386,16 @@ class spectrum(object):
             cal_pix = cal_pix[arg_sort]
             interp_lam = interpolate.UnivariateSpline(cal_pix, cal_lambda, k=k_spline)
             self.w = interp_lam(self.tab_pix)
-            pyssn.log_.message('Wavelength table generated using spline of order {0}'.format(k_spline),
+            log_.message('Wavelength table generated using spline of order {0}'.format(k_spline),
                                 calling = self.calling)
                         
         self.obj_velo = self.get_conf("obj_velo", undefined=0.)
-        self.w *= 1 - self.obj_velo/(pyssn.CST.CLIGHT/1e5)
-        pyssn.log_.message('Wavelenghts shifted by Vel = {} km/s'.format(self.conf["obj_velo"]),
+        self.w *= 1 - self.obj_velo/(CST.CLIGHT/1e5)
+        log_.message('Wavelenghts shifted by Vel = {} km/s'.format(self.conf["obj_velo"]),
                                 calling = self.calling)
 
         lims = ((self.w >= self.limit_sp[0]) & (self.w <= self.limit_sp[1]))
-        pyssn.log_.message('Observations resized from {0} to {1}'.format(len(self.w), lims.sum()), calling=self.calling)
+        log_.message('Observations resized from {0} to {1}'.format(len(self.w), lims.sum()), calling=self.calling)
         self.w = self.w[lims]
         self.f = self.f[lims]
 
@@ -402,7 +403,7 @@ class spectrum(object):
         self.f_ori = self.f.copy()
         
         resol = self.get_conf('resol', undefined = 1, message=None)
-        pyssn.log_.message('Observations resized from {0} by a factor of {1}'.format(len(self.w), resol), 
+        log_.message('Observations resized from {0} by a factor of {1}'.format(len(self.w), resol), 
                            calling=self.calling)
         self.w = change_size(self.w, resol)
         self.f = change_size(self.f, resol)
@@ -422,7 +423,7 @@ class spectrum(object):
         if self.E_BV > 0:
             RC = pn.RedCorr(E_BV = self.E_BV, law=self.get_conf('red_corr_law', message='error'))
             self.red_corr = RC.getCorr(self.w, self.get_conf('lambda_ref_rougi', message='error'))
-            pyssn.log_.message('Reddening correction set to {0}'.format(self.E_BV), calling=self.calling)
+            log_.message('Reddening correction set to {0}'.format(self.E_BV), calling=self.calling)
         else:
             self.red_corr = np.ones_like(self.w)
         
@@ -563,7 +564,7 @@ class spectrum(object):
         if self.do_cosmetik:
             for line_cosmetik in cosmetik_arr:
                 if (line_cosmetik['ref'] == 0) and not bool(self.conf['do_icor_on_ref']):
-                    pyssn.log_.warn('No cosmetik on {0}, reference line'.format(line_cosmetik['num']),
+                    log_.warn('No cosmetik on {0}, reference line'.format(line_cosmetik['num']),
                                     calling = self.calling)
                 else:
                     to_change = (liste_totale.num == line_cosmetik['num'])
@@ -574,17 +575,17 @@ class spectrum(object):
                         if (line_to_change['i_rel'] == line_cosmetik['i_rel']) or (line_cosmetik['i_cor'] == 1.):
                             line_to_change['i_cor'] = line_cosmetik['i_cor']
                         liste_totale[to_change] = line_to_change
-                        pyssn.log_.debug('Cosmetik on {0}'.format([line_cosmetik]), calling=self.calling)
+                        log_.debug('Cosmetik on {0}'.format([line_cosmetik]), calling=self.calling)
                     elif to_change.sum() == 0:
                         if self.get_conf('warn_on_no_cosmetik'):
-                            pyssn.log_.warn('No cosmetik on {0}, undefined line'.format(line_cosmetik['num']),
+                            log_.warn('No cosmetik on {0}, undefined line'.format(line_cosmetik['num']),
                                         calling = self.calling)
                     else:
-                        pyssn.log_.warn('No cosmetik on {0}, multiple defined line'.format(line_cosmetik['num']),
+                        log_.warn('No cosmetik on {0}, multiple defined line'.format(line_cosmetik['num']),
                                         calling = self.calling)
 
         liste_raies = self.restric_liste(liste_totale)
-        pyssn.log_.message('Size of the line list: {0}, size of the restricted line list: {1}'.format(len(liste_totale),
+        log_.message('Size of the line list: {0}, size of the restricted line list: {1}'.format(len(liste_totale),
                                                                                                       len(liste_raies)), calling=self.calling)
 
         if self.do_cosmetik:
@@ -618,7 +619,7 @@ class spectrum(object):
                 if dep_non_affich.sum() != 0:
                     before = liste_in['ref'][dep_non_affich]
                     liste_in['ref'][dep_non_affich] = 999
-                    pyssn.log_.message('Before = {0}, After = {1}'.format(before, liste_in['ref'][dep_non_affich]), calling=self.calling)
+                    log_.message('Before = {0}, After = {1}'.format(before, liste_in['ref'][dep_non_affich]), calling=self.calling)
                     the_end = False
             if the_end:
                 break
@@ -627,7 +628,7 @@ class spectrum(object):
                        ((liste_in['lambda'] + liste_in['l_shift']) > np.min(self.w)) &
                        (liste_in['ref'] != 999))
         liste_out = liste_in.copy()[where_restr]
-        pyssn.log_.message('Old size = {0}, new_size = {1}'.format(len(liste_in), len(liste_out)), calling=self.calling)
+        log_.message('Old size = {0}, new_size = {1}'.format(len(liste_in), len(liste_out)), calling=self.calling)
         
         last_loop = 0
         the_end = False
@@ -642,7 +643,7 @@ class spectrum(object):
                     i_main_line = np.where(liste_in['num'] == raie_synth['ref'])[0]
                     if len(i_main_line) != 1:
                         if self.get_conf('warn_on_no_reference'):
-                            pyssn.log_.warn('Satellite sans raie de reference:{0} looking for {1}'.format(raie_synth['num'], raie_synth['ref']), 
+                            log_.warn('Satellite sans raie de reference:{0} looking for {1}'.format(raie_synth['num'], raie_synth['ref']), 
                                         calling=self.calling)
                         raie_synth['i_rel'] = 0.0
                         raie_synth['comment'] = '!pas de ref' + raie_synth['comment']
@@ -655,7 +656,7 @@ class spectrum(object):
                                 raie_synth['i_cor'] *= main_line['i_cor']
                             raie_synth['profile'] = main_line['profile']
                             last_loop = 2
-                            pyssn.log_.debug('filling {0} with {1}'.format(liste_out[i_satellite]['num'],
+                            log_.debug('filling {0} with {1}'.format(liste_out[i_satellite]['num'],
                                                                              main_line['num']),
                                                calling = self.calling)
                         if last_loop == 1:
@@ -665,7 +666,7 @@ class spectrum(object):
                             if bool(self.conf['recursive_i_cor']):
                                 raie_synth['i_cor'] *= main_line['i_cor']
                             raie_synth['profile'] = main_line['profile']
-                            pyssn.log_.debug('filling {0} with {1}, last loop'.format(liste_out[i_satellite]['num'],
+                            log_.debug('filling {0} with {1}, last loop'.format(liste_out[i_satellite]['num'],
                                                                              main_line['num']),
                                                calling = self.calling)
                     liste_out[i_satellite] = raie_synth
@@ -677,7 +678,7 @@ class spectrum(object):
             if the_end:
                 break
         tt = (np.abs(liste_out['i_rel']) > 1e-50)
-        pyssn.log_.message('number of lines with i_rel > 1e-50: {0}'.format(tt.sum()), calling=self.calling)
+        log_.message('number of lines with i_rel > 1e-50: {0}'.format(tt.sum()), calling=self.calling)
         return liste_out[tt]
         
     def make_synth(self, liste_raies, sp_theo):
@@ -696,7 +697,7 @@ class spectrum(object):
             if np.isfinite(aire) and (aire != 0.):
                 max_sp = np.max(sp_tmp)
                 if (np.abs(sp_tmp[0]/max_sp) > 1e-3) or (np.abs(sp_tmp[-1]/max_sp) > 1e-3):
-                    pyssn.log_.warn('Area of {0} {1} could be wrong'.format(raie['id'], raie['lambda']), 
+                    log_.warn('Area of {0} {1} could be wrong'.format(raie['id'], raie['lambda']), 
                                       calling = self.calling)
                 intens_pic = raie['i_rel'] * raie['i_cor'] * self.aire_ref / aire
 
@@ -715,7 +716,7 @@ class spectrum(object):
         for key in ('correc', 'raie_ref', 'spectr'):
             sp_theo[key] = sp_theo[key][tt]
         
-        pyssn.log_.message('Number of theoretical spectra: {0}'.format(len(self.sp_theo['correc'])), calling=self.calling)
+        log_.message('Number of theoretical spectra: {0}'.format(len(self.sp_theo['correc'])), calling=self.calling)
         return sp_theo, sp_synth
         
     def make_sp_abs(self, sp_theo):
@@ -736,7 +737,7 @@ class spectrum(object):
                 self.conf['fic_atm'] = (self.conf['fic_atm'],)
                 self.conf['coeff_atm'] = (self.conf['coeff_atm'],)
             if len(self.get_conf('fic_atm')) != len(self.get_conf('coeff_atm')):
-                pyssn.log_.error('fic_atm number {} != coeff_atm number {}'.format(len(self.get_conf('fic_atm')), len(self.get_conf('coeff_atm'))), 
+                log_.error('fic_atm number {} != coeff_atm number {}'.format(len(self.get_conf('fic_atm')), len(self.get_conf('coeff_atm'))), 
                                       calling = self.calling)
             for fic_atm, coeff_atm, shift_atm in zip(self.get_conf('fic_atm'), self.get_conf('coeff_atm'), self.get_conf('shift_atm')):
                 try:
@@ -750,7 +751,7 @@ class spectrum(object):
                         abs_interp = interpolate.interp1d(d['wl']*(1+s_atm/CST.CLIGHT*1e5), d['abs'])
                         sp_abs *= np.exp(np.log(abs_interp(self.w)) * c_atm)
                 except:
-                    pyssn.log_.warn('Problem in using data from {}'.format(fic_atm), 
+                    log_.warn('Problem in using data from {}'.format(fic_atm), 
                                       calling = self.calling)
         
         # sp_abs /= self.red_corr
@@ -798,10 +799,10 @@ class spectrum(object):
         for key in ('lambda', 'l_shift', 'i_rel', 'i_cor', 'vitesse', 'profile'):
             mask_diff = mask_diff | (new_liste_raies[key] != self.liste_raies[key])
         
-        pyssn.log_.debug('{} differences in lines from files'.format(mask_diff.sum()),
+        log_.debug('{} differences in lines from files'.format(mask_diff.sum()),
                            calling=self.calling + ' adjust')
         ref_diff = self.compare_profiles()
-        pyssn.log_.debug('{} differences in profile'.format(len(ref_diff)),
+        log_.debug('{} differences in profile'.format(len(ref_diff)),
                            calling=self.calling + ' adjust')
         for im, l in enumerate(new_liste_raies.profile):
             if np.str(l) in ref_diff:
@@ -810,7 +811,7 @@ class spectrum(object):
         if mask_diff.sum() > 0:
             old_sp_theo = self.sp_theo.copy()
             if len(new_sp_theo) != len(old_sp_theo):
-                pyssn.log_.error('The new list has different number of elements', 
+                log_.error('The new list has different number of elements', 
                                  calling = self.calling+'.adjust')
             
             liste_old_diff = self.liste_raies[mask_diff]
@@ -820,7 +821,7 @@ class spectrum(object):
                 
             liste_new_diff = new_liste_raies[mask_diff]
             new_sp_theo, new_sp_synth = self.make_synth(liste_new_diff, new_sp_theo)
-            if pyssn.log_.level >= 3:
+            if log_.level >= 3:
                 print('Old values:')
                 self.print_line(liste_old_diff)
                 print('New values:')
@@ -841,14 +842,14 @@ class spectrum(object):
                 else:
                     self.sp_synth += (new_sp_theo['correc'][i_change] * new_sp_theo['spectr'][i_change] -
                                       old_sp_theo['correc'][i_change] * old_sp_theo['spectr'][i_change]) 
-                pyssn.log_.message('change line {0}'.format(new_sp_theo['raie_ref'][i_change]['num']),
+                log_.message('change line {0}'.format(new_sp_theo['raie_ref'][i_change]['num']),
                                    calling=self.calling + ' adjust')            
             if do_abs:
                 self.sp_abs = self.make_sp_abs(self.sp_theo)
             self.liste_raies = new_liste_raies
             self.sp_synth_tot = self.convol_synth(self.cont, self.sp_synth)
             self.cont_lr, self.sp_synth_lr = self.rebin_on_obs()
-        pyssn.log_.message('{} differences'.format(mask_diff.sum()), calling=self.calling + ' adjust')
+        log_.message('{} differences'.format(mask_diff.sum()), calling=self.calling + ' adjust')
 
         return mask_diff.sum()
         
@@ -857,7 +858,7 @@ class spectrum(object):
 #     def modif_intens(self, raie_num, fact):
 #         
 #         if fact <= 0.:
-#             pyssn.log_.error('fact must be >0. {0}'.format(fact))
+#             log_.error('fact must be >0. {0}'.format(fact))
 #             return None
 #         a_changer = (self.sp_theo['raie_ref']['num'] == raie_num)
 #         if a_changer.sum() == 1:
@@ -927,7 +928,7 @@ class spectrum(object):
               cyan_ref = None, cyan_lab=None, call_init_axes=True):
         
         
-        pyssn.log_.message('entering plots, ID(ax1)'.format(id(self.fig1)), calling=self.calling)
+        log_.message('entering plots, ID(ax1)'.format(id(self.fig1)), calling=self.calling)
         self.hr = hr
         self.split = split
         self.do_ax2 = do_ax2
@@ -953,11 +954,11 @@ class spectrum(object):
         
         if fig is None:
             self.fig1 = plt.figure()
-            pyssn.log_.message('creating new figure ID {}'.format(id(self.fig1)), calling=self.calling)
+            log_.message('creating new figure ID {}'.format(id(self.fig1)), calling=self.calling)
         else:
             self.fig1 = fig
             self.fig1.clf()
-            pyssn.log_.message('using argument figure ID: {} {}'.format(id(self.fig1), id(fig)), calling=self.calling)
+            log_.message('using argument figure ID: {} {}'.format(id(self.fig1), id(fig)), calling=self.calling)
         if split:
             if do_ax2:
                 self.fig2 = plt.figure()
@@ -1020,7 +1021,7 @@ class spectrum(object):
                 self.ax1_line_cyan = ax.step(self.w, self.cont+self.sp_theo['spectr'][i_cyan][0], c='cyan', 
                               label=label_cyan, linestyle='-')[0]
         ax.legend(loc=self.legend_loc)
-        pyssn.log_.debug('ax1 drawn on ax ID {}'.format(id(ax)), calling=self.calling)
+        log_.debug('ax1 drawn on ax ID {}'.format(id(ax)), calling=self.calling)
         
     def plot_ax2(self, ax):        
         
@@ -1035,7 +1036,7 @@ class spectrum(object):
         ax.set_xlim(self.get_conf('x_plot_lims'))
         ax.set_ylim(self.get_conf('y2_plot_lims'))
         """
-        pyssn.log_.debug('ax2 drawn on ax ID {}'.format(id(ax)), calling=self.calling)
+        log_.debug('ax2 drawn on ax ID {}'.format(id(ax)), calling=self.calling)
         
 
     def plot_ax3(self, ax):     
@@ -1052,7 +1053,7 @@ class spectrum(object):
         else:
             ax.set_ylim(self.get_conf('y3_plot_lims'))
         """
-        pyssn.log_.debug('ax3 drawn on ax ID {}'.format(id(ax)), calling=self.calling)
+        log_.debug('ax3 drawn on ax ID {}'.format(id(ax)), calling=self.calling)
         
     def update_plot2(self):
         
@@ -1123,7 +1124,7 @@ class spectrum(object):
         if self.y3_plot_lims is None:
             mask = (self.w_ori > self.x_plot_lims[0]) & (self.w_ori < self.x_plot_lims[1])
             self.y3_plot_lims = (np.min((self.f - self.cont)[mask]), np.max((self.f - self.cont)[mask]))
-        pyssn.log_.message('Axes initialized', calling=self.calling)
+        log_.message('Axes initialized', calling=self.calling)
         self.print_axes()
                          
     def save_axes(self):
@@ -1141,18 +1142,18 @@ class spectrum(object):
             self.y3_plot_lims = self.ax3.get_ylim()
         else:
             self.y3_plot_lims = None
-        pyssn.log_.message('Axes saved', calling=self.calling)
+        log_.message('Axes saved', calling=self.calling)
         self.print_axes()
         
     def restore_axes(self):
         if self.x_plot_lims is not None:
             if self.ax1 is not None:
                 self.ax1.set_xlim(self.x_plot_lims)
-                pyssn.log_.message('X-axes restored to {}'.format(self.ax1.get_xlim()), calling=self.calling)
+                log_.message('X-axes restored to {}'.format(self.ax1.get_xlim()), calling=self.calling)
             else:
-                pyssn.log_.message('ax1 is None', calling=self.calling)
+                log_.message('ax1 is None', calling=self.calling)
         else:
-            pyssn.log_.message('x_plot_lims is None', calling=self.calling)
+            log_.message('x_plot_lims is None', calling=self.calling)
         if self.y1_plot_lims is not None:
             if self.ax1 is not None:
                 self.ax1.set_ylim(self.y1_plot_lims)
@@ -1163,11 +1164,11 @@ class spectrum(object):
             if self.ax3 is not None:
                 self.ax3.set_ylim(self.y3_plot_lims)
         
-        pyssn.log_.message('Axes restored', calling=self.calling)
+        log_.message('Axes restored', calling=self.calling)
         self.print_axes()
         
     def print_axes(self):
-        pyssn.log_.debug('{} {} {} {}'.format(self.x_plot_lims, self.y1_plot_lims, self.y2_plot_lims, self.y3_plot_lims), calling=self.calling)
+        log_.debug('{} {} {} {}'.format(self.x_plot_lims, self.y1_plot_lims, self.y2_plot_lims, self.y3_plot_lims), calling=self.calling)
     
     def rerun(self):
         self.run(do_synth = True, do_read_liste = True, do_profiles=True)
@@ -1301,12 +1302,12 @@ class spectrum(object):
         
     def _cursOn(self, event=None):
         self._cid = self.fig1.canvas.mpl_connect('button_press_event', self._curs_onclick)
-        pyssn.log_.message('Cursor ON', calling=self.calling)
+        log_.message('Cursor ON', calling=self.calling)
 
     def _cursOff(self, event=None):
         if self._cid is not None:
             self.fig1.canvas.mpl_disconnect(self._cid)
-            pyssn.log_.message('Cursor OFF', calling=self.calling)
+            log_.message('Cursor OFF', calling=self.calling)
                     
     def _curs_onclick(self, event):
         
@@ -1375,7 +1376,7 @@ def main_loc(config_file):
     from pyssn.core.spectrum import main_loc
     sp = main_loc('./s6302_n_c_init.py')
     """
-    sp = pyssn.spectrum(config_file=config_file)
+    sp = spectrum(config_file=config_file)
     fig = plt.figure(figsize=(20, 7))
     sp.plot2(fig=fig)
     sp.save_axes()
@@ -1389,8 +1390,8 @@ def main():
     parser = get_parser()
     args = parser.parse_args()
     if args.file is None:
-        pyssn.log_.error('A file name is needed, use option -f')
-    sp = pyssn.spectrum(config_file=args.file)
+        log_.error('A file name is needed, use option -f')
+    sp = spectrum(config_file=args.file)
     fig = plt.figure(figsize=(20, 7))
     sp.plot2(fig=fig)
     plt.show()

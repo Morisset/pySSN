@@ -25,10 +25,11 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg
 from matplotlib.figure import Figure
 import numpy as np
-import pyssn
-from pyssn.utils.misc import get_parser
+from pyssn import log_, __version__
+from ..core.spectrum import spectrum
+from ..utils.misc import get_parser
 
-pyssn.log_.level = 3
+log_.level = 3
 
 #ToDo : 
 
@@ -158,7 +159,7 @@ class AppForm(QtGui.QMainWindow):
         #
         self.dpi = 100
         self.fig = Figure((20.0, 15.0), dpi=self.dpi)
-        pyssn.log_.debug('creating figure {}'.format(id(self.fig)), calling=self.calling)
+        log_.debug('creating figure {}'.format(id(self.fig)), calling=self.calling)
         
         #self.fig = Figure()
         self.canvas = FigureCanvas(self.fig)
@@ -233,7 +234,7 @@ class AppForm(QtGui.QMainWindow):
         self.verbosity_cb.addItem('2: Errs + Warnings')
         self.verbosity_cb.addItem('3: Errs + Warns + Messages')
         self.verbosity_cb.addItem('4: All + Debug messages')
-        self.verbosity_cb.setCurrentIndex(pyssn.log_.level)
+        self.verbosity_cb.setCurrentIndex(log_.level)
         self.connect(self.verbosity_cb, QtCore.SIGNAL('activated(QString)'), self.verbosity)
         
         #
@@ -281,7 +282,7 @@ class AppForm(QtGui.QMainWindow):
         self.setCentralWidget(self.main_frame)
     
     def create_status_bar(self):
-        self.status_text = QtGui.QLabel("pySSN, v{}".format(pyssn.__version__))
+        self.status_text = QtGui.QLabel("pySSN, v{}".format(__version__))
         self.statusBar().addWidget(self.status_text, 1)
         
     def create_menu(self):        
@@ -336,17 +337,17 @@ class AppForm(QtGui.QMainWindow):
     def on_draw(self):
         """ Redraws the figure
         """
-        pyssn.log_.debug('Entering on_drawn', calling=self.calling)
+        log_.debug('Entering on_drawn', calling=self.calling)
         if self.sp is None:
-            pyssn.log_.debug('Np sp in on_drawn', calling=self.calling)
+            log_.debug('Np sp in on_drawn', calling=self.calling)
             return
         
         if self.axes is None:
-            pyssn.log_.debug('Calling make_axes from on_draw (self.axes is None)', calling=self.calling)
+            log_.debug('Calling make_axes from on_draw (self.axes is None)', calling=self.calling)
             self.call_on_draw=False
             self.make_axes()
             self.init_axes()
-            pyssn.log_.debug('back from make_axes from on_draw', calling=self.calling)
+            log_.debug('back from make_axes from on_draw', calling=self.calling)
             self.call_on_draw=True
         
         if self.do_save:
@@ -365,11 +366,11 @@ class AppForm(QtGui.QMainWindow):
         self.restore_axes()
         
         self.canvas.draw()
-        pyssn.log_.debug('Exit on_drawn', calling=self.calling)
+        log_.debug('Exit on_drawn', calling=self.calling)
         
     def make_axes(self):
         
-        pyssn.log_.debug('Entering make_axes', calling=self.calling)
+        log_.debug('Entering make_axes', calling=self.calling)
         if self.call_on_draw: 
             self.save_axes()
         self.fig.clf()
@@ -407,12 +408,12 @@ class AppForm(QtGui.QMainWindow):
             self.sp.ax3 = self.axes3
         self.fig.subplots_adjust(hspace=0.0)
         if self.call_on_draw: 
-            pyssn.log_.debug('Calling on_draw from make_axes', calling=self.calling)
+            log_.debug('Calling on_draw from make_axes', calling=self.calling)
             self.do_save = False
             self.on_draw()
             self.do_save = True
         
-        pyssn.log_.debug('Exit make_axes', calling=self.calling)
+        log_.debug('Exit make_axes', calling=self.calling)
 
     def init_axes(self):
         self.x_plot_lims = self.sp.get_conf('x_plot_lims')
@@ -432,7 +433,7 @@ class AppForm(QtGui.QMainWindow):
         if self.y3_plot_lims is None:
             mask = (self.sp.w_ori > self.x_plot_lims[0]) & (self.sp.w_ori < self.x_plot_lims[1])
             self.y3_plot_lims = (np.min((self.sp.f - self.sp.cont)[mask]), np.max((self.sp.f - self.sp.cont)[mask]))
-        pyssn.log_.debug('Axes initialized. IDs {} {} {}'.format(id(self.axes), id(self.axes2), id(self.axes3)), calling=self.calling)
+        log_.debug('Axes initialized. IDs {} {} {}'.format(id(self.axes), id(self.axes2), id(self.axes3)), calling=self.calling)
         self.print_axes()
 
     def save_axes(self):
@@ -443,18 +444,18 @@ class AppForm(QtGui.QMainWindow):
             self.y2_plot_lims = self.axes2.get_ylim()
         if self.axes3 is not None:
             self.y3_plot_lims = self.axes3.get_ylim()
-        pyssn.log_.debug('Axes saved. IDs {} {} {}'.format(id(self.axes), id(self.axes2), id(self.axes3)), calling=self.calling)
+        log_.debug('Axes saved. IDs {} {} {}'.format(id(self.axes), id(self.axes2), id(self.axes3)), calling=self.calling)
         self.print_axes()
         
     def restore_axes(self):
         if self.x_plot_lims is not None:
             if self.axes is not None:
                 self.axes.set_xlim(self.x_plot_lims)
-                pyssn.log_.debug('X-axes restored to {}'.format(self.axes.get_xlim()), calling=self.calling)
+                log_.debug('X-axes restored to {}'.format(self.axes.get_xlim()), calling=self.calling)
             else:
-                pyssn.log_.debug('axes is None', calling=self.calling)
+                log_.debug('axes is None', calling=self.calling)
         else:
-            pyssn.log_.debug('x_plot_lims is None', calling=self.calling)
+            log_.debug('x_plot_lims is None', calling=self.calling)
         if self.y1_plot_lims is not None:
             if self.axes is not None:
                 self.axes.set_ylim(self.y1_plot_lims)
@@ -465,13 +466,13 @@ class AppForm(QtGui.QMainWindow):
             if self.axes3 is not None:
                 self.axes3.set_ylim(self.y3_plot_lims)
         
-        pyssn.log_.debug('Axes restored. IDs {} {} {}'.format(id(self.axes), id(self.axes2), id(self.axes3)), calling=self.calling)
+        log_.debug('Axes restored. IDs {} {} {}'.format(id(self.axes), id(self.axes2), id(self.axes3)), calling=self.calling)
         self.print_axes()
         
     def print_axes(self):
-        pyssn.log_.debug('{} {} {} {}'.format(self.x_plot_lims, self.y1_plot_lims, self.y2_plot_lims, self.y3_plot_lims), calling=self.calling)
-        pyssn.log_.debug('Axes IDs {} {} {}'.format(id(self.axes), id(self.axes2), id(self.axes3)), calling=self.calling)
-        pyssn.log_.debug(' IDs {} {} {}'.format(id(self.axes), id(self.axes2), id(self.axes3)), calling=self.calling)
+        log_.debug('{} {} {} {}'.format(self.x_plot_lims, self.y1_plot_lims, self.y2_plot_lims, self.y3_plot_lims), calling=self.calling)
+        log_.debug('Axes IDs {} {} {}'.format(id(self.axes), id(self.axes2), id(self.axes3)), calling=self.calling)
+        log_.debug(' IDs {} {} {}'.format(id(self.axes), id(self.axes2), id(self.axes3)), calling=self.calling)
 
     
     def select_init(self, init_file_name=None):
@@ -489,12 +490,12 @@ class AppForm(QtGui.QMainWindow):
             if self.sp is None:
                 raise ValueError('A filename must be given')
             else:
-                pyssn.log_.warn('A filename must be given', calling=self.calling)
+                log_.warn('A filename must be given', calling=self.calling)
                 return
         
     def start_spectrum(self):
-        self.sp = pyssn.spectrum(config_file=unicode(self.init_file_name))
-        self.status_text.setText('pySSN, v {}. init file: {}, at. data: {}, model: {}, cosmetic: {}'.format(pyssn.__version__, 
+        self.sp = spectrum(config_file=unicode(self.init_file_name))
+        self.status_text.setText('pySSN, v {}. init file: {}, at. data: {}, model: {}, cosmetic: {}'.format(__version__, 
                                                                                                       self.sp.config_file.split('/')[-1], 
                                                                                                       self.sp.phyat_file.split('/')[-1],
                                                                                                       self.sp.get_conf('fic_modele').split('/')[-1],
@@ -514,7 +515,7 @@ class AppForm(QtGui.QMainWindow):
             return
         old_sp_norm = self.sp.get_conf('sp_norm')
         new_sp_norm = np.float(self.sp_norm_box.text())
-        pyssn.log_.message('Changing sp_norm. Old: {}, New: {}'.format(old_sp_norm, new_sp_norm), calling=self.calling)
+        log_.message('Changing sp_norm. Old: {}, New: {}'.format(old_sp_norm, new_sp_norm), calling=self.calling)
         if np.abs(new_sp_norm - old_sp_norm)/old_sp_norm > 1e-6:
             self.sp.renorm(new_sp_norm)
             self.on_draw()
@@ -525,7 +526,7 @@ class AppForm(QtGui.QMainWindow):
             return
         old_obj_velo = self.sp.get_conf('obj_velo')
         new_obj_velo = np.float(self.obj_velo_box.text())
-        pyssn.log_.message('Changing obj_velo. Old: {}, New: {}'.format(old_obj_velo, new_obj_velo), calling=self.calling)
+        log_.message('Changing obj_velo. Old: {}, New: {}'.format(old_obj_velo, new_obj_velo), calling=self.calling)
         if np.abs((new_obj_velo - old_obj_velo)/old_obj_velo) > 1e-6:
             self.sp.init_obs(obj_velo=new_obj_velo)
             #self.sp.make_continuum()
@@ -537,7 +538,7 @@ class AppForm(QtGui.QMainWindow):
             return
         old_ebv = self.sp.get_conf('e_bv')
         new_ebv = np.float(self.ebv_box.text())
-        pyssn.log_.message('Changing E B-V. Old: {}, New: {}'.format(old_ebv, new_ebv), calling=self.calling)
+        log_.message('Changing E B-V. Old: {}, New: {}'.format(old_ebv, new_ebv), calling=self.calling)
         if np.abs(new_ebv - old_ebv)/old_ebv > 1e-6:
             self.sp.set_conf('e_bv', new_ebv)
             self.sp.init_red_corr()
@@ -557,7 +558,7 @@ class AppForm(QtGui.QMainWindow):
             return
         old_resol = self.sp.get_conf('resol')
         new_resol = np.int(self.resol_box.text())
-        pyssn.log_.message('Changing resol. Old: {}, New: {}'.format(old_resol, new_resol), calling=self.calling)
+        log_.message('Changing resol. Old: {}, New: {}'.format(old_resol, new_resol), calling=self.calling)
         if np.abs(new_resol - old_resol) > 0.5:
             self.sp.set_conf('resol', new_resol)
             self.sp.init_obs()
@@ -604,8 +605,8 @@ class AppForm(QtGui.QMainWindow):
     
     def verbosity(self):
         verbosity = self.verbosity_cb.currentIndex()
-        pyssn.log_.debug('Change verbosity from {} to {}'.format(pyssn.log_.level, verbosity), calling=self.calling)
-        pyssn.log_.level = verbosity
+        log_.debug('Change verbosity from {} to {}'.format(log_.level, verbosity), calling=self.calling)
+        log_.level = verbosity
 
 def main_loc(init_filename=None):
     app = QtGui.QApplication(sys.argv)

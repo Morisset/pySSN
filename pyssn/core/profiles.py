@@ -5,8 +5,8 @@ Created on 28 janv. 2014
 '''
 
 import numpy as np
-from pyssn.utils.physics import CST
-from pyssn.utils.misc import convolgauss
+from ..utils.physics import CST
+from ..utils.misc import convolgauss
 
 
 def profil_emis(w, raie, lambda_shift=0.):
