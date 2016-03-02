@@ -60,7 +60,7 @@ class _Config(object):
         self.DataPaths = []
         self.addDataFilePath('../data/', inpySSN=True)
         self.addDataFilePath('./', inpySSN=False)
-        self.addDataFilePath('/', inpySSN=False)
+        #self.addDataFilePath('/', inpySSN=False)
         self.unuse_multiprocs()
                     
     def use_multiprocs(self):
@@ -83,8 +83,9 @@ class _Config(object):
         else:
             try:
                 if inpySSN:
-                    self.DataPaths.append(execution_path(dir_))
+                    self.DataPaths.insert(0, execution_path(dir_))
                 else:
-                    self.DataPaths.append(os.path.abspath(dir_))
+                    self.DataPaths.insert(0, os.path.abspath(dir_))
             except:
                 self.log_.warn('{0} could not be added to the path list', calling='addDataFilePath')
+                

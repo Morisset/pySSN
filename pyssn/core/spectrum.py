@@ -1,3 +1,10 @@
+"""
+pySSN is available under the GNU licence providing you cite the developpers names:
+
+    Ch. Morisset (Instituto de Astronomia, Universidad Nacional Autonoma de Mexico)
+
+    D. Pequignot (Meudon Observatory, France)
+"""
 import os
 import numpy as np
 import matplotlib.pyplot as plt
@@ -54,9 +61,20 @@ class spectrum(object):
         """
         
         self.profil_instr = profil_instr
-        self.config_file = config_file
         self.do_cosmetik = do_cosmetik        
         self.calling = 'spectrum'
+        self.full_config_file = config_file
+        if '/' in self.full_config_file:
+            file_name = self.full_config_file.split('/')[-1]
+            dir = self.full_config_file.split(file_name)[0]
+            if dir == '':
+                dir = './'
+            self.directory = dir
+            self.config_file = file_name
+        else:
+            self.directory = './'
+            self.config_file = self.full_config_file
+        config.addDataFilePath(self.directory, inpySSN=False)
         
         self.init_vars()
         
@@ -151,7 +169,13 @@ class spectrum(object):
                 
     def do_profile_dict(self, return_res=False):
         
-        self.fic_profs = self.get_conf('fic_profile', execution_path('./')+'../data/default_profiles.dat')
+        self.fic_profs = self.get_conf('fic_profile', None)
+        
+        if self.fic_profs is None:
+            self.fic_profs = execution_path('./')+'../data/default_profiles.dat'
+        else:
+            self.fic_profs = self.directory + self.fic_profs
+        
         if not os.path.isfile(self.fic_profs):
             log_.error('File not found {}'.format(self.fic_profs), calling=self.calling)
         emis_profiles = {}
@@ -182,6 +206,8 @@ class spectrum(object):
                             params = l.split()
                             params[1::] = [np.float(p.strip()) for p in params[1::]]
                             prof_params.append(params)
+        log_.message('profile read from {0}'.format(self.fic_profs), 
+                                   calling = self.calling)
         emis_profiles[key] = {'T4': T4, 
                               'vel': vel,
                               'params' : prof_params}
@@ -255,13 +281,12 @@ class spectrum(object):
         execfile(execution_path('./')+'init_defaults.py', self.conf)
         if self.config_file is not None:
             try:
-                execfile(self.config_file, self.conf)
+                execfile(self.directory + self.config_file, self.conf)
                 log_.message('configuration read from {0}'.format(self.config_file), 
                                    calling = self.calling)
             except:
                 log_.warn('configuration NOT read from {0}'.format(self.config_file),
                                 calling = self.calling)
-        
             
     def get_conf(self, key=None, undefined=None, message=None):
         """
@@ -303,10 +328,12 @@ class spectrum(object):
         for dir_ in config.DataPaths:
             try:
                 phyat_arr = read_data('{0}/{1}'.format(dir_, self.phyat_file))
-                log_.message('data read from {0}/{1}'.format(dir_, self.phyat_file),
+                log_.message('phyat data read from {0}/{1}'.format(dir_, self.phyat_file),
                                 calling = self.calling)
+                break
             except:
-                pass
+                log_.debug('No phyat file found as {0}/{1}'.format(dir_, self.phyat_file),
+                                calling = self.calling)
         if len(phyat_arr) == 0:
             log_.error('No phyat file read', calling = self.calling)
             return None
@@ -320,15 +347,15 @@ class spectrum(object):
             model_arr = self.phyat_arr.copy()[mask]
             model_arr['num'] -= 90000000000000
             model_arr['vitesse'] = 10
-            log_.message('data initialized from phyat'.format(model_file),
+            log_.message('data initialized from phyat',
                                 calling = self.calling) 
         else:
             try:
-                model_arr = read_data('{0}'.format(model_file))
-                log_.message('data read from {0}'.format(model_file),
+                model_arr = read_data('{0}'.format(self.directory + model_file))
+                log_.message('data read from {0}'.format(self.directory + model_file),
                                     calling = self.calling)
             except:
-                log_.warn('unable to read from {0}'.format(model_file),
+                log_.warn('unable to read from {0}'.format(self.directory + model_file),
                                     calling = self.calling)
         model_arr['ref'] = 0
         return model_arr
@@ -337,11 +364,11 @@ class spectrum(object):
         
         cosmetik_arr = []
         try:
-            cosmetik_arr = read_data('{0}'.format(cosmetik_file))
-            log_.message('cosmetik read from {0}'.format(cosmetik_file),
+            cosmetik_arr = read_data('{0}'.format(self.directory + cosmetik_file))
+            log_.message('cosmetik read from {0}'.format(self.directory + cosmetik_file),
                                 calling = self.calling)
         except:
-            log_.warn('unable to read from {0}'.format(cosmetik_file),
+            log_.warn('unable to read from {0}'.format(self.directory + cosmetik_file),
                                 calling = self.calling)
         return cosmetik_arr
 
@@ -352,24 +379,24 @@ class spectrum(object):
             self.w = np.linspace(self.limit_sp[0], self.limit_sp[1], n_pix)
             self.f = np.ones_like(self.w)
         else:
-            obs_file = self.conf['spectr_obs']+'.spr.gz'
+            obs_file = self.directory + self.conf['spectr_obs']+'.spr.gz'
             if not os.path.isfile(obs_file):
-                obs_file = self.conf['spectr_obs']+'.spr'
+                obs_file = self.directory + self.conf['spectr_obs']+'.spr'
             try:                
                 self.obs = np.loadtxt(obs_file)
                 log_.message('Observations read from {0}'.format(obs_file),
                                     calling = self.calling)
-                if bool(self.get_conf('data_incl_w', undefined = False)):
-                    self.w = self.obs[:,0]
-                    self.f = self.obs[:,1]
-                else:
-                    self.f = self.obs 
             except:
                 self.f = None
                 log_.warn('Observations NOT read from {0}'.format(obs_file),
                                     calling = self.calling)
                 self.n_lambda = 0.
                 return None
+        if bool(self.get_conf('data_incl_w', undefined = False)):
+            self.w = self.obs[:,0]
+            self.f = self.obs[:,1]
+        else:
+            self.f = self.obs 
         
         if bool(self.get_conf('reverse_spectra', undefined=False)):
                 self.f = self.f[::-1]
@@ -1385,12 +1412,13 @@ def main_loc(config_file):
 
 def main():
     """
-    Not working, exiting at the end...
+    
     """
     parser = get_parser()
     args = parser.parse_args()
     if args.file is None:
         log_.error('A file name is needed, use option -f')
+    log_.level = args.verbosity
     sp = spectrum(config_file=args.file)
     fig = plt.figure(figsize=(20, 7))
     sp.plot2(fig=fig)

@@ -1,19 +1,14 @@
 """
-This demo demonstrates how to embed a matplotlib (mpl) plot 
-into a PyQt4 GUI application, including:
+This is the window manager part of pySSN
 
-* Using the navigation toolbar
-* Adding data to the plot
-* Dynamically modifying the plot's properties
-* Processing mpl events
-* Saving the plot to a file from a menu
+pySSN is available under the GNU licence providing you cite the developpers names:
 
-The main goal is to serve as a basis for developing rich PyQt GUI
-applications featuring mpl plots (using the mpl OO API).
+    Ch. Morisset (Instituto de Astronomia, Universidad Nacional Autonoma de Mexico)
 
+    D. Pequignot (Meudon Observatory, France)
+
+Inspired by a demo code by: 
 Eli Bendersky (eliben@gmail.com)
-License: this code is in the public domain
-Last modified: 19.01.2009
 """
 import sys, os
 import argparse
@@ -21,25 +16,23 @@ import argparse
 from PyQt4 import QtCore, QtGui
 
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
-#from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
-from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg
+#from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
+from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT
 from matplotlib.figure import Figure
 import numpy as np
 from pyssn import log_, __version__
 from ..core.spectrum import spectrum
 from ..utils.misc import get_parser
 
-log_.level = 3
-
 #ToDo : 
 
-class NavigationToolbar( NavigationToolbar2QTAgg ):
+class NavigationToolbar( NavigationToolbar2QT ):
 
     curs = QtCore.pyqtSignal(bool)
 
     def __init__(self, canvas, parent ):
         
-        NavigationToolbar2QTAgg.__init__(self,canvas,parent)
+        NavigationToolbar2QT.__init__(self,canvas,parent)
         self.clearButtons=[]
         # Search through existing buttons
         # next use for placement of custom button
@@ -134,14 +127,7 @@ class AppForm(QtGui.QMainWindow):
             self.statusBar().showMessage('Saved to %s' % path, 2000)
     
     def on_about(self):
-        msg = """ A demo of using PyQt with matplotlib:
-        
-         * Use the matplotlib navigation bar
-         * Add values to the text box and press Enter (or click "Draw")
-         * Show or hide the grid
-         * Drag the slider to modify the width of the bars
-         * Save the plot to a file using the File menu
-         * Click on a bar to receive an informative message
+        msg = """ pySSN (Spectral Synthesis for Nebulae):        
         """
         QtGui.QMessageBox.about(self, "About the demo", msg.strip())
     
@@ -363,6 +349,13 @@ class AppForm(QtGui.QMainWindow):
             self.axes3.cla()
             self.sp.plot_ax3(self.axes3)
         
+        if self.pl_ax3_cb.isChecked():
+            self.axes3.set_xlabel(r'Wavelength ($\AA$)')
+        elif self.pl_ax2_cb.isChecked():
+            self.axes2.set_xlabel(r'Wavelength ($\AA$)')
+        else:
+            self.axes.set_xlabel(r'Wavelength ($\AA$)')
+        
         self.restore_axes()
         
         self.canvas.draw()
@@ -403,10 +396,11 @@ class AppForm(QtGui.QMainWindow):
             self.sp.ax3 = self.axes3
             if self.pl_ax2_cb.isChecked():
                 self.axes2.get_xaxis().set_visible(False)
+            self.axes.get_xaxis().set_visible(False)
         else:
             self.axes3 = None
             self.sp.ax3 = self.axes3
-        self.fig.subplots_adjust(hspace=0.0)
+        self.fig.subplots_adjust(hspace=0.0, bottom=0.11, right=0.97, top=0.97, left=0.1)
         if self.call_on_draw: 
             log_.debug('Calling on_draw from make_axes', calling=self.calling)
             self.do_save = False
@@ -477,7 +471,7 @@ class AppForm(QtGui.QMainWindow):
     
     def select_init(self, init_file_name=None):
         if init_file_name is None:
-            self.init_file_name = QtGui.QFileDialog.getOpenFileName(self, 'Open file', '', '*init.py')
+            self.init_file_name = str(QtGui.QFileDialog.getOpenFileName(self, 'Open file', '', '*init.py'))
         else:
             self.init_file_name = init_file_name
         if self.init_file_name:
@@ -494,7 +488,12 @@ class AppForm(QtGui.QMainWindow):
                 return
         
     def start_spectrum(self):
-        self.sp = spectrum(config_file=unicode(self.init_file_name))
+        init_file = self.init_file_name.split('/')[-1]
+        dir = self.init_file_name.split(init_file)[0]
+        if dir == '':
+            dir = './'
+        self.directory = dir
+        self.sp = spectrum(config_file=self.init_file_name)
         self.status_text.setText('pySSN, v {}. init file: {}, at. data: {}, model: {}, cosmetic: {}'.format(__version__, 
                                                                                                       self.sp.config_file.split('/')[-1], 
                                                                                                       self.sp.phyat_file.split('/')[-1],
@@ -617,7 +616,8 @@ def main_loc(init_filename=None):
         
 def main():
     parser = get_parser()
-    args = parser.parse_args()    
+    args = parser.parse_args()
+    log_.level = args.verbosity    
     app = QtGui.QApplication(sys.argv)
     form = AppForm(init_filename=args.file)
     form.show()

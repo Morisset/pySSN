@@ -14,17 +14,7 @@ setup(name='pySSN',
       py_modules=[],
       packages=['pyssn','pyssn.core','pyssn.utils','pyssn.qt'],
       package_data={'pyssn':['data/*']},
-      entry_points={'console_scripts': ['pySSN = pyssn.qt.pyssn_qt:main']},
+      entry_points={'console_scripts': ['pySSN = pySSN_exec:main']},
      )
 
 
-"""
-What to put in pySSN executable:
-#!/usr/bin/env python
-if __name__ == '__main__':
-    import sys
-    from pyssn.qt.pyssn_qt import main
-
-    sys.exit(main())
-
-"""
