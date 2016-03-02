@@ -288,6 +288,10 @@ class spectrum(object):
             except:
                 log_.warn('configuration NOT read from {0}'.format(self.config_file),
                                 calling = self.calling)
+        self.plot_magenta = self.get_conf('plot_magenta', None)
+        self.label_magenta = self.get_conf('label_magenta', None)      
+        self.plot_cyan = self.get_conf('plot_cyan', None)
+        self.label_cyan = self.get_conf('label_cyan', None)      
             
     def get_conf(self, key=None, undefined=None, message=None):
         """
@@ -336,7 +340,7 @@ class spectrum(object):
                 log_.debug('No phyat file found as {0}/{1}'.format(dir_, self.phyat_file),
                                 calling = self.calling)
         if len(phyat_arr) == 0:
-            log_.error('No phyat file read', calling = self.calling)
+            log_.error('No phyat file read from {0}/{1}'.format(dir_, self.phyat_file), calling = self.calling)
             return None
         return phyat_arr, len(phyat_arr)
         

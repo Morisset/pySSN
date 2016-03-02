@@ -178,7 +178,7 @@ class AppForm(QtGui.QMainWindow):
         self.adjust_button.setChecked(False)
         self.connect(self.adjust_button, QtCore.SIGNAL('clicked()'), self.adjust)
 
-        self.post_proc_button = QtGui.QPushButton("Apply function")
+        self.post_proc_button = QtGui.QPushButton("Post proc")
         self.post_proc_button.setChecked(False)
         self.connect(self.post_proc_button, QtCore.SIGNAL('clicked()'), self.apply_post_proc)
 
@@ -485,6 +485,8 @@ class AppForm(QtGui.QMainWindow):
             self.do_save = False
             self.on_draw()
             self.do_save = True
+            self.pl_ax2_cb.setChecked(self.sp.get_conf('plot_ax2', True))
+            self.pl_ax3_cb.setChecked(self.sp.get_conf('plot_ax3', True))
             self.restore_axes()
         else:
             if self.sp is None:
@@ -521,9 +523,9 @@ class AppForm(QtGui.QMainWindow):
         old_sp_norm = self.sp.get_conf('sp_norm')
         new_sp_norm = np.float(self.sp_norm_box.text())
         log_.message('Changing sp_norm. Old: {}, New: {}'.format(old_sp_norm, new_sp_norm), calling=self.calling)
-        if np.abs(new_sp_norm - old_sp_norm)/old_sp_norm > 1e-6:
-            self.sp.renorm(new_sp_norm)
-            self.on_draw()
+        
+        self.sp.renorm(new_sp_norm)
+        self.on_draw()
 
     def obj_velo(self):
         
@@ -532,11 +534,12 @@ class AppForm(QtGui.QMainWindow):
         old_obj_velo = self.sp.get_conf('obj_velo')
         new_obj_velo = np.float(self.obj_velo_box.text())
         log_.message('Changing obj_velo. Old: {}, New: {}'.format(old_obj_velo, new_obj_velo), calling=self.calling)
-        if np.abs((new_obj_velo - old_obj_velo)/old_obj_velo) > 1e-6:
-            self.sp.init_obs(obj_velo=new_obj_velo)
-            #self.sp.make_continuum()
-            #self.sp.run(do_synth = True, do_read_liste = True, do_profiles=False)
-            self.on_draw()
+        
+        self.sp.init_obs(obj_velo=new_obj_velo)
+        self.sp.init_red_corr()
+        self.sp.make_continuum()
+        self.sp.run(do_synth = True, do_read_liste = True, do_profiles=False)
+        self.on_draw()
 
     def ebv(self):
         if self.sp is None:
@@ -544,12 +547,12 @@ class AppForm(QtGui.QMainWindow):
         old_ebv = self.sp.get_conf('e_bv')
         new_ebv = np.float(self.ebv_box.text())
         log_.message('Changing E B-V. Old: {}, New: {}'.format(old_ebv, new_ebv), calling=self.calling)
-        if np.abs(new_ebv - old_ebv)/old_ebv > 1e-6:
-            self.sp.set_conf('e_bv', new_ebv)
-            self.sp.init_red_corr()
-            self.sp.make_continuum()
-            self.sp.run(do_synth = True, do_read_liste = False, do_profiles=False)
-            self.on_draw()
+        
+        self.sp.set_conf('e_bv', new_ebv)
+        self.sp.init_red_corr()
+        self.sp.make_continuum()
+        self.sp.run(do_synth = True, do_read_liste = False, do_profiles=False)
+        self.on_draw()
             
     def adjust(self):
         if self.sp is None:

@@ -179,6 +179,10 @@ label_magenta = ''
 plot_cyan = None
 label_cyan = ''
 
+# Plot the second and third panels
+plot_ax2 = True
+plot_ax3 = True
+
 # Scale factor for the plot of the theoretical (individual) spectra:
 fact_multi_synth =  1.
 
