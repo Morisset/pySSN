@@ -92,7 +92,7 @@ class NavigationToolbar( NavigationToolbar2QT ):
 
 class AppForm(QtGui.QMainWindow):
     
-    def __init__(self, parent=None, init_filename=None):
+    def __init__(self, parent=None, init_filename=None, post_proc_file=None):
         self.calling = 'pySSN GUI'
         QtGui.QMainWindow.__init__(self, parent)
         self.setWindowTitle('pySSN')
@@ -110,11 +110,11 @@ class AppForm(QtGui.QMainWindow):
         self.y2_plot_lims = None
         self.y3_plot_lims = None
         self.do_save = True
-        
         self.create_menu()
         self.create_main_frame()
         self.create_status_bar()
         self.select_init(init_filename)
+        self.post_proc_file = post_proc_file
         
     def save_plot(self):
         file_choices = "PDF (*.pdf)|*.pdf"
@@ -147,19 +147,19 @@ class AppForm(QtGui.QMainWindow):
         self.fig = Figure((20.0, 15.0), dpi=self.dpi)
         log_.debug('creating figure {}'.format(id(self.fig)), calling=self.calling)
         
-        #self.fig = Figure()
+        
         self.canvas = FigureCanvas(self.fig)
         self.canvas.setParent(self.main_frame)
-
+    
         self.canvas.mpl_connect('button_press_event', self.on_click)
-                
+        
         # Create the navigation toolbar, tied to the canvas
         #
         self.mpl_toolbar = NavigationToolbar(self.canvas, self.main_frame)
         self.mpl_toolbar.curs.connect(self.set_cursor)   
         # Other GUI controls
         # 
-
+        
         self.select_init_button = QtGui.QPushButton("&Select init file")
         self.connect(self.select_init_button, QtCore.SIGNAL('clicked()'), self.select_init)
         
@@ -177,6 +177,10 @@ class AppForm(QtGui.QMainWindow):
         self.adjust_button = QtGui.QPushButton("Update lines")
         self.adjust_button.setChecked(False)
         self.connect(self.adjust_button, QtCore.SIGNAL('clicked()'), self.adjust)
+
+        self.post_proc_button = QtGui.QPushButton("Apply function")
+        self.post_proc_button.setChecked(False)
+        self.connect(self.post_proc_button, QtCore.SIGNAL('clicked()'), self.apply_post_proc)
 
         self.update_profile_button = QtGui.QPushButton("Update profiles")
         self.update_profile_button.setChecked(False)
@@ -232,7 +236,8 @@ class AppForm(QtGui.QMainWindow):
         hbox4 = QtGui.QHBoxLayout()
         hbox5 = QtGui.QHBoxLayout()
          
-        for w in [self.select_init_button, self.draw_button, self.pl_ax2_cb, self.pl_ax3_cb, self.adjust_button]:
+        for w in [self.select_init_button, self.draw_button, self.pl_ax2_cb, self.pl_ax3_cb, 
+                  self.adjust_button, self.post_proc_button]:
             hbox.addWidget(w)
             hbox.setAlignment(w, QtCore.Qt.AlignVCenter)
 
@@ -553,6 +558,26 @@ class AppForm(QtGui.QMainWindow):
         if N_diff > 0:
             self.on_draw()
 
+    def apply_post_proc(self):
+        if self.post_proc_file is None:
+            file_ = str(QtGui.QFileDialog.getOpenFileName(self, 'Open file', '', '*.py'))
+            self.post_proc_file = file_.split('/')[-1]
+        try:
+            user_module = {}
+            execfile(os.path.abspath(self.directory)+'/'+self.post_proc_file, user_module)
+            self.post_proc = user_module['post_proc']
+            log_.message('function post_proc read from {}'.format(self.post_proc_file))
+        except:
+            self.post_proc = None
+            log_.warn('function post_proc NOT read from {}'.format(self.post_proc_file), 
+                          calling = self.calling)
+        if self.post_proc is not None:
+            try:
+                self.post_proc(self.fig)
+            except:
+                log_.warn('Error in {}'.format(self.post_proc_file), 
+                          calling = self.calling)
+                
     def resol(self):
         if self.sp is None:
             return
@@ -608,19 +633,19 @@ class AppForm(QtGui.QMainWindow):
         log_.debug('Change verbosity from {} to {}'.format(log_.level, verbosity), calling=self.calling)
         log_.level = verbosity
 
-def main_loc(init_filename=None):
+def main_loc(init_filename=None, post_proc_file=None):
     app = QtGui.QApplication(sys.argv)
-    form = AppForm(init_filename=init_filename)
+    form = AppForm(init_filename=init_filename, post_proc_file=post_proc_file)
     form.show()
     app.exec_()
-    return form.sp
+    return form.fig
         
 def main():
     parser = get_parser()
     args = parser.parse_args()
     log_.level = args.verbosity    
     app = QtGui.QApplication(sys.argv)
-    form = AppForm(init_filename=args.file)
+    form = AppForm(init_filename=args.file, post_proc_file=args.post_proc)
     form.show()
     app.exec_()
     

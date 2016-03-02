@@ -185,6 +185,7 @@ def get_parser():
     parser.add_argument("-f", "--file", help="init file")
     parser.add_argument("-n", "--noQt4", help="without Qt4", action="store_true")
     parser.add_argument("-v", "--verbosity", help="verbosity level (between 0 and 4, default is 2)", default=2, type=int)
+    parser.add_argument("-p", "--post_proc", help="python script containing post_proc function")
     parser.add_argument("-V", "--version", action="version", version=pyssn.__version__,
                         help="Display version information and exit")
     

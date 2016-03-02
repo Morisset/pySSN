@@ -52,7 +52,7 @@ class spectrum(object):
     
     def __init__(self, config_file=None, phyat_file=None, profil_instr=profil_instr, 
                  do_synth = True, do_read_liste = True, do_cosmetik = True, do_run = True, limit_sp = None,
-                 spectr_obs=None, sp_norm=None, obj_velo=None):
+                 spectr_obs=None, sp_norm=None, obj_velo=None, post_proc_file=None):
         """
         Main pySSN object.
         It reads the configuration file given by the config_file parameter. 
@@ -75,6 +75,7 @@ class spectrum(object):
             self.directory = './'
             self.config_file = self.full_config_file
         config.addDataFilePath(self.directory, inpySSN=False)
+        self.post_proc_file = post_proc_file
         
         self.init_vars()
         
@@ -89,7 +90,7 @@ class spectrum(object):
             self.phyat_file = self.get_conf('phyat_file', 'liste_phyat.dat')
         if do_run:
             self.run(do_synth = do_synth, do_read_liste = do_read_liste)
-
+        
     def init_vars(self):
         self.fig1 = None
         self.fig2 = None
@@ -1183,6 +1184,21 @@ class spectrum(object):
     def print_axes(self):
         log_.debug('{} {} {} {}'.format(self.x_plot_lims, self.y1_plot_lims, self.y2_plot_lims, self.y3_plot_lims), calling=self.calling)
     
+    def apply_post_proc(self):
+        
+        if self.post_proc_file is not None and self.post_proc_file is not "":
+            try:
+                user_module = {}
+                execfile(os.path.abspath(self.directory)+'/'+self.post_proc_file, user_module)
+                self.post_proc = user_module['post_proc']
+                log_.message('function post_proc read from {}'.format(self.post_proc_file), calling=self.calling)
+            except:
+                self.post_proc = None
+                log_.warn('function post_proc NOT read from {}'.format(self.post_proc_file), calling=self.calling)
+            
+            if self.post_proc is not None:
+                self.post_proc(self.fig1)
+        
     def rerun(self):
         self.run(do_synth = True, do_read_liste = True, do_profiles=True)
 
@@ -1405,8 +1421,9 @@ def main():
     if args.file is None:
         log_.error('A file name is needed, use option -f')
     log_.level = args.verbosity
-    sp = spectrum(config_file=args.file)
+    sp = spectrum(config_file=args.file, post_proc_file=args.post_proc)
     fig = plt.figure(figsize=(20, 7))
     sp.plot2(fig=fig)
+    sp.apply_post_proc()
     plt.show()
 
