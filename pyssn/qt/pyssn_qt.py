@@ -438,6 +438,7 @@ class AppForm(QtGui.QMainWindow):
             self.y2_plot_lims = self.axes2.get_ylim()
         if self.axes3 is not None:
             self.y3_plot_lims = self.axes3.get_ylim()
+        self.sp.save_axes()
         log_.debug('Axes saved. IDs {} {} {}'.format(id(self.axes), id(self.axes2), id(self.axes3)), calling=self.calling)
         self.print_axes()
         

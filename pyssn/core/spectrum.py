@@ -1055,31 +1055,17 @@ class spectrum(object):
         for line in self.liste_raies:
             wl = line['lambda'] + line['l_shift'] + self.conf['lambda_shift']
             i_rel = line['i_rel']
-            if (abs(i_rel) > self.cut_plot2) & (wl > ax.get_xlim()[0]) & (wl < ax.get_xlim()[1]):
+            if (abs(i_rel) > self.cut_plot2): 
                 ax.plot([wl, wl], [0, 1], color='blue')
                 ax.text(wl, -0.2, '{0} {1:7.4f}'.format(line['id'], i_rel), 
-                              rotation='vertical', fontsize=self.ax2_fontsize)
-        """
-        ax.set_xlim(self.get_conf('x_plot_lims'))
-        ax.set_ylim(self.get_conf('y2_plot_lims'))
-        """
+                              rotation='vertical', fontsize=self.ax2_fontsize).set_clip_on(True)
         log_.debug('ax2 drawn on ax ID {}'.format(id(ax)), calling=self.calling)
         
-
     def plot_ax3(self, ax):     
 
         ax.step(self.w, self.f - self.cont, c = 'red', linestyle='--')
         ax.plot((0, 1e10), (0.0, 0.0), c='green')
         ax_line_diff = ax.step(self.w_ori, self.f_ori - self.sp_synth_lr, c='blue')[0]
-
-        """    
-        ax.set_xlim(self.get_conf('x_plot_lims'))
-        if self.get_conf('y3_plot_lims') is None:
-            mask = (self.w > ax.get_xlim()[0]) & (self.w < ax.get_xlim()[1]) 
-            ax.set_ylim((np.min((self.f - self.cont)[mask]), np.max((self.f - self.cont)[mask])))            
-        else:
-            ax.set_ylim(self.get_conf('y3_plot_lims'))
-        """
         log_.debug('ax3 drawn on ax ID {}'.format(id(ax)), calling=self.calling)
         
     def update_plot2(self):
