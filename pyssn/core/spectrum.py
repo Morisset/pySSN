@@ -917,7 +917,7 @@ class spectrum(object):
                 self.print_line(line[isort])
             return
         print('{0[num]:>14d} {0[id]:9s}{0[lambda]:11.3f}{0[l_shift]:6.3f}{0[i_rel]:10.3e}{0[i_cor]:7.3f}'\
-              ' {0[ref]:>14d}{0[profile]:5d}{0[vitesse]:7.2f}{0[comment]:25s}'.format(line))
+              ' {0[ref]:>14d}{0[profile]:5d}{0[vitesse]:7.2f}{1:1s}'.format(line, line['comment'].strip()))
        
     def line_info(self, line_num, sat_info=True, print_header=True, sort='lambda', reverse=False):
         
