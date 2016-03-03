@@ -945,13 +945,10 @@ class spectrum(object):
             if Nsat > 0:
                 print('{0} satellites'.format(Nsat))
                 self.print_line(self.liste_raies[satellites_tab], sort=sort, reverse=reverse)
-                """
-                for raie in self.liste_raies[satellites_tab]:
-                    self.print_line(raie, sort=sort, reverse=reverse)
-                """
             if self.sp_theo['correc'][to_print][0] != 1.0:
                 print('Intensity corrected by {0}'.format(self.sp_theo['correc'][to_print][0]))
-            
+        print('----------------------------')
+        
     def plot1(self):
         f, ax = plt.subplots()
         ax.step(self.w_ori, self.f_ori, label='Obs')
@@ -1165,7 +1162,7 @@ class spectrum(object):
             self.y3_plot_lims = self.ax3.get_ylim()
         else:
             self.y3_plot_lims = None
-        log_.message('Axes saved', calling=self.calling)
+        #log_.message('Axes saved', calling=self.calling)
         self.print_axes()
         
     def restore_axes(self):

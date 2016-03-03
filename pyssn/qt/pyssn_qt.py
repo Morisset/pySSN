@@ -152,7 +152,7 @@ class AppForm(QtGui.QMainWindow):
         self.canvas.setParent(self.main_frame)
     
         self.canvas.mpl_connect('button_press_event', self.on_click)
-        
+        self.canvas.mpl_connect('figure_leave_event', self.leave_fig)
         # Create the navigation toolbar, tied to the canvas
         #
         self.mpl_toolbar = NavigationToolbar(self.canvas, self.main_frame)
@@ -705,6 +705,9 @@ class AppForm(QtGui.QMainWindow):
         self.sp.run(do_synth = True, do_read_liste = True, do_profiles=False)
         self.on_draw()
         
+    def leave_fig(self, event):
+        self.save_axes()
+        self.update_lim_boxes()
         
 def main_loc(init_filename=None, post_proc_file=None):
     app = QtGui.QApplication(sys.argv)
