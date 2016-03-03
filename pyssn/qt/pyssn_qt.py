@@ -210,6 +210,16 @@ class AppForm(QtGui.QMainWindow):
         self.update_profile_button.setChecked(False)
         self.connect(self.update_profile_button, QtCore.SIGNAL('clicked()'), self.update_profile)
 
+
+        self.sp_min_box = QtGui.QLineEdit()
+        self.sp_min_box.setMinimumWidth(50)
+        self.connect(self.sp_min_box, QtCore.SIGNAL('returnPressed()'), self.change_sp)
+        
+        self.sp_max_box = QtGui.QLineEdit()
+        self.sp_max_box.setMinimumWidth(50)
+        self.connect(self.sp_max_box, QtCore.SIGNAL('returnPressed()'), self.change_sp)
+        
+        
         self.sp_norm_box = QtGui.QLineEdit()
         self.sp_norm_box.setMinimumWidth(50)
         self.connect(self.sp_norm_box, QtCore.SIGNAL('returnPressed()'), self.sp_norm)
@@ -254,6 +264,7 @@ class AppForm(QtGui.QMainWindow):
         #
         # Layout with box sizers
         # 
+        hbox0t = QtGui.QHBoxLayout()
         hbox0 = QtGui.QHBoxLayout()
         hbox1 = QtGui.QHBoxLayout()
         hbox2 = QtGui.QHBoxLayout()
@@ -261,6 +272,11 @@ class AppForm(QtGui.QMainWindow):
         hbox4 = QtGui.QHBoxLayout()
         hbox5 = QtGui.QHBoxLayout()
          
+        for l in ['xmin', 'xmax', 'y1min', 'y1max', 'y3min', 'y3max']:
+            w = QtGui.QLabel(l)
+            hbox0t.addWidget(w)
+            hbox0t.setAlignment(w, QtCore.Qt.AlignVCenter)
+
         for w in [self.xlim_min_box, self.xlim_max_box, self.y1lim_min_box, self.y1lim_max_box, self.y3lim_min_box, self.y3lim_max_box]:
             hbox0.addWidget(w)
             hbox0.setAlignment(w, QtCore.Qt.AlignVCenter)
@@ -270,12 +286,12 @@ class AppForm(QtGui.QMainWindow):
             hbox1.addWidget(w)
             hbox1.setAlignment(w, QtCore.Qt.AlignVCenter)
 
-        for l in ['sp norm', 'obj velo', 'E_B-V', 'resol', 'cut2']:
+        for l in ['sp min', 'sp max', 'sp norm', 'obj velo', 'E_B-V', 'resol', 'cut2']:
             w = QtGui.QLabel(l)
             hbox2.addWidget(w)
             hbox2.setAlignment(w, QtCore.Qt.AlignVCenter)
 
-        for w in [self.sp_norm_box, self.obj_velo_box, self.ebv_box, self.resol_box, self.cut2_box]:
+        for w in [self.sp_min_box, self.sp_max_box, self.sp_norm_box, self.obj_velo_box, self.ebv_box, self.resol_box, self.cut2_box]:
             hbox3.addWidget(w)
             hbox3.setAlignment(w, QtCore.Qt.AlignVCenter)
           
@@ -292,6 +308,7 @@ class AppForm(QtGui.QMainWindow):
         
         vbox.addWidget(self.canvas)
         vbox.addWidget(self.mpl_toolbar)
+        vbox.addLayout(hbox0t)
         vbox.addLayout(hbox0)
         vbox.addLayout(hbox1)
         vbox.addLayout(hbox2)
@@ -545,6 +562,8 @@ class AppForm(QtGui.QMainWindow):
         self.cut2_box.setText('{}'.format(self.sp.cut_plot2))
         self.magenta_box.setText('{}'.format(self.sp.plot_magenta))
         self.cyan_box.setText('{}'.format(self.sp.plot_cyan))
+        self.sp_min_box.setText('{}'.format(self.sp.get_conf('limit_sp')[0]))
+        self.sp_max_box.setText('{}'.format(self.sp.get_conf('limit_sp')[1]))
             
     def sp_norm(self):
         
@@ -617,13 +636,12 @@ class AppForm(QtGui.QMainWindow):
         old_resol = self.sp.get_conf('resol')
         new_resol = np.int(self.resol_box.text())
         log_.message('Changing resol. Old: {}, New: {}'.format(old_resol, new_resol), calling=self.calling)
-        if np.abs(new_resol - old_resol) > 0.5:
-            self.sp.set_conf('resol', new_resol)
-            self.sp.init_obs()
-            self.sp.init_red_corr()
-            self.sp.make_continuum()
-            self.sp.run(do_synth = True, do_read_liste = True, do_profiles=False)
-            self.on_draw()
+        self.sp.set_conf('resol', new_resol)
+        self.sp.init_obs()
+        self.sp.init_red_corr()
+        self.sp.make_continuum()
+        self.sp.run(do_synth = True, do_read_liste = True, do_profiles=False)
+        self.on_draw()
 
     def update_profile(self):
         if self.sp is None:
@@ -680,6 +698,16 @@ class AppForm(QtGui.QMainWindow):
         self.y3_plot_lims = (float(self.y3lim_min_box.text()), float(self.y3lim_max_box.text()))
         self.restore_axes()
         self.on_draw()
+        
+    def change_sp(self):
+        limit_sp = (float(self.sp_min_box.text()), float(self.sp_max_box.text()))
+        self.sp.set_conf('limit_sp', limit_sp)
+        self.sp.init_obs()
+        self.sp.init_red_corr()
+        self.sp.make_continuum()
+        self.sp.run(do_synth = True, do_read_liste = True, do_profiles=False)
+        self.on_draw()
+        
         
 def main_loc(init_filename=None, post_proc_file=None):
     app = QtGui.QApplication(sys.argv)
