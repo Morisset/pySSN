@@ -908,16 +908,18 @@ class spectrum(object):
 #             self.cont_lr, self.sp_synth_lr = self.rebin_on_obs()
 #             self.update_plot2()
 #             
-    def print_line(self, line, sort='lambda'):
+    def print_line(self, line, sort='lambda', reverse=False):
         if type(line) == np.core.records.recarray:
             sorts = np.argsort(line[sort])
+            if reverse:
+                sorts = sorts[::-1]
             for isort in sorts:
                 self.print_line(line[isort])
             return
         print('{0[num]:>14d} {0[id]:9s}{0[lambda]:11.3f}{0[l_shift]:6.3f}{0[i_rel]:10.3e}{0[i_cor]:7.3f}'\
               ' {0[ref]:>14d}{0[profile]:5d}{0[vitesse]:7.2f}{0[comment]:25s}'.format(line))
        
-    def line_info(self, line_num, sat_info=True, print_header=True, sort='lambda'):
+    def line_info(self, line_num, sat_info=True, print_header=True, sort='lambda', reverse=False):
         
         if print_header:
             print('-------- INFO LINES --------')
@@ -928,7 +930,7 @@ class spectrum(object):
         to_print = (self.liste_raies['num'] == line_num)
         if to_print.sum() == 1:
             raie = self.liste_raies[to_print][0]
-            self.print_line(raie, sort=sort)
+            self.print_line(raie)
             if raie['ref'] != 0 and sat_info:
                 print('Satellite line of:')
                 self.line_info(raie['ref'])
@@ -936,14 +938,17 @@ class spectrum(object):
         to_print = (self.sp_theo['raie_ref']['num'] == line_num)
         if to_print.sum() > 0 and sat_info:
             raie = self.sp_theo['raie_ref'][to_print][0]
-            self.print_line(raie, sort=sort)
+            self.print_line(raie)
             print('Reference line')
             satellites_tab = (self.liste_raies['ref'] == raie['num'])
             Nsat = satellites_tab.sum()
             if Nsat > 0:
                 print('{0} satellites'.format(Nsat))
+                self.print_line(self.liste_raies[satellites_tab], sort=sort, reverse=reverse)
+                """
                 for raie in self.liste_raies[satellites_tab]:
-                    self.print_line(raie, sort=sort)
+                    self.print_line(raie, sort=sort, reverse=reverse)
+                """
             if self.sp_theo['correc'][to_print][0] != 1.0:
                 print('Intensity corrected by {0}'.format(self.sp_theo['correc'][to_print][0]))
             

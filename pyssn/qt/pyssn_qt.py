@@ -210,7 +210,6 @@ class AppForm(QtGui.QMainWindow):
         self.update_profile_button.setChecked(False)
         self.connect(self.update_profile_button, QtCore.SIGNAL('clicked()'), self.update_profile)
 
-
         self.sp_min_box = QtGui.QLineEdit()
         self.sp_min_box.setMinimumWidth(50)
         self.connect(self.sp_min_box, QtCore.SIGNAL('returnPressed()'), self.change_sp)
@@ -218,7 +217,6 @@ class AppForm(QtGui.QMainWindow):
         self.sp_max_box = QtGui.QLineEdit()
         self.sp_max_box.setMinimumWidth(50)
         self.connect(self.sp_max_box, QtCore.SIGNAL('returnPressed()'), self.change_sp)
-        
         
         self.sp_norm_box = QtGui.QLineEdit()
         self.sp_norm_box.setMinimumWidth(50)
@@ -659,9 +657,8 @@ class AppForm(QtGui.QMainWindow):
         if self.sp is None:
             return
         new_ref = np.int(self.line_info_box.text())
-        if new_ref != self.line_info_ref:
-            self.line_info_ref = new_ref
-            self.sp.line_info(new_ref)
+        self.line_info_ref = new_ref
+        self.sp.line_info(new_ref, sort='i_rel')
         
     def magenta_line(self):
         if self.sp is None:
