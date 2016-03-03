@@ -160,6 +160,30 @@ class AppForm(QtGui.QMainWindow):
         # Other GUI controls
         # 
         
+        self.xlim_min_box = QtGui.QLineEdit()
+        self.xlim_min_box.setMinimumWidth(50)
+        self.connect(self.xlim_min_box, QtCore.SIGNAL('returnPressed()'), self.save_from_lim_boxes)
+        
+        self.xlim_max_box = QtGui.QLineEdit()
+        self.xlim_max_box.setMinimumWidth(50)
+        self.connect(self.xlim_max_box, QtCore.SIGNAL('returnPressed()'), self.save_from_lim_boxes)
+        
+        self.y1lim_min_box = QtGui.QLineEdit()
+        self.y1lim_min_box.setMinimumWidth(50)
+        self.connect(self.y1lim_min_box, QtCore.SIGNAL('returnPressed()'), self.save_from_lim_boxes)
+        
+        self.y1lim_max_box = QtGui.QLineEdit()
+        self.y1lim_max_box.setMinimumWidth(50)
+        self.connect(self.xlim_max_box, QtCore.SIGNAL('returnPressed()'), self.save_from_lim_boxes)
+        
+        self.y3lim_min_box = QtGui.QLineEdit()
+        self.y3lim_min_box.setMinimumWidth(50)
+        self.connect(self.y3lim_min_box, QtCore.SIGNAL('returnPressed()'), self.save_from_lim_boxes)
+        
+        self.y3lim_max_box = QtGui.QLineEdit()
+        self.y3lim_max_box.setMinimumWidth(50)
+        self.connect(self.y3lim_max_box, QtCore.SIGNAL('returnPressed()'), self.save_from_lim_boxes)
+        
         self.select_init_button = QtGui.QPushButton("&Select init file")
         self.connect(self.select_init_button, QtCore.SIGNAL('clicked()'), self.select_init)
         
@@ -230,16 +254,21 @@ class AppForm(QtGui.QMainWindow):
         #
         # Layout with box sizers
         # 
-        hbox = QtGui.QHBoxLayout()
+        hbox0 = QtGui.QHBoxLayout()
+        hbox1 = QtGui.QHBoxLayout()
         hbox2 = QtGui.QHBoxLayout()
         hbox3 = QtGui.QHBoxLayout()
         hbox4 = QtGui.QHBoxLayout()
         hbox5 = QtGui.QHBoxLayout()
          
+        for w in [self.xlim_min_box, self.xlim_max_box, self.y1lim_min_box, self.y1lim_max_box, self.y3lim_min_box, self.y3lim_max_box]:
+            hbox0.addWidget(w)
+            hbox0.setAlignment(w, QtCore.Qt.AlignVCenter)
+
         for w in [self.select_init_button, self.draw_button, self.pl_ax2_cb, self.pl_ax3_cb, 
                   self.adjust_button, self.post_proc_button]:
-            hbox.addWidget(w)
-            hbox.setAlignment(w, QtCore.Qt.AlignVCenter)
+            hbox1.addWidget(w)
+            hbox1.setAlignment(w, QtCore.Qt.AlignVCenter)
 
         for l in ['sp norm', 'obj velo', 'E_B-V', 'resol', 'cut2']:
             w = QtGui.QLabel(l)
@@ -263,7 +292,8 @@ class AppForm(QtGui.QMainWindow):
         
         vbox.addWidget(self.canvas)
         vbox.addWidget(self.mpl_toolbar)
-        vbox.addLayout(hbox)
+        vbox.addLayout(hbox0)
+        vbox.addLayout(hbox1)
         vbox.addLayout(hbox2)
         vbox.addLayout(hbox3)
         vbox.addLayout(hbox4)
@@ -362,7 +392,7 @@ class AppForm(QtGui.QMainWindow):
             self.axes.set_xlabel(r'Wavelength ($\AA$)')
         
         self.restore_axes()
-        
+        self.update_lim_boxes()
         self.canvas.draw()
         log_.debug('Exit on_drawn', calling=self.calling)
         
@@ -635,7 +665,22 @@ class AppForm(QtGui.QMainWindow):
         verbosity = self.verbosity_cb.currentIndex()
         log_.debug('Change verbosity from {} to {}'.format(log_.level, verbosity), calling=self.calling)
         log_.level = verbosity
+        
+    def update_lim_boxes(self):
+        self.xlim_min_box.setText('{}'.format(self.x_plot_lims[0]))
+        self.xlim_max_box.setText('{}'.format(self.x_plot_lims[1]))
+        self.y1lim_min_box.setText('{}'.format(self.y1_plot_lims[0]))
+        self.y1lim_max_box.setText('{}'.format(self.y1_plot_lims[1]))
+        self.y3lim_min_box.setText('{}'.format(self.y3_plot_lims[0]))
+        self.y3lim_max_box.setText('{}'.format(self.y3_plot_lims[1]))
 
+    def save_from_lim_boxes(self):
+        self.x_plot_lims = (float(self.xlim_min_box.text()), float(self.xlim_max_box.text()))
+        self.y1_plot_lims = (float(self.y1lim_min_box.text()), float(self.y1lim_max_box.text()))
+        self.y3_plot_lims = (float(self.y3lim_min_box.text()), float(self.y3lim_max_box.text()))
+        self.restore_axes()
+        self.on_draw()
+        
 def main_loc(init_filename=None, post_proc_file=None):
     app = QtGui.QApplication(sys.argv)
     form = AppForm(init_filename=init_filename, post_proc_file=post_proc_file)
