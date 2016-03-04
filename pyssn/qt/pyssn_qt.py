@@ -699,7 +699,7 @@ class AppForm(QtGui.QMainWindow):
         if self.sp is None:
             return
         ref_str = self.cyan_box.text()
-        ref_txt = self.magenta_label_box.text()
+        ref_txt = self.cyan_label_box.text()
         if ref_str == '':
             self.sp.plot_cyan = None
             self.sp.label_cyan = ''
