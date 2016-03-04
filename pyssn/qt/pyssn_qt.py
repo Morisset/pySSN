@@ -187,6 +187,9 @@ class AppForm(QtGui.QMainWindow):
         self.select_init_button = QtGui.QPushButton("&Select init file")
         self.connect(self.select_init_button, QtCore.SIGNAL('clicked()'), self.select_init)
         
+        self.rerun_button = QtGui.QPushButton("&Rerun")
+        self.connect(self.rerun_button, QtCore.SIGNAL('clicked()'), self.rerun)
+        
         self.draw_button = QtGui.QPushButton("&Draw")
         self.connect(self.draw_button, QtCore.SIGNAL('clicked()'), self.on_draw)
         
@@ -279,7 +282,7 @@ class AppForm(QtGui.QMainWindow):
             hbox0.addWidget(w)
             hbox0.setAlignment(w, QtCore.Qt.AlignVCenter)
 
-        for w in [self.select_init_button, self.draw_button, self.pl_ax2_cb, self.pl_ax3_cb, 
+        for w in [self.select_init_button, self.rerun_button, self.draw_button, self.pl_ax2_cb, self.pl_ax3_cb, 
                   self.adjust_button, self.post_proc_button]:
             hbox1.addWidget(w)
             hbox1.setAlignment(w, QtCore.Qt.AlignVCenter)
@@ -563,6 +566,13 @@ class AppForm(QtGui.QMainWindow):
         self.sp_min_box.setText('{}'.format(self.sp.get_conf('limit_sp')[0]))
         self.sp_max_box.setText('{}'.format(self.sp.get_conf('limit_sp')[1]))
             
+    def rerun(self):
+        self.sp.read_obs()
+        self.sp.init_red_corr()
+        self.sp.make_continuum()
+        self.sp.run()
+        self.on_draw()
+    
     def sp_norm(self):
         
         if self.sp is None:
