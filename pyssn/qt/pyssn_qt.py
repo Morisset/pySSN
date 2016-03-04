@@ -249,10 +249,18 @@ class AppForm(QtGui.QMainWindow):
         self.magenta_box.setMinimumWidth(50)
         self.connect(self.magenta_box, QtCore.SIGNAL('returnPressed()'), self.magenta_line)
 
+        self.magenta_label_box = QtGui.QLineEdit()
+        self.magenta_label_box.setMinimumWidth(50)
+        self.connect(self.magenta_label_box, QtCore.SIGNAL('returnPressed()'), self.magenta_line)
+
         self.cyan_box = QtGui.QLineEdit()
         self.cyan_box.setMinimumWidth(50)
         self.connect(self.cyan_box, QtCore.SIGNAL('returnPressed()'), self.cyan_line)
         
+        self.cyan_label_box = QtGui.QLineEdit()
+        self.cyan_label_box.setMinimumWidth(50)
+        self.connect(self.cyan_label_box, QtCore.SIGNAL('returnPressed()'), self.cyan_line)
+
         self.verbosity_cb = QtGui.QComboBox()
         self.verbosity_cb.addItem('0: nothing')
         self.verbosity_cb.addItem('1: Errors')
@@ -296,12 +304,12 @@ class AppForm(QtGui.QMainWindow):
             hbox3.addWidget(w)
             hbox3.setAlignment(w, QtCore.Qt.AlignVCenter)
           
-        for l in ['line info', 'magenta', 'cyan', 'verbosity']:
+        for l in ['line info', 'magenta', 'magenta txt', 'cyan', 'cyan txt', 'verbosity']:
             w = QtGui.QLabel(l)
             hbox4.addWidget(w)
             hbox4.setAlignment(w, QtCore.Qt.AlignVCenter)
 
-        for w in [self.line_info_box, self.magenta_box, self.cyan_box, self.verbosity_cb]:
+        for w in [self.line_info_box, self.magenta_box, self.magenta_label_box, self.cyan_box, self.cyan_label_box, self.verbosity_cb]:
             hbox5.addWidget(w)
             hbox5.setAlignment(w, QtCore.Qt.AlignVCenter)
 
@@ -562,7 +570,9 @@ class AppForm(QtGui.QMainWindow):
         self.resol_box.setText('{}'.format(self.sp.get_conf('resol')))   
         self.cut2_box.setText('{}'.format(self.sp.cut_plot2))
         self.magenta_box.setText('{}'.format(self.sp.plot_magenta))
+        self.magenta_label_box.setText('{}'.format(self.sp.label_magenta))
         self.cyan_box.setText('{}'.format(self.sp.plot_cyan))
+        self.cyan_label_box.setText('{}'.format(self.sp.label_cyan))
         self.sp_min_box.setText('{}'.format(self.sp.get_conf('limit_sp')[0]))
         self.sp_max_box.setText('{}'.format(self.sp.get_conf('limit_sp')[1]))
             
@@ -674,6 +684,7 @@ class AppForm(QtGui.QMainWindow):
         if self.sp is None:
             return
         ref_str = self.magenta_box.text()
+        ref_txt = self.magenta_label_box.text()
         if ref_str == '':
             self.sp.plot_magenta = None
             self.sp.label_magenta = ''
@@ -681,12 +692,14 @@ class AppForm(QtGui.QMainWindow):
         else:
             new_ref = np.int(ref_str)
             self.sp.plot_magenta = new_ref
+            self.sp.label_magenta = ref_txt
             self.on_draw()
         
     def cyan_line(self):
         if self.sp is None:
             return
         ref_str = self.cyan_box.text()
+        ref_txt = self.magenta_label_box.text()
         if ref_str == '':
             self.sp.plot_cyan = None
             self.sp.label_cyan = ''
@@ -694,6 +707,7 @@ class AppForm(QtGui.QMainWindow):
         else:
             new_ref = np.int(ref_str)
             self.sp.plot_cyan = new_ref
+            self.sp.label_cyan = ref_txt
             self.on_draw()
     
     def verbosity(self):
