@@ -174,7 +174,7 @@ class AppForm(QtGui.QMainWindow):
         
         self.y1lim_max_box = QtGui.QLineEdit()
         self.y1lim_max_box.setMinimumWidth(50)
-        self.connect(self.xlim_max_box, QtCore.SIGNAL('returnPressed()'), self.save_from_lim_boxes)
+        self.connect(self.y1lim_max_box, QtCore.SIGNAL('returnPressed()'), self.save_from_lim_boxes)
         
         self.y3lim_min_box = QtGui.QLineEdit()
         self.y3lim_min_box.setMinimumWidth(50)
@@ -663,16 +663,26 @@ class AppForm(QtGui.QMainWindow):
     def magenta_line(self):
         if self.sp is None:
             return
-        new_ref = np.int(self.magenta_box.text())
-        if new_ref != self.sp.plot_magenta:
+        ref_str = self.magenta_box.text()
+        if ref_str == '':
+            self.sp.plot_magenta = None
+            self.sp.label_magenta = ''
+            self.on_draw()
+        else:
+            new_ref = np.int(ref_str)
             self.sp.plot_magenta = new_ref
             self.on_draw()
         
     def cyan_line(self):
         if self.sp is None:
             return
-        new_ref = np.int(self.cyan_box.text())
-        if new_ref != self.sp.plot_cyan:
+        ref_str = self.cyan_box.text()
+        if ref_str == '':
+            self.sp.plot_cyan = None
+            self.sp.label_cyan = ''
+            self.on_draw()
+        else:
+            new_ref = np.int(ref_str)
             self.sp.plot_cyan = new_ref
             self.on_draw()
     
