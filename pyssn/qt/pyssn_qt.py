@@ -92,8 +92,10 @@ class NavigationToolbar( NavigationToolbar2QT ):
 
 class AppForm(QtGui.QMainWindow):
     
-    def __init__(self, parent=None, init_filename=None, post_proc_file=None):
+    def __init__(self, parent=None, init_filename=None, post_proc_file=None, use_workspace=False):
+        
         self.calling = 'pySSN GUI'
+        self.use_workspace = use_workspace
         QtGui.QMainWindow.__init__(self, parent)
         self.setWindowTitle('pySSN')
         self.sp = None
@@ -109,12 +111,14 @@ class AppForm(QtGui.QMainWindow):
         self.y1_plot_lims = None
         self.y2_plot_lims = None
         self.y3_plot_lims = None
+        self.post_proc_file = post_proc_file
         self.do_save = True
+        self.axes_fixed = True
+
         self.create_menu()
         self.create_main_frame()
         self.create_status_bar()
         self.select_init(init_filename)
-        self.post_proc_file = post_proc_file
         
     def save_plot(self):
         file_choices = "PDF (*.pdf)|*.pdf"
@@ -139,18 +143,28 @@ class AppForm(QtGui.QMainWindow):
             self.sp._curs_onclick(event)
 
     def create_main_frame(self):
-        self.main_frame = QtGui.QWidget()
         
+        if self.use_workspace:
+            self.main_frame = QtGui.QWorkspace()
+        else:
+            self.main_frame = QtGui.QWidget()
         # Create the mpl Figure and FigCanvas objects. 
         #
         self.dpi = 100
         self.fig = Figure((20.0, 15.0), dpi=self.dpi)
+        
         log_.debug('creating figure {}'.format(id(self.fig)), calling=self.calling)
         
         
         self.canvas = FigureCanvas(self.fig)
-        self.canvas.setParent(self.main_frame)
-    
+        if self.use_workspace:
+            self.main_frame.addWindow(self.canvas)
+            self.fig2 = Figure((20.0, 15.0), dpi=self.dpi)
+            self.canvas2 = FigureCanvas(self.fig2)
+            #self.main_frame.addWindow(self.canvas2)
+        else:
+            self.canvas.setParent(self.main_frame)
+                
         self.canvas.mpl_connect('button_press_event', self.on_click)
         self.canvas.mpl_connect('figure_leave_event', self.leave_fig)
         # Create the navigation toolbar, tied to the canvas
@@ -160,6 +174,10 @@ class AppForm(QtGui.QMainWindow):
         # Other GUI controls
         # 
         
+        self.fix_axes_cb = QtGui.QCheckBox("Fix axes")
+        self.fix_axes_cb.setChecked(True)
+        self.connect(self.fix_axes_cb, QtCore.SIGNAL('stateChanged(int)'), self.fix_axes)
+
         self.xlim_min_box = QtGui.QLineEdit()
         self.xlim_min_box.setMinimumWidth(50)
         self.connect(self.xlim_min_box, QtCore.SIGNAL('returnPressed()'), self.save_from_lim_boxes)
@@ -280,13 +298,13 @@ class AppForm(QtGui.QMainWindow):
         hbox3 = QtGui.QHBoxLayout()
         hbox4 = QtGui.QHBoxLayout()
         hbox5 = QtGui.QHBoxLayout()
-         
+        
         for l in ['xmin', 'xmax', 'y1min', 'y1max', 'y3min', 'y3max']:
             w = QtGui.QLabel(l)
             hbox0t.addWidget(w)
             hbox0t.setAlignment(w, QtCore.Qt.AlignVCenter)
 
-        for w in [self.xlim_min_box, self.xlim_max_box, self.y1lim_min_box, self.y1lim_max_box, self.y3lim_min_box, self.y3lim_max_box]:
+        for w in [self.fix_axes_cb, self.xlim_min_box, self.xlim_max_box, self.y1lim_min_box, self.y1lim_max_box, self.y3lim_min_box, self.y3lim_max_box]:
             hbox0.addWidget(w)
             hbox0.setAlignment(w, QtCore.Qt.AlignVCenter)
 
@@ -740,9 +758,16 @@ class AppForm(QtGui.QMainWindow):
         self.on_draw()
         
     def leave_fig(self, event):
-        self.save_axes()
-        self.update_lim_boxes()
+        if not self.axes_fixed:
+            self.save_axes()
+            self.update_lim_boxes()
         
+    def fix_axes(self):
+        if self.fix_axes_cb.isChecked():
+            self.axes_fixed = True
+        else:
+            self.axes_fixed = False
+    
 def main_loc(init_filename=None, post_proc_file=None):
     app = QtGui.QApplication(sys.argv)
     form = AppForm(init_filename=init_filename, post_proc_file=post_proc_file)

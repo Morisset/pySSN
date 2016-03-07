@@ -1347,17 +1347,25 @@ class spectrum(object):
     def _curs_onclick(self, event):
         
         wl = event.xdata
-        if (wl > self.ax1.get_xlim()[1]) or (wl < self.ax1.get_xlim()[0]) or (event.button == 2):
-            self._cursOff()
+        try:
+            if (wl > self.ax1.get_xlim()[1]) or (wl < self.ax1.get_xlim()[0]) or (event.button == 2):
+                self._cursOff()
+                return None
+        except AttributeError:
+            log_.warn('ax1 not defined', calling=self.calling)
             return None
-        if event.button in (1,3):
-            wl_lim = self.cursor_width * (self.ax1.get_xlim()[1] - self.ax1.get_xlim()[0])
-            tt = (np.abs(self.liste_raies['lambda'] + self.liste_raies['l_shift'] + self.conf['lambda_shift'] - wl) < wl_lim)
-            if tt.sum() > 0:
-                print('')
-                print('------------ CURSOR on {0:10.3f} -----------'.format(wl))
-                self.print_line(self.liste_raies[tt])
-                print('---------------------------------------------')
+        try:
+            if event.button in (1,3):
+                wl_lim = self.cursor_width * (self.ax1.get_xlim()[1] - self.ax1.get_xlim()[0])
+                tt = (np.abs(self.liste_raies['lambda'] + self.liste_raies['l_shift'] + self.conf['lambda_shift'] - wl) < wl_lim)
+                if tt.sum() > 0:
+                    print('')
+                    print('------------ CURSOR on {0:10.3f} -----------'.format(wl))
+                    self.print_line(self.liste_raies[tt])
+                    print('---------------------------------------------')
+        except AttributeError:
+            log_.warn('ax1 not defined', calling=self.calling)
+            return None
 
     def _call_adjust(self, event=None):
         self.adjust()
