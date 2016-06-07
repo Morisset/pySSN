@@ -12,6 +12,15 @@ import numpy as np
 import pyssn
 from pyneb.utils.physics import vactoair
 
+def my_execfile(pyfile, global_vars=None, local_vars=None):
+
+    if sys.version_info.major < 3:
+        execfile(pyfile, global_vars, local_vars)
+    else:
+        with open(pyfile) as f:
+            code = compile(f.read(), pyfile, 'exec')
+            exec(code, global_vars, local_vars)    
+
 def execution_path(filename):
     return os.path.join(os.path.dirname(sys._getframe(1).f_code.co_filename), filename)
 

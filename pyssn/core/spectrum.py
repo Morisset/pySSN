@@ -10,13 +10,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Button
 from scipy import interpolate
-import pyneb as pn
+try:
+    import pyneb as pn
+except:
+    pass
 
 from pyssn import log_, config
 from ..utils.physics import CST, Planck, make_cont_Ercolano, gff
 from ..utils.misc import execution_path, change_size, convol, rebin, is_absorb, no_red_corr, gauss, carre, lorentz, convolgauss, vactoair, clean_label
 from ..core.profiles import profil_instr
-from ..utils.misc import get_parser
+from ..utils.misc import get_parser, my_execfile as execfile
 
 """
 ToDo:
