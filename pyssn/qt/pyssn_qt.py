@@ -551,7 +551,7 @@ class AppForm(QtGui.QMainWindow):
     
     def select_init(self, init_file_name=None):
         if init_file_name is None:
-            self.init_file_name = str(QtGui.QFileDialog.getOpenFileName(self, 'Open file', '', '*init.py'))
+            self.init_file_name = str(QtGui.QFileDialog.getOpenFileName(self, 'Open file', '', '*init.py, *init.yml'))
         else:
             self.init_file_name = init_file_name
         if self.init_file_name:

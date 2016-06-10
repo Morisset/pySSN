@@ -69,7 +69,7 @@ lambda_shift = 0.0 # w units
 spectr_obs = None 
 sp_norm = 1.0 #  
 lambda_pix = 0.1 #
-limit_sp = (4100., 5100.)
+limit_sp = [0, 1.0e+10]
 # Velocity of the object, applied to the wavelengths in the
 # calibration of the observations
 

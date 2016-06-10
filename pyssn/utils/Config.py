@@ -56,6 +56,17 @@ class _Config(object):
         except:
             self.INSTALLED['Qt4'] = False
             self.log_.message('pySSN Qt not available', calling=self.calling)
+        try:
+            import pyneb
+            self.INSTALLED['PyNeb'] = True
+        except:
+            self.INSTALLED['PyNeb'] = False
+        try:
+            import yaml
+            self.INSTALLED['YAML'] = True
+        except:
+            self.INSTALLED['YAML'] = False
+            self.log_.message('YAML config files not available', calling=self.calling)
         
         self.DataPaths = []
         self.addDataFilePath('../data/', inpySSN=True)

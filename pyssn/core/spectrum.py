@@ -10,12 +10,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Button
 from scipy import interpolate
-try:
-    import pyneb as pn
-except:
-    pass
+
 
 from pyssn import log_, config
+if config.INSTALLED['YAML']:
+    import yaml
+if config.INSTALLED['PyNeb']:
+    import pyneb as pn
+
 from ..utils.physics import CST, Planck, make_cont_Ercolano, gff
 from ..utils.misc import execution_path, change_size, convol, rebin, is_absorb, no_red_corr, gauss, carre, lorentz, convolgauss, vactoair, clean_label
 from ..core.profiles import profil_instr
@@ -281,16 +283,25 @@ class spectrum(object):
             config_file = self.config_file
         else:
             self.config_file = config_file
+
         self.conf = {}
         execfile(execution_path('./')+'init_defaults.py', self.conf)
+        
         if self.config_file is not None:
-            try:
-                execfile(self.directory + self.config_file, self.conf)
-                log_.message('configuration read from {0}'.format(self.config_file), 
-                                   calling = self.calling)
-            except:
-                log_.warn('configuration NOT read from {0}'.format(self.config_file),
-                                calling = self.calling)
+            if self.config_file.split('.')[-1] == 'py':
+                try:
+                    execfile(self.directory + self.config_file, self.conf)
+                    log_.message('configuration read from {0}'.format(self.config_file), 
+                                       calling = self.calling)
+                except:
+                    log_.warn('configuration NOT read from {0}'.format(self.config_file),
+                                    calling = self.calling)
+            elif self.config_file.split('.')[-1] == 'yml':
+                with open(self.directory + self.config_file, 'r') as ymlfile:
+                    conf2 = yaml.load(ymlfile)
+                    for k in conf2:
+                        self.conf[k] = conf2[k]
+        
         self.plot_magenta = self.get_conf('plot_magenta', None)
         self.label_magenta = self.get_conf('label_magenta', None)      
         self.plot_cyan = self.get_conf('plot_cyan', None)
@@ -424,11 +435,15 @@ class spectrum(object):
             log_.message('Wavelength table generated using spline of order {0}'.format(k_spline),
                                 calling = self.calling)
                         
+        if self.limit_sp[0] < 0.01:
+            self.limit_sp[0] = np.min(self.w)*1.0001
+        if self.limit_sp[1] > 0.9e10:
+            self.limit_sp[1] = np.max(self.w)*0.9999
         self.obj_velo = self.get_conf("obj_velo", undefined=0.)
         self.w *= 1 - self.obj_velo/(CST.CLIGHT/1e5)
         log_.message('Wavelenghts shifted by Vel = {} km/s'.format(self.conf["obj_velo"]),
                                 calling = self.calling)
-
+        
         lims = ((self.w >= self.limit_sp[0]) & (self.w <= self.limit_sp[1]))
         log_.message('Observations resized from {0} to {1}'.format(len(self.w), lims.sum()), calling=self.calling)
         self.w = self.w[lims]
@@ -771,6 +786,7 @@ class spectrum(object):
             if type(self.get_conf('fic_atm')) not in (list, tuple):
                 self.conf['fic_atm'] = (self.conf['fic_atm'],)
                 self.conf['coeff_atm'] = (self.conf['coeff_atm'],)
+                self.conf['shift_atm'] = (self.conf['shift_atm'],)
             if len(self.get_conf('fic_atm')) != len(self.get_conf('coeff_atm')):
                 log_.error('fic_atm number {} != coeff_atm number {}'.format(len(self.get_conf('fic_atm')), len(self.get_conf('coeff_atm'))), 
                                       calling = self.calling)
