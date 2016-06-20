@@ -8,8 +8,8 @@ def main():
     parser = get_parser()
     args = parser.parse_args()
     if args.noQt4:
-	pyssn.config.INSTALLED['Qt4'] = False
-	
+        pyssn.config.INSTALLED['Qt4'] = False
+
     if pyssn.config.INSTALLED['Qt4']:
         from pyssn.qt.pyssn_qt import main
         sys.exit(main())

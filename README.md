@@ -19,10 +19,3 @@ If you don't have Qt4 installed, you can still call pySSN with an init file (man
 
 `pySSN -f s6302_n_c_init.py`
 
-And you can also call it from python session:
-
-`from pyssn.core.spectrum import main_loc`
-
-`sp = main_loc('./s6302_n_c_init.py')`
-
-You will have the possibility to interact with sp.

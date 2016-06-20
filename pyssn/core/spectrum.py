@@ -300,19 +300,13 @@ class spectrum(object):
         execfile(execution_path('./')+'init_defaults.py', self.conf)
         
         if self.config_file is not None:
-            if self.config_file.split('.')[-1] == 'py':
-                try:
-                    execfile(self.directory + self.config_file, self.conf)
-                    log_.message('configuration read from {0}'.format(self.config_file), 
-                                       calling = self.calling)
-                except:
-                    log_.warn('configuration NOT read from {0}'.format(self.config_file),
-                                    calling = self.calling)
-            elif self.config_file.split('.')[-1] == 'yml':
-                with open(self.directory + self.config_file, 'r') as ymlfile:
-                    conf2 = yaml.load(ymlfile)
-                    for k in conf2:
-                        self.conf[k] = conf2[k]
+            try:
+                execfile(self.directory + self.config_file, self.conf)
+                log_.message('configuration read from {0}'.format(self.config_file), 
+                                   calling = self.calling)
+            except:
+                log_.warn('configuration NOT read from {0}'.format(self.config_file),
+                                calling = self.calling)
         
         self.plot_magenta = self.get_conf('plot_magenta', None)
         self.label_magenta = self.get_conf('label_magenta', None)      
@@ -1186,8 +1180,11 @@ class spectrum(object):
             
         self.y1_plot_lims = self.get_conf('y1_plot_lims')
         if self.y1_plot_lims is None:
-            mask = (self.w_ori > self.x_plot_lims[0]) & (self.w_ori < self.x_plot_lims[1]) 
-            self.y1_plot_lims = (np.min(self.sp_synth_lr[mask]), np.max(self.sp_synth_lr[mask]))      
+            if self.sp_synth_lr is None:
+                self.y1_plot_lims = (np.min(self.f), np.max(self.f)) 
+            else:
+                mask = (self.w_ori > self.x_plot_lims[0]) & (self.w_ori < self.x_plot_lims[1])
+                self.y1_plot_lims = (np.min(self.sp_synth_lr[mask]), np.max(self.sp_synth_lr[mask]))      
         
         self.y2_plot_lims = self.get_conf('y2_plot_lims')
         if self.y2_plot_lims is None:
