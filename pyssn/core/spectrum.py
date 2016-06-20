@@ -82,8 +82,16 @@ class spectrum(object):
         self.init_vars()
         
         self.read_conf(self.config_file)
+        if not self.get_conf('do_synth'):
+            self.set_conf('plot_ax2', False)
+            self.set_conf('plot_ax3', False)
+            self.set_conf('fic_cosmetik', 'NO_cosmetik.dat')
+            self.set_conf('fic_modele', 'NO_modele.dat')
+            self.set_conf('phyat_file', 'NO_phyat.dat')
+            
         if do_synth is None:
             do_synth = self.get_conf('do_synth')
+            
         if do_read_liste is None:
             do_read_liste = self.get_conf('do_read_liste')
         if do_cosmetik is None:

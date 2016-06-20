@@ -582,7 +582,12 @@ class AppForm(QtGui.QMainWindow):
             dir = './'
         self.directory = dir
         self.sp = spectrum(config_file=self.init_file_name)
-        self.status_text.setText('pySSN, v {}. init file: {}, at. data: {}, model: {}, cosmetic: {}'.format(__version__, 
+        if self.sp.phyat_file == 'NO_phyat.dat':
+            self.status_text.setText('pySSN, v {}. init file: {}, No synthesis'.format(__version__, 
+                                                                                        self.sp.config_file.split('/')[-1]))
+            
+        else:
+            self.status_text.setText('pySSN, v {}. init file: {}, at. data: {}, model: {}, cosmetic: {}'.format(__version__, 
                                                                                                       self.sp.config_file.split('/')[-1], 
                                                                                                       self.sp.phyat_file.split('/')[-1],
                                                                                                       self.sp.get_conf('fic_modele').split('/')[-1],
