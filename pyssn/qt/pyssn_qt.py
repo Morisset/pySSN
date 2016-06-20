@@ -175,7 +175,7 @@ class AppForm(QtGui.QMainWindow):
         # 
         
         self.fix_axes_cb = QtGui.QCheckBox("Fix axes")
-        self.fix_axes_cb.setChecked(True)
+        self.fix_axes_cb.setChecked(False)
         self.connect(self.fix_axes_cb, QtCore.SIGNAL('stateChanged(int)'), self.fix_axes)
 
         self.xlim_min_box = QtGui.QLineEdit()
@@ -496,7 +496,10 @@ class AppForm(QtGui.QMainWindow):
         self.y1_plot_lims = self.sp.get_conf('y1_plot_lims')
         if self.y1_plot_lims is None:
             mask = (self.sp.w_ori > self.x_plot_lims[0]) & (self.sp.w_ori < self.x_plot_lims[1]) 
-            self.y1_plot_lims = (np.min(self.sp.sp_synth_lr[mask]), np.max(self.sp.sp_synth_lr[mask]))      
+            if self.sp.sp_synth_lr is None:
+                self.y1_plot_lims = (np.min(self.sp.f), np.max(self.sp.f))
+            else:
+                self.y1_plot_lims = (np.min(self.sp.sp_synth_lr[mask]), np.max(self.sp.sp_synth_lr[mask]))      
         
         self.y2_plot_lims = self.sp.get_conf('y2_plot_lims')
         if self.y2_plot_lims is None:
@@ -505,7 +508,10 @@ class AppForm(QtGui.QMainWindow):
         self.y3_plot_lims = self.sp.get_conf('y3_plot_lims')
         if self.y3_plot_lims is None:
             mask = (self.sp.w_ori > self.x_plot_lims[0]) & (self.sp.w_ori < self.x_plot_lims[1])
-            self.y3_plot_lims = (np.min((self.sp.f - self.sp.cont)[mask]), np.max((self.sp.f - self.sp.cont)[mask]))
+            if self.sp.cont is None:
+                self.y3_plot_lims = (-1,1)
+            else:
+                self.y3_plot_lims = (np.min((self.sp.f - self.sp.cont)[mask]), np.max((self.sp.f - self.sp.cont)[mask]))
         log_.debug('Axes initialized. IDs {} {} {}'.format(id(self.axes), id(self.axes2), id(self.axes3)), calling=self.calling)
         self.print_axes()
 
@@ -774,6 +780,13 @@ def main_loc(init_filename=None, post_proc_file=None):
     form.show()
     app.exec_()
     return form.fig
+        
+def main_loc_obj(init_filename=None, post_proc_file=None):
+    app = QtGui.QApplication(sys.argv)
+    form = AppForm(init_filename=init_filename, post_proc_file=post_proc_file)
+    form.show()
+    app.exec_()
+    return form
         
 def main():
     parser = get_parser()

@@ -56,7 +56,7 @@ def read_data(filename, NF=True):
 class spectrum(object):
     
     def __init__(self, config_file=None, phyat_file=None, profil_instr=profil_instr, 
-                 do_synth = True, do_read_liste = True, do_cosmetik = True, do_run = True, limit_sp = None,
+                 do_synth = None, do_read_liste = None, do_cosmetik = None, do_run = True, limit_sp = None,
                  spectr_obs=None, sp_norm=None, obj_velo=None, post_proc_file=None):
         """
         Main pySSN object.
@@ -65,8 +65,6 @@ class spectrum(object):
         correction, the 
         """
         
-        self.profil_instr = profil_instr
-        self.do_cosmetik = do_cosmetik        
         self.calling = 'spectrum'
         self.full_config_file = config_file
         if '/' in self.full_config_file:
@@ -80,11 +78,20 @@ class spectrum(object):
             self.directory = './'
             self.config_file = self.full_config_file
         config.addDataFilePath(self.directory, inpySSN=False)
-        self.post_proc_file = post_proc_file
         
         self.init_vars()
         
         self.read_conf(self.config_file)
+        if do_synth is None:
+            do_synth = self.get_conf('do_synth')
+        if do_read_liste is None:
+            do_read_liste = self.get_conf('do_read_liste')
+        if do_cosmetik is None:
+            do_cosmetik = self.get_conf('do_cosmetik')
+
+        self.profil_instr = profil_instr
+        self.do_cosmetik = do_cosmetik        
+        self.post_proc_file = post_proc_file
         self.init_obs(spectr_obs=spectr_obs, sp_norm=sp_norm, obj_velo=obj_velo, limit_sp=limit_sp)
         self.init_red_corr()
         self.make_continuum()
@@ -165,6 +172,11 @@ class spectrum(object):
         
             self.sp_theo, self.sp_synth = self.make_synth(self.liste_raies, self.sp_theo)
             self.n_sp_theo = len(self.sp_theo['spectr'])
+        else:
+            self.sp_theo = None
+            self.sp_synth = None
+            self.n_sp_theo = 0
+            
         self.f *= self.aire_ref
 
         self.sp_abs = self.make_sp_abs(self.sp_theo)
@@ -411,20 +423,23 @@ class spectrum(object):
                                     calling = self.calling)
                 self.n_lambda = 0.
                 return None
-        if bool(self.get_conf('data_incl_w', undefined = False)):
-            self.w = self.obs[:,0]
-            self.f = self.obs[:,1]
-        else:
-            self.f = self.obs 
-        
-        if bool(self.get_conf('reverse_spectra', undefined=False)):
-                self.f = self.f[::-1]
+            
+            if bool(self.get_conf('data_incl_w', undefined = False)):
+                self.w = self.obs[:,0]
+                self.f = self.obs[:,1]
+            else:
+                self.f = self.obs
+                self.w = None
+            
+            if bool(self.get_conf('reverse_spectra', undefined=False)):
+                    self.f = self.f[::-1]
+                    
         self.n_lambda = len(self.f)
         self.tab_pix = np.arange(self.n_lambda)
         
         self.f *= self.get_conf('sp_norm', undefined = 1.)
         
-        if ("cal_lambda" in self.conf) and ("cal_pix" in self.conf):
+        if ("cal_lambda" in self.conf) and ("cal_pix" in self.conf) and (self.w is None):
             cal_lambda = np.array(self.conf["cal_lambda"])
             cal_pix = np.array(self.conf["cal_pix"])
             arg_sort = cal_lambda.argsort()
@@ -771,6 +786,8 @@ class spectrum(object):
         
     def make_sp_abs(self, sp_theo):
         
+        if sp_theo is None:
+            return None
         sp_tau = np.zeros_like(self.w)
         """
         WARNING check also misc.is_absorb(raie)
@@ -810,6 +827,10 @@ class spectrum(object):
 
     def make_filter_instr(self):
         
+        if self.sp_synth is None:
+            self.filter_ = None
+            return None
+        
         filter_size = 11
         increm = 1.1
         detect_limit = 1e-3 / np.max(self.sp_synth)
@@ -828,12 +849,18 @@ class spectrum(object):
     
     def convol_synth(self, cont, sp_synth):
         
+        if sp_synth is None:
+            return None
+        
         input_arr = (cont + sp_synth) * self.sp_abs 
         kernel = self.filter_
         sp_synth_tot = convol(input_arr, kernel)
         return sp_synth_tot
         
     def rebin_on_obs(self):
+        if self.sp_synth_tot is None:
+            return None, None
+        
         resol = self.get_conf('resol', undefined = 1, message=None)
         cont_lr = rebin(self.cont, resol)
         sp_synth_lr = rebin(self.sp_synth_tot, resol)
@@ -1052,6 +1079,9 @@ class spectrum(object):
     def plot_ax1(self, ax, xlims=None):
         
         ax.step(self.w_ori, self.f_ori, label='Obs', c='red')
+        
+        if self.sp_synth_lr is None:
+            return
         self.ax1_line_synth = ax.step(self.w_ori, self.sp_synth_lr, label='Synth', c='blue', linewidth=2)[0]
         if self.hr:
             ax.step(self.w, self.sp_synth, c='green')
@@ -1076,8 +1106,10 @@ class spectrum(object):
         ax.legend(loc=self.legend_loc)
         log_.debug('ax1 drawn on ax ID {}'.format(id(ax)), calling=self.calling)
         
-    def plot_ax2(self, ax):        
-        
+    def plot_ax2(self, ax):
+            
+        if self.sp_synth_lr is None:
+            return
         for line in self.liste_raies:
             wl = line['lambda'] + line['l_shift'] + self.conf['lambda_shift']
             i_rel = line['i_rel']
@@ -1088,15 +1120,17 @@ class spectrum(object):
         log_.debug('ax2 drawn on ax ID {}'.format(id(ax)), calling=self.calling)
         
     def plot_ax3(self, ax):     
-
-        ax.step(self.w, self.f - self.cont, c = 'red', linestyle='--')
-        ax.plot((0, 1e10), (0.0, 0.0), c='green')
-        ax_line_diff = ax.step(self.w_ori, self.f_ori - self.sp_synth_lr, c='blue')[0]
-        log_.debug('ax3 drawn on ax ID {}'.format(id(ax)), calling=self.calling)
+        if self.sp_synth_lr is not None:
+            ax.step(self.w, self.f - self.cont, c = 'red', linestyle='--')
+            ax.plot((0, 1e10), (0.0, 0.0), c='green')
+            ax_line_diff = ax.step(self.w_ori, self.f_ori - self.sp_synth_lr, c='blue')[0]
+            log_.debug('ax3 drawn on ax ID {}'.format(id(ax)), calling=self.calling)
         
     def update_plot2(self):
         
         if self.ax1 is None:
+            return
+        if self.sp_synth_lr is None:
             return
         self.ax1_line_synth.remove()
         self.ax1_line_synth = self.ax1.step(self.w_ori, self.sp_synth_lr, label='Synth', c='blue', linewidth=2)[0]
