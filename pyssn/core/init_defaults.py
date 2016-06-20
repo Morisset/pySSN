@@ -7,7 +7,7 @@ Created on 17/01/2014
 #   Initialisation
 #-------------------------------------------------------------------
 
-log_level = 3
+log_level = 2
 #
 # All the following variables (most of them boolean) can be
 # set here, or in the init_file of the model you are doing,

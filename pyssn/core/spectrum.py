@@ -82,12 +82,15 @@ class spectrum(object):
         self.init_vars()
         
         self.read_conf(self.config_file)
+        log_.level = self.get_conf('log_level', 2)
         if not self.get_conf('do_synth'):
             self.set_conf('plot_ax2', False)
             self.set_conf('plot_ax3', False)
             self.set_conf('fic_cosmetik', 'NO_cosmetik.dat')
             self.set_conf('fic_modele', 'NO_modele.dat')
             self.set_conf('phyat_file', 'NO_phyat.dat')
+        if self.get_conf('spectr_obs') is None:
+            self.set_conf('plot_ax3', False)            
             
         if do_synth is None:
             do_synth = self.get_conf('do_synth')

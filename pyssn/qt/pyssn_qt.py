@@ -604,6 +604,7 @@ class AppForm(QtGui.QMainWindow):
         self.cyan_label_box.setText('{}'.format(self.sp.label_cyan))
         self.sp_min_box.setText('{}'.format(self.sp.get_conf('limit_sp')[0]))
         self.sp_max_box.setText('{}'.format(self.sp.get_conf('limit_sp')[1]))
+        self.verbosity_cb.setCurrentIndex(self.sp.get_conf('log_level'))
             
     def rerun(self):
         self.sp.read_obs()
