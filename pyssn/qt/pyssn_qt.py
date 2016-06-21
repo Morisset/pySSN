@@ -113,7 +113,7 @@ class AppForm(QtGui.QMainWindow):
         self.y3_plot_lims = None
         self.post_proc_file = post_proc_file
         self.do_save = True
-        self.axes_fixed = True
+        self.axes_fixed = False
 
         self.create_menu()
         self.create_main_frame()
@@ -202,7 +202,7 @@ class AppForm(QtGui.QMainWindow):
         self.y3lim_max_box.setMinimumWidth(50)
         self.connect(self.y3lim_max_box, QtCore.SIGNAL('returnPressed()'), self.save_from_lim_boxes)
         
-        self.select_init_button = QtGui.QPushButton("&Select init file")
+        self.select_init_button = QtGui.QPushButton("Select init file")
         self.connect(self.select_init_button, QtCore.SIGNAL('clicked()'), self.select_init)
         
         self.rerun_button = QtGui.QPushButton("&Rerun")
@@ -210,6 +210,9 @@ class AppForm(QtGui.QMainWindow):
         
         self.draw_button = QtGui.QPushButton("&Draw")
         self.connect(self.draw_button, QtCore.SIGNAL('clicked()'), self.on_draw)
+
+        self.savelines_button = QtGui.QPushButton("&Save Lines")
+        self.connect(self.savelines_button, QtCore.SIGNAL('clicked()'), self.save_lines)
         
         self.pl_ax2_cb = QtGui.QCheckBox("Lines ID")
         self.pl_ax2_cb.setChecked(True)
@@ -219,7 +222,7 @@ class AppForm(QtGui.QMainWindow):
         self.pl_ax3_cb.setChecked(True)
         self.connect(self.pl_ax3_cb, QtCore.SIGNAL('stateChanged(int)'), self.make_axes)
 
-        self.adjust_button = QtGui.QPushButton("Update lines")
+        self.adjust_button = QtGui.QPushButton("&Update lines")
         self.adjust_button.setChecked(False)
         self.connect(self.adjust_button, QtCore.SIGNAL('clicked()'), self.adjust)
 
@@ -299,7 +302,7 @@ class AppForm(QtGui.QMainWindow):
         hbox4 = QtGui.QHBoxLayout()
         hbox5 = QtGui.QHBoxLayout()
         
-        for l in ['xmin', 'xmax', 'y1min', 'y1max', 'y3min', 'y3max']:
+        for l in ['', 'xmin', 'xmax', 'y1min', 'y1max', 'y3min', 'y3max']:
             w = QtGui.QLabel(l)
             hbox0t.addWidget(w)
             hbox0t.setAlignment(w, QtCore.Qt.AlignVCenter)
@@ -313,12 +316,12 @@ class AppForm(QtGui.QMainWindow):
             hbox1.addWidget(w)
             hbox1.setAlignment(w, QtCore.Qt.AlignVCenter)
 
-        for l in ['sp min', 'sp max', 'sp norm', 'obj velo', 'E_B-V', 'resol', 'cut2']:
+        for l in ['sp min', 'sp max', 'sp norm', 'obj velo', 'E_B-V', 'resol', 'cut2', 'Save lines']:
             w = QtGui.QLabel(l)
             hbox2.addWidget(w)
             hbox2.setAlignment(w, QtCore.Qt.AlignVCenter)
 
-        for w in [self.sp_min_box, self.sp_max_box, self.sp_norm_box, self.obj_velo_box, self.ebv_box, self.resol_box, self.cut2_box]:
+        for w in [self.sp_min_box, self.sp_max_box, self.sp_norm_box, self.obj_velo_box, self.ebv_box, self.resol_box, self.cut2_box, self.savelines_button]:
             hbox3.addWidget(w)
             hbox3.setAlignment(w, QtCore.Qt.AlignVCenter)
           
@@ -597,7 +600,7 @@ class AppForm(QtGui.QMainWindow):
         self.obj_velo_box.setText('{}'.format(self.sp.get_conf('obj_velo')))   
         self.ebv_box.setText('{}'.format(self.sp.get_conf('e_bv')))   
         self.resol_box.setText('{}'.format(self.sp.get_conf('resol')))   
-        self.cut2_box.setText('{}'.format(self.sp.cut_plot2))
+        self.cut2_box.setText('{}'.format(self.sp.get_conf('cut_plot2')))
         self.magenta_box.setText('{}'.format(self.sp.plot_magenta))
         self.magenta_label_box.setText('{}'.format(self.sp.label_magenta))
         self.cyan_box.setText('{}'.format(self.sp.plot_cyan))
@@ -700,7 +703,7 @@ class AppForm(QtGui.QMainWindow):
     def cut2(self):
         if self.sp is None:
             return
-        self.sp.cut_plot2 = np.float(self.cut2_box.text())
+        self.sp.set_conf('cut_plot2', np.float(self.cut2_box.text()))
         self.on_draw()
 
     def line_info(self):
@@ -779,6 +782,10 @@ class AppForm(QtGui.QMainWindow):
             self.axes_fixed = True
         else:
             self.axes_fixed = False
+    
+    def save_lines(self):
+        self.sp.save_lines()
+    
     
 def main_loc(init_filename=None, post_proc_file=None):
     app = QtGui.QApplication(sys.argv)

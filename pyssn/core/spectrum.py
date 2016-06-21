@@ -137,7 +137,6 @@ class spectrum(object):
         self.do_ax2 = True
         self.do_buttons = True
         self.do_ax3 = True
-        self.cut_plot2 = 1.
         self.ax2_fontsize = 12
         self.legend_loc = 1
 
@@ -460,9 +459,9 @@ class spectrum(object):
                     self.f = self.f[::-1]
                         
         if self.limit_sp[0] < 0.01:
-            self.limit_sp[0] = np.min(self.w)*1.0001
+            self.limit_sp[0] = np.min(self.w) * (1. + self.get_conf("delta_limit_sp")/100.)
         if self.limit_sp[1] > 0.9e10:
-            self.limit_sp[1] = np.max(self.w)*0.9999
+            self.limit_sp[1] = np.max(self.w) * (1. - self.get_conf("delta_limit_sp")/100.)
         self.obj_velo = self.get_conf("obj_velo", undefined=0.)
         self.w *= 1 - self.obj_velo/(CST.CLIGHT/1e5)
         log_.message('Wavelenghts shifted by Vel = {} km/s'.format(self.conf["obj_velo"]),
@@ -1004,6 +1003,30 @@ class spectrum(object):
                 print('Intensity corrected by {0}'.format(self.sp_theo['correc'][to_print][0]))
         print('----------------------------')
         
+    def save_lines(self):
+        cut = self.get_conf('cut_plot2')
+        sort = self.get_conf('line_saved_ordered_by')
+        format= self.get_conf('line_saved_format')
+        if format == 'tex':
+            sep = ' & '
+            end = '{0}{0}'.format('\\')
+        elif format == 'csv':
+            sep = ' ; '
+            end = ''
+        elif format == 'txt':
+            sep = ' '
+            end = ''
+        sorts = np.argsort(self.liste_raies[sort])
+        with open(self.get_conf('line_saved_filename'), 'w') as f:
+            for i_sort in sorts:
+                line = self.liste_raies[i_sort]
+                wl = line['lambda'] + line['l_shift'] + self.conf['lambda_shift']
+                i_rel = line['i_rel']
+                i_tot = line['i_rel'] + line['i_cor']
+                if (abs(i_rel) > self.get_conf('cut_plot2')):
+                    f.write('{0[id]:9s}{3}{0[lambda]:10.2f}{3}{0[l_shift]:10.2f}{3}{2:11.3e}{4} \n'.format(line, wl, i_tot, sep, end))
+        
+        
     def plot1(self):
         f, ax = plt.subplots()
         ax.step(self.w_ori, self.f_ori, label='Obs')
@@ -1024,7 +1047,7 @@ class spectrum(object):
         self.do_buttons = do_buttons
         self.do_ax3 = do_ax3
         if cut is not None:
-            self.cut_plot2 = cut
+            self.set_conf('cut_plot2', cut)   
         self.ax2_fontsize = fontsize
         self.legend_loc = legend_loc
 
@@ -1122,7 +1145,7 @@ class spectrum(object):
         for line in self.liste_raies:
             wl = line['lambda'] + line['l_shift'] + self.conf['lambda_shift']
             i_rel = line['i_rel']
-            if (abs(i_rel) > self.cut_plot2): 
+            if (abs(i_rel) > self.get_conf('cut_plot2')): 
                 ax.plot([wl, wl], [0, 1], color='blue')
                 ax.text(wl, -0.2, '{0} {1:7.4f}'.format(line['id'], i_rel), 
                               rotation='vertical', fontsize=self.ax2_fontsize).set_clip_on(True)
@@ -1176,7 +1199,7 @@ class spectrum(object):
         for line in self.liste_raies:
             wl = line['lambda'] + line['l_shift'] + self.conf['lambda_shift']
             i_rel = line['i_rel']
-            if (abs(i_rel) > self.cut_plot2) & (wl > self.ax2.get_xlim()[0]) & (wl < self.ax2.get_xlim()[1]):
+            if (abs(i_rel) > self.get_conf('cut_plot2')) & (wl > self.ax2.get_xlim()[0]) & (wl < self.ax2.get_xlim()[1]):
                 self.ax2.plot([wl, wl], [0, 1], color='blue')
                 self.ax2.text(wl, -0.2, '{0} {1:7.4f}'.format(line['id'], i_rel), 
                                 rotation='vertical', fontsize=self.ax2_fontsize)
@@ -1278,7 +1301,7 @@ class spectrum(object):
         self.ax1.clear()
         self.ax2.clear()
         self.ax3.clear()
-        self.plot2(hr=self.hr, cut=self.cut_plot2, split=self.split, 
+        self.plot2(hr=self.hr, cut=self.get_conf('cut_plot2'), split=self.split, 
                    do_ax2=self.do_ax2, do_ax3=self.do_ax3, do_buttons=self.do_buttons, 
                    fontsize=self.ax2_fontsize, legend_loc=self.legend_loc, fig=self.fig1, call_init_axes=False)
         self.fig1.canvas.draw()
