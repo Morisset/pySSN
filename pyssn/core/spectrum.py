@@ -93,7 +93,9 @@ class spectrum(object):
             self.set_conf('plot_ax3', False)            
             
         if do_synth is None:
-            do_synth = self.get_conf('do_synth')
+            self.do_synth = self.get_conf('do_synth')
+        else:
+            self.do_synth = do_synth
             
         if do_read_liste is None:
             do_read_liste = self.get_conf('do_read_liste')
@@ -112,7 +114,7 @@ class spectrum(object):
         else:
             self.phyat_file = self.get_conf('phyat_file', 'liste_phyat.dat')
         if do_run:
-            self.run(do_synth = do_synth, do_read_liste = do_read_liste)
+            self.run(do_synth = self.do_synth, do_read_liste = do_read_liste)
         
     def init_vars(self):
         self.fig1 = None
@@ -436,7 +438,7 @@ class spectrum(object):
                 self.f = self.obs
                 self.w = None
             
-            if bool(self.get_conf('reverse_spectra', undefined=False)):
+            if bool(self.get_conf('reverse_spectra', undefined=False)) :
                     self.f = self.f[::-1]
                     
         self.n_lambda = len(self.f)
@@ -454,6 +456,8 @@ class spectrum(object):
             self.w = interp_lam(self.tab_pix)
             log_.message('Wavelength table generated using spline of order {0}'.format(k_spline),
                                 calling = self.calling)
+            if bool(self.get_conf('reverse_spectra', undefined=False)) :
+                    self.f = self.f[::-1]
                         
         if self.limit_sp[0] < 0.01:
             self.limit_sp[0] = np.min(self.w)*1.0001

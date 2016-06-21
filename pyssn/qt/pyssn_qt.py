@@ -635,7 +635,7 @@ class AppForm(QtGui.QMainWindow):
         self.sp.init_obs(obj_velo=new_obj_velo)
         self.sp.init_red_corr()
         self.sp.make_continuum()
-        self.sp.run(do_synth = True, do_read_liste = True, do_profiles=False)
+        self.sp.run(do_synth = self.sp.do_synth, do_read_liste = True, do_profiles=False)
         self.on_draw()
 
     def ebv(self):
@@ -648,7 +648,7 @@ class AppForm(QtGui.QMainWindow):
         self.sp.set_conf('e_bv', new_ebv)
         self.sp.init_red_corr()
         self.sp.make_continuum()
-        self.sp.run(do_synth = True, do_read_liste = False, do_profiles=False)
+        self.sp.run(do_synth = self.sp.do_synth, do_read_liste = False, do_profiles=False)
         self.on_draw()
             
     def adjust(self):

@@ -62,7 +62,7 @@ limit_sp = [0, 1.0e+10]
 obj_velo = 0. # km/s
 
 # If observed spectra is to be reversed to let the wavelength growing
-reverse_spectra = 1
+reverse_spectra = False
 
 # If the data include the wavelengths (1st column), set the following to True
 data_incl_w =  True
