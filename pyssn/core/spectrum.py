@@ -323,7 +323,28 @@ class spectrum(object):
         self.plot_magenta = self.get_conf('plot_magenta', None)
         self.label_magenta = self.get_conf('label_magenta', None)      
         self.plot_cyan = self.get_conf('plot_cyan', None)
-        self.label_cyan = self.get_conf('label_cyan', None)      
+        self.label_cyan = self.get_conf('label_cyan', None)
+        
+        # If you DON'T want an i_cor on a main line to affect the satellites, 
+        # set the following variable to False
+        self.set_conf('recursive_i_cor', True)
+        
+        # Is i_cor applied in the atomic physic database AND model database?
+        # If this is the case, i_cor on phyat_database will be directly
+        # applied on i_rel and will not appear as i_cor in the printed liste
+        # of lines or with the cursor.
+        self.set_conf('do_icor_outside_cosmetik', True)
+        
+        # If you want to perform cosmetik on reference lines (which have ref = 0):
+        self.set_conf('do_icor_on_ref', True)
+
+        # Here follow caracteristics of the reference line.
+        # This line will be assumed to have a flux
+        # at center of 1.00/A.  NO!!!
+        
+        self.set_conf('do_calcul_aire_ref', False)
+        self.set_conf('raie_ref ', {"vitesse" : 25.0, "lambda" : 4861.0, "profile" : 1})     # depuis 25/10/01
+        
             
     def get_conf(self, key=None, undefined=None, message=None):
         """

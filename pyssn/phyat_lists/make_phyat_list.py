@@ -2,11 +2,13 @@ import numpy as np
 import pyneb as pn
 from pyneb.utils.physics import Z, IP
 from pyneb.utils.misc import int_to_roman
+import os
 
 pn.atomicData.setDataFile('fe_ii_atom.chianti')
 pn.atomicData.setDataFile('fe_ii_coll.chianti')
 
 # ToDo : faire les ions suivant en reprenant les rapports connus et les energies adaptees.
+# Il faut verifier que l'on commence a ecrire uniquement quand on est sur d'avoir qqchose a ecrire.
 
 def print_liste_phyat(atom, tem, den, cut=1e-3, ij_ref = None, filename=None, norm_by='sum'):
     
@@ -24,7 +26,7 @@ def print_liste_phyat(atom, tem, den, cut=1e-3, ij_ref = None, filename=None, no
         emis_ref = emis[ij_ref[0]-1, ij_ref[1]-1]
     wls = atom.wave_Ang
     NLevels = emis.shape[0]
-    str_print = '{}{:02d}{:02d}000{:03d}{:03d} {:>2s}_{:<5s} {:11.3f} 0.000{:10.3e}  1.000  {:02d}{:02d}000{:03d}{:03d}   1   1.00 {}'
+    str_print = '{}{:02d}{:02d}000{:03d}{:03d} {:<8s} {:11.3f} 0.000{:10.3e}  1.000  {:02d}{:02d}000{:03d}{:03d}   1   1.00 {}'
     if filename is None:
         f = None
     else:
@@ -34,7 +36,8 @@ def print_liste_phyat(atom, tem, den, cut=1e-3, ij_ref = None, filename=None, no
         elif type(filename) is file:
             f = filename
     com = '{:.0f}K 10**{:.0f}cm-3'.format(tem, np.log10(den))
-    myprint(str_print.format('9', Z[atom.elem], atom.spec, 0, 0, atom.elem, int_to_roman(atom.spec), 1.0, 1.0, 0, 0, 9, 99, com), f)
+    ion_name = '{:>2s}_{:<5s}'.format(atom.elem, int_to_roman(atom.spec)).strip()
+    myprint(str_print.format('9', Z[atom.elem], atom.spec, 0, 0, ion_name, 1.0, 1.0, 0, 0, 0, 999, com), f)
     
     for i in np.arange(NLevels-1)+1:
         emis_i = emis[i,:]
@@ -51,12 +54,14 @@ def print_liste_phyat(atom, tem, den, cut=1e-3, ij_ref = None, filename=None, no
             norm = emis[i, j_emis_ref_loc]
         if print_it:
             com = '{:.1f}+'.format(wls[i,j_emis_ref_loc])
-            myprint(str_print.format(' ', Z[atom.elem], atom.spec, i+1, 0, atom.elem, int_to_roman(atom.spec), 
+            ion_name = '{:>2s}_{:<5s}'.format(atom.elem, int_to_roman(atom.spec)).strip()
+            myprint(str_print.format(' ', Z[atom.elem], atom.spec, i+1, 0, ion_name, 
                                      1.0, emis[i, j_emis_ref_loc]/emis_ref, Z[atom.elem], atom.spec, 0, 0, com), f)
             for j in np.arange(i):
-                if emis[i,j] > cut * emis_ref:
+                if emis[i,j] > cut * emis_ref and wls[i,j] > 912:
                     com = '{} {}'.format(i+1, j+1)
-                    myprint(str_print.format(' ', Z[atom.elem], atom.spec, i+1, j+1, atom.elem, int_to_roman(atom.spec), 
+                    ion_name = '{:>2s}_{:<5s}'.format(atom.elem, int_to_roman(atom.spec)).strip()
+                    myprint(str_print.format(' ', Z[atom.elem], atom.spec, i+1, j+1, ion_name, 
                                              wls[i,j], emis[i,j]/norm, Z[atom.elem], atom.spec, i+1, 0, com), f)
     
 
@@ -64,20 +69,43 @@ def get_tem_den(IP):
     if IP < 14:
         return 1e4, 1e3
     elif IP < 25:
-        return 1.2e4, 3e3
+        return 1.e4, 1e3
     else:
-        return 1.3e4, 5e3
+        return 1.e4, 1e3
 
-def make_all(tem1=None, den1=None, cut=1e-3, filename=None, norm_by='sum'):
+def make_all(tem1=None, den1=None, cut=1e-4, filename=None, norm_by='sum'):
     aa = pn.atomicData.getAllAtoms()
+    Chianti_path = os.environ['XUVTOP']
+    masterlist = '{0}/masterlist/masterlist.ions'.format(Chianti_path)
+    with open(masterlist, 'r') as f:
+        lines = f.readlines()
+    chianti_ions = [l[0:7].strip() for l in lines]
+    chianti_ions = [i.capitalize().replace('_','') for i in chianti_ions if i[-1] != 'd']
+    for cion in chianti_ions:
+        if cion not in aa and cion not in ('H1', 'He1', 'He2'):
+            try:
+                atfiles = pn.atomicData.getAllAvailableFiles(cion)
+                for atfile in atfiles:
+                    pn.atomicData.setDataFile(atfile)
+                aa.append(cion)
+                print('Adding {} from Chianti'.format(cion))
+            except:
+                pass
+            
     f = open(filename, 'w')
-    for a in aa:
+
+    
+    for a in np.sort(aa):
         try:
             print('trying {}'.format(a))
             atom = pn.Atom(atom=a)
-            atom.NLevels = 30
+            
             if tem1 is None:
-                tem, den = get_tem_den(IP[atom.atom])
+                try:
+                    tem, den = get_tem_den(IP[atom.atom])
+                except:
+                    tem = 1e4
+                    den = 1e3
             else:
                 tem = tem1
                 den = den1
@@ -85,4 +113,5 @@ def make_all(tem1=None, den1=None, cut=1e-3, filename=None, norm_by='sum'):
             print('{} done'.format(a))
         except:
             pass
+    
     f.close()

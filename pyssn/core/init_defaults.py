@@ -57,7 +57,7 @@ do_synth = True
 limit_sp = [0, 1.0e+10]
 
 # Here are the 2 filenames of the data. The filename 
-# of the atomic database is hard-coded (in read_liste.pro)
+# of the atomic database is hard-coded 
 fic_modele = 'liste_modele.dat'
 fic_cosmetik = 'liste_cosmetik.dat'
 
@@ -66,19 +66,6 @@ fic_cosmetik = 'liste_cosmetik.dat'
 # the same lines (modification of the profiles, lambda-calibration...)
 # Note that if do_synth = False, the following flag has no meaning. 
 do_read_liste = True
-
-# If you DON'T want an i_cor on a main line to affect the satellites, 
-# set the following variable to False
-recursive_i_cor = True
-
-# Is i_cor applied in the atomic physic database AND model database?
-# If this is the case, i_cor on phyat_database will be directly
-# applied on i_rel and will not appear as i_cor in the printed liste
-# of lines or with the cursor.
-do_icor_outside_cosmetik = True
-
-# If you want to perform cosmetik on reference lines (which have ref = 0):
-do_icor_on_ref = True
 
 warn_on_no_cosmetik = True
 warn_on_no_reference = True
@@ -90,13 +77,6 @@ fic_atm = None
 coeff_atm = 0.0
 shift_atm = 0.0
 
-
-# Here follow caracteristics of the reference line.
-# This line will be assumed to have a flux
-# at center of 1.00/A. 
-
-do_calcul_aire_ref = False
-raie_ref =  {"vitesse" : 25.0, "lambda" : 4861.0, "profile" : 1}      # depuis 25/10/01
 
 # Here is the name of the function used for the emission profiles:
 profil_emis_name = 'profil_emis'
