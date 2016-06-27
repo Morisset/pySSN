@@ -3,6 +3,7 @@ import pyneb as pn
 from pyneb.utils.physics import Z, IP
 from pyneb.utils.misc import int_to_roman
 import os
+from ..core.spectrum import read_data
 
 pn.atomicData.setDataFile('fe_ii_atom.chianti')
 pn.atomicData.setDataFile('fe_ii_coll.chianti')
@@ -98,7 +99,7 @@ def make_all(tem1=None, den1=None, cut=1e-4, filename=None, norm_by='sum'):
     for a in np.sort(aa):
         try:
             print('trying {}'.format(a))
-            atom = pn.Atom(atom=a)
+            atom = pn.Atom(atom=a, NLevels=30)
             
             if tem1 is None:
                 try:
@@ -115,3 +116,24 @@ def make_all(tem1=None, den1=None, cut=1e-4, filename=None, norm_by='sum'):
             pass
     
     f.close()
+
+
+def phyat2model(phyat_file, model_file):
+    """  
+
+    """
+    
+    str_print = '{}{:02d}{:02d}000{:03d}{:03d} {:<8s} {:11.3f} 0.000{:10.3e}  1.000  {:02d}{:02d}000{:03d}{:03d}   1   1.00 {}'
+
+    list_phyat = read_data(phyat_file)
+    with open(model_file, 'w') as f:
+        for line in list_phyat:
+            if line['ref'] == 999:
+                f.write('{0:14d} {1[id]:8s}      1.000 0.000 1.000e+04  1.000  0000000000000   1   1.00 {1[comment]:15s}'.format(line['num']-90000000000000, line))
+
+            
+            
+            
+            
+            
+    
