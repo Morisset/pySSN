@@ -562,27 +562,35 @@ class spectrum(object):
                 pl_cont += I * (self.w / 5000.)**alpha
         self.conts['pl'] = pl_cont
         
+        if self.conf["cont_ihi"]  != 0.:
+            alfa = 1e-13 * 0.668 * (self.conf["cont_Thi"]/1e4)**(-0.507) / \
+                (1. + 1.221*(self.conf["cont_Thi"]/1e4)**(0.653)) * 1.000 
+            emis_Hi = alfa * CST.HPLANCK * CST.CLIGHT * 1e8 / 4861.3 # erg/s.cm3
+            H_cont = self.conf["cont_ihi"] * make_cont_Ercolano(self.conf["cont_Thi"],'H',self.w) / emis_Hi 
+            H_cont[~np.isfinite(H_cont)] = 0.
+            self.conts['H'] = H_cont
+        else:
+            self.conts['H'] = np.zeros_like(self.w)
         
-        alfa = 1e-13 * 0.668 * (self.conf["cont_Thi"]/1e4)**(-0.507) / \
-            (1. + 1.221*(self.conf["cont_Thi"]/1e4)**(0.653)) * 1.000 
-        emis_Hi = alfa * CST.HPLANCK * CST.CLIGHT * 1e8 / 4861.3 # erg/s.cm3
-        H_cont = self.conf["cont_ihi"] * make_cont_Ercolano(self.conf["cont_Thi"],'H',self.w) / emis_Hi 
-        H_cont[~np.isfinite(H_cont)] = 0.
-        self.conts['H'] = H_cont
-        
-        alfa = 1e-13 * 0.331 * (self.conf["cont_Thei"]/1e4)**(-0.615) / \
-            (1. + 0.910*(self.conf["cont_Thei"]/1e4)**(0.780)) * 0.7986
-        emis_Hei = alfa * CST.HPLANCK * CST.CLIGHT * 1e8 / 4471.5
-        He1_cont = self.conf["cont_ihei"] * make_cont_Ercolano(self.conf["cont_Thei"],'He1',self.w) / emis_Hei 
-        He1_cont[~np.isfinite(He1_cont)] = 0.
-        self.conts['He1'] = He1_cont
+        if self.conf["cont_ihei"] != 0.0:
+            alfa = 1e-13 * 0.331 * (self.conf["cont_Thei"]/1e4)**(-0.615) / \
+                (1. + 0.910*(self.conf["cont_Thei"]/1e4)**(0.780)) * 0.7986
+            emis_Hei = alfa * CST.HPLANCK * CST.CLIGHT * 1e8 / 4471.5
+            He1_cont = self.conf["cont_ihei"] * make_cont_Ercolano(self.conf["cont_Thei"],'He1',self.w) / emis_Hei 
+            He1_cont[~np.isfinite(He1_cont)] = 0.
+            self.conts['He1'] = He1_cont
+        else:
+            self.conts['He1'] = np.zeros_like(self.w)
 
-        alfa = 2. * 1e-13 * 1.549 * (self.conf["cont_Theii"]/1e4/4.)**(-0.693) / \
-            (1. + 2.884*(self.conf["cont_Theii"]/1e4/4.)**(0.609))*1.000
-        emis_Heii = alfa * CST.HPLANCK * CST.CLIGHT * 1e8 / 4685.8
-        He2_cont = self.conf["cont_iheii"] * make_cont_Ercolano(self.conf["cont_Theii"],'He2',self.w) / emis_Heii 
-        He2_cont[~np.isfinite(He2_cont)] = 0.
-        self.conts['He2'] = He2_cont
+        if self.conf["cont_iheii"] != 0.0:
+            alfa = 2. * 1e-13 * 1.549 * (self.conf["cont_Theii"]/1e4/4.)**(-0.693) / \
+                (1. + 2.884*(self.conf["cont_Theii"]/1e4/4.)**(0.609))*1.000
+            emis_Heii = alfa * CST.HPLANCK * CST.CLIGHT * 1e8 / 4685.8
+            He2_cont = self.conf["cont_iheii"] * make_cont_Ercolano(self.conf["cont_Theii"],'He2',self.w) / emis_Heii 
+            He2_cont[~np.isfinite(He2_cont)] = 0.
+            self.conts['He2'] = He2_cont
+        else:
+            self.conts['He2'] = np.zeros_like(self.w)
                 
         gff_HI = gff(1., self.conf["cont_Thi"], self.w)
         gff_HeI = gff(1., self.conf["cont_Thei"], self.w)
@@ -590,25 +598,31 @@ class spectrum(object):
         
         #32.d0*!phy.e^4.*!phy.h/3./!phy.m_e^2./!phy.c^3.*sqrt(!dpi*13.6*!phy.erg_s_ev/3./!phy.k)= 6.8391014e-38
 
-        FF_cont = (6.8391014e-38 * CST.CLIGHT * 1e8 / self.w**2. * (
-                    self.conf["cont_ihi"] * 1.0**2. / np.sqrt(self.conf["cont_Thi"]) * np.exp(-CST.HPLANCK*CST.CLIGHT*1e8/self.w/CST.BOLTZMANN/self.conf["cont_Thi"]) * gff_HI/emis_Hi + 
-                    self.conf["cont_ihei"] * 1.0**2./ np.sqrt(self.conf["cont_Thei"]) * np.exp(-CST.HPLANCK*CST.CLIGHT*1e8/self.w/CST.BOLTZMANN/self.conf["cont_Thei"]) * gff_HeI/emis_Hei  + 
-                    self.conf["cont_iheii"] * 2.0**2. / np.sqrt(self.conf["cont_Theii"]) * np.exp(-CST.HPLANCK*CST.CLIGHT*1e8/self.w/CST.BOLTZMANN/self.conf["cont_Theii"]) * gff_HeII / emis_Heii))
-        FF_cont[~np.isfinite(FF_cont)] = 0.
-        self.conts['FF'] = FF_cont
+        if self.conf["cont_ihi"] != 0 and self.conf["cont_ihei"] != 0 and self.conf["cont_iheii"] != 0 :
+            FF_cont = (6.8391014e-38 * CST.CLIGHT * 1e8 / self.w**2. * (
+                        self.conf["cont_ihi"] * 1.0**2. / np.sqrt(self.conf["cont_Thi"]) * np.exp(-CST.HPLANCK*CST.CLIGHT*1e8/self.w/CST.BOLTZMANN/self.conf["cont_Thi"]) * gff_HI/emis_Hi + 
+                        self.conf["cont_ihei"] * 1.0**2./ np.sqrt(self.conf["cont_Thei"]) * np.exp(-CST.HPLANCK*CST.CLIGHT*1e8/self.w/CST.BOLTZMANN/self.conf["cont_Thei"]) * gff_HeI/emis_Hei  + 
+                        self.conf["cont_iheii"] * 2.0**2. / np.sqrt(self.conf["cont_Theii"]) * np.exp(-CST.HPLANCK*CST.CLIGHT*1e8/self.w/CST.BOLTZMANN/self.conf["cont_Theii"]) * gff_HeII / emis_Heii))
+            FF_cont[~np.isfinite(FF_cont)] = 0.
+            self.conts['FF'] = FF_cont
+        else:
+            self.conts['FF'] = np.zeros_like(self.w)
 
         
         # 2-photons
         #http://adsabs.harvard.edu/abs/1984A%26A...138..495N
-        y = 1215.7 / self.w
-        A = 202.0 * (y * (1. - y) * (1. -(4. * y * (1 - y))**0.8) + 0.88 * ( y * (1 - y))**1.53 * (4. * y * (1 - y))**0.8)
-        alfa_eff = 0.838e-13 * (self.conf["cont_Thi"] / 1e4)**(-0.728) # fit DP de Osterbrock
-        q = 5.31e-4 * (self.conf["cont_Thi"] / 1e4)**(-0.17) # fit DP de Osterbrock
-        n_crit = 8.226 / q
-        twophot_cont = self.conf["cont_ihi"] * CST.HPLANCK * CST.CLIGHT * 1e8 / self.w**3. * 1215.7 * A / 8.226 * alfa_eff / (1. + self.conf["cont_edens"]/n_crit) / emis_Hi
-        twophot_cont[~np.isfinite(twophot_cont)] = 0.
-        self.conts['2photons'] = twophot_cont
-
+        if self.conf["cont_ihi"] != 0:
+            y = 1215.7 / self.w
+            A = 202.0 * (y * (1. - y) * (1. -(4. * y * (1 - y))**0.8) + 0.88 * ( y * (1 - y))**1.53 * (4. * y * (1 - y))**0.8)
+            alfa_eff = 0.838e-13 * (self.conf["cont_Thi"] / 1e4)**(-0.728) # fit DP de Osterbrock
+            q = 5.31e-4 * (self.conf["cont_Thi"] / 1e4)**(-0.17) # fit DP de Osterbrock
+            n_crit = 8.226 / q
+            twophot_cont = self.conf["cont_ihi"] * CST.HPLANCK * CST.CLIGHT * 1e8 / self.w**3. * 1215.7 * A / 8.226 * alfa_eff / (1. + self.conf["cont_edens"]/n_crit) / emis_Hi
+            twophot_cont[~np.isfinite(twophot_cont)] = 0.
+            self.conts['2photons'] = twophot_cont
+        else:
+            self.conts['2photons'] = np.zeros_like(self.w)
+            
         self.cont = np.zeros_like(self.w)  
         for key in self.conts:
             self.cont += self.conts[key]
