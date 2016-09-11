@@ -8,8 +8,8 @@ from ..core.spectrum import read_data
 
 pn.atomicData.setDataFile('fe_ii_atom.chianti')
 pn.atomicData.setDataFile('fe_ii_coll.chianti')
-pn.atomicData.setDataFile('o_iii_atom.chianti')
-pn.atomicData.setDataFile('o_iii_coll.chianti')
+#pn.atomicData.setDataFile('o_iii_atom.chianti')
+#pn.atomicData.setDataFile('o_iii_coll.chianti')
 
 # ToDo : faire les ions suivant en reprenant les rapports connus et les energies adaptees.
 # Il faut verifier que l'on commence a ecrire uniquement quand on est sur d'avoir qqchose a ecrire.
@@ -23,9 +23,9 @@ def print_liste_phyat(atom, tem, den, cut=1e-3, ij_ref = None, filename=None, up
             None: default hard coded value is used, see up_levs below
     """
     
-    up_levs = {'s1': 'each', 
-               's2': 'each', 
-               'p1': [2, [3,4,5], [6,7]], 
+    up_levs = {'s1': [[2,3]],  
+               's2': 'each',
+               'p1': [2, [3, 4, 5], [6,7]], 
                'p2': 'each',
                'p3': [2, 3, [4, 5]],
                'p4': 'each',
@@ -38,7 +38,7 @@ def print_liste_phyat(atom, tem, den, cut=1e-3, ij_ref = None, filename=None, up
         def myprint(s, f):
             f.write(s)
 
-    str_print = '{}{:02d}{:02d}{:1d}00{:03d}{:03d} {:<8s} {:11.3f} 0.000{:10.3e}  1.000  {:02d}{:02d}{:1d}00{:03d}{:03d}   1   1.00 {}'  
+    str_print = '{}{:02d}{:02d}{:02d}0{:03d}{:03d} {:<8s} {:11.3f} 0.000{:10.3e}  1.000  {:02d}{:02d}{:1d}00{:03d}{:03d}   1   1.00 {}'  
     if filename is None:
         f = None
     else:
@@ -63,9 +63,9 @@ def print_liste_phyat(atom, tem, den, cut=1e-3, ij_ref = None, filename=None, up
             up_lev_rule = 'all'
     
     if up_lev_rule == 'each':
-        up_lev_list = range(2, NLevels)
+        up_lev_list = range(2, NLevels+1)
     elif up_lev_rule == 'all':
-        up_lev_list = [range(2, NLevels)]
+        up_lev_list = [range(2, NLevels+1)]
     else:
         up_lev_list = up_lev_rule
         
@@ -79,6 +79,7 @@ def print_liste_phyat(atom, tem, den, cut=1e-3, ij_ref = None, filename=None, up
             up_lev = [up_lev]
             
         emis_max = 0
+        i_emis_ref_loc = None
         for i0 in up_lev:
             i = i0-1
             for j in np.arange(i):
@@ -87,44 +88,42 @@ def print_liste_phyat(atom, tem, den, cut=1e-3, ij_ref = None, filename=None, up
                     j_emis_ref_loc = j
                     emis_max = emis[i,j]
 
-        com_ref = '{:.0f}K 10**{:.0f}cm-3 {:.1f}'.format(tem, np.log10(den), wls[i_emis_ref_loc,j_emis_ref_loc])
-        com_ref = '{} {} {:.1f}'.format(i_emis_ref_loc+1, j_emis_ref_loc+1, wls[i_emis_ref_loc,j_emis_ref_loc])
-        #to_print.append(str_print.format(' ', Z[atom.elem], atom.spec, i+1, i+1, 0, ion_name, 
-        #                1.0, emis[i, j_emis_ref_loc]/emis_max, Z[atom.elem], atom.spec, 0, 0, 0, com))
-
-        ref_str=str_print.format('9', Z[atom.elem], atom.spec,i_emis_ref_loc+1 , 0, 0, ion_name, 1.0, 1.0, 0, 0, 0, 0, 999, com_ref)
-        print_ref = True 
-        
-        for i0 in up_lev:
-            i = i0-1            
-            print_it = False
-            for j in np.arange(i):
-                if emis[i,j] > cut * emis_max_tot and wls[i,j] > 912:
-                    print_it = True
-                    print_any = True
-                    NLevels_max = i0+1
-            if print_it:                
+        if i_emis_ref_loc is not None:
+            com_ref = '{:.0f}K 10**{:.0f}cm-3 {:.1f}'.format(tem, np.log10(den), wls[i_emis_ref_loc,j_emis_ref_loc])
+            com_ref = '{} {} {:.1f}'.format(i_emis_ref_loc+1, j_emis_ref_loc+1, wls[i_emis_ref_loc,j_emis_ref_loc])
+            ref_str=str_print.format('9', Z[atom.elem], atom.spec,i_emis_ref_loc+1 , 0, 0, ion_name, 1.0, 1.0, 0, 0, 0, 0, 999, com_ref)
+            print_ref = True 
+            
+            for i0 in up_lev:
+                i = i0-1            
+                print_it = False
                 for j in np.arange(i):
                     if emis[i,j] > cut * emis_max_tot and wls[i,j] > 912:
-                        com = '{} {}'.format(i+1, j+1)
-                        ion_name = '{:>2s}_{:<5s}'.format(atom.elem, int_to_roman(atom.spec)).strip()
-                        if print_ref:
-                            to_print.append(ref_str)
-                            print_ref = False
-                        to_print.append(str_print.format(' ', Z[atom.elem], atom.spec, i+1, i+1, j+1, ion_name, 
-                                                 wls[i,j], emis[i,j]/emis_max, Z[atom.elem], atom.spec, i_emis_ref_loc+1, 0, 0, com))
+                        print_it = True
+                        print_any = True
+                        NLevels_max = i0+1
+                if print_it:                
+                    for j in np.arange(i):
+                        if emis[i,j] > cut * emis_max_tot and wls[i,j] > 912:
+                            com = '{} {}'.format(i+1, j+1)
+                            ion_name = '{:>2s}_{:<5s}'.format(atom.elem, int_to_roman(atom.spec)).strip()
+                            if print_ref:
+                                to_print.append(ref_str)
+                                print_ref = False
+                            to_print.append(str_print.format(' ', Z[atom.elem], atom.spec, i+1, i+1, j+1, ion_name, 
+                                                     wls[i,j], emis[i,j]/emis_max, Z[atom.elem], atom.spec, i_emis_ref_loc+1, 0, 0, com))
     
 
     if print_any:
         for str_ in to_print:
             myprint(str_, f)
 
-    if help_file is not None:
+    if help_file is not None and print_any:
         if type(help_file) is str:
             hf = open(help_file, 'w')
         else:
             hf = help_file
-        hf.write(' ------------------------- \n'.format())
+#         hf.write(' ------------------------- \n'.format())
         hf.write('{} \n'.format(atom.atom))
         hf.write('Temperature = {} K, Density = {} cm-3 \n'.format(tem, den))
                 
@@ -190,7 +189,6 @@ def phyat2model(phyat_file, model_file):
 def make_conf_plots():
     
     at_list = [pn.Atom(atom=at) for at in ('C4', 'C3', 'C2', 'O3', 'O2', 'Ne3', 'Ne2')]
-    #cf_list = ('s1', 's2', 'p1', 'p2', 'p3', 'p4', 'p5')
     f, axes = plt.subplots(4,2, figsize=(15, 30))
     for at, ax in zip(at_list, axes.ravel()):
         at.plotGrotrian(ax=ax)
@@ -234,3 +232,10 @@ def get_atoms_by_conf():
     return res
                 
         
+"""
+To make a new liste_phyat, from an ipython session:
+
+from pyssn.phyat_lists.make_phyat_list import make_all
+make_all(tem1=1e4, den1=1e3, cut=1e-4, filename='liste_phyat_4_3.dat', help_file='HF_4_3.dat')
+
+"""
