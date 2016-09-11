@@ -38,7 +38,7 @@ def print_liste_phyat(atom, tem, den, cut=1e-3, ij_ref = None, filename=None, up
         def myprint(s, f):
             f.write(s)
 
-    str_print = '{}{:02d}{:02d}{:02d}0{:03d}{:03d} {:<8s} {:11.3f} 0.000{:10.3e}  1.000  {:02d}{:02d}{:1d}00{:03d}{:03d}   1   1.00 {}'  
+    str_print = '{}{:02d}{:02d}{:02d}0{:03d}{:03d} {:<8s} {:11.3f} 0.000{:10.3e}  1.000  {:02d}{:02d}{:02d}0{:03d}{:03d}   1   1.00 {}'  
     if filename is None:
         f = None
     else:
@@ -53,6 +53,8 @@ def print_liste_phyat(atom, tem, den, cut=1e-3, ij_ref = None, filename=None, up
     emis = atom.getEmissivity(tem, den)
     emis_max_tot = np.max(emis)
     wls = atom.wave_Ang
+    wls_mask = wls < 911.0
+    emis[wls_mask] = 0.0
     NLevels = emis.shape[0]
     gs = gsFromAtom(atom.atom)
     
@@ -174,16 +176,18 @@ def make_all(tem1=None, den1=None, cut=1e-4, filename=None, help_file=None):
 
 def phyat2model(phyat_file, model_file):
     """  
+    dtype = 'i8, a1, a9, f, f, f, f, a1, i8, i4, f, a25'
+    if NF:
+        delimiter = [14, 1, 9, 11, 6, 10, 7, 1, 14, 4, 7, 25]
 
     """
     
-    str_print = '{}{:02d}{:02d}000{:03d}{:03d} {:<8s} {:11.3f} 0.000{:10.3e}  1.000  {:02d}{:02d}000{:03d}{:03d}   1   1.00 {}'
-
     list_phyat = read_data(phyat_file)
     with open(model_file, 'w') as f:
         for line in list_phyat:
             if line['ref'] == 999:
-                f.write('{0:14d} {1[id]:8s}      1.000 0.000 1.000e+04  1.000  0000000000000   1   1.00 {1[comment]:15s}'.format(line['num']-90000000000000, line))
+                new_num = line['num']-90000000000000
+                f.write('{0:14d} {1[id]:9s}      1.000 0.000 1.000e+04  1.000  0000000000000   1   1.00 {1[comment]:>15s}'.format(new_num, line))
 
                         
 def make_conf_plots():
