@@ -235,7 +235,7 @@ def get_atoms_by_conf():
 """
 To make a new liste_phyat, from an ipython session:
 
-from pyssn.phyat_lists.make_phyat_list import make_all
-make_all(tem1=1e4, den1=1e3, cut=1e-4, filename='liste_phyat_4_3.dat', help_file='HF_4_3.dat')
+import pyssn
+pyssn.make_all(tem1=1e4, den1=1e3, cut=1e-4, filename='liste_phyat_4_3.dat', help_file='HF_4_3.dat')
 
 """
