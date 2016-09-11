@@ -229,7 +229,7 @@ def get_atoms_by_conf():
     gss = {}
     for atom in atoms:
         gss[atom] = gsFromAtom(atom)
-    for gs in ('s1', 's2', 'p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'd2', 'd3', 'd4', 'd5', 'd6', 'd7', 'd8', 'unknown'):        
+    for gs in ('s1', 's2', 'p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'd8', 'd7', 'd6', 'd5', 'd4', 'd3', 'd2', 'unknown'):        
         for atom in atoms:
             if gss[atom] == gs:
                 res.append(atom)
