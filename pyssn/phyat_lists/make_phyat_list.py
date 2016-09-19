@@ -169,8 +169,8 @@ def print_liste_phyat(atom, tem, den, cut=1e-3, cut_inter=1e-5, ij_ref = None, f
 
     if print_any:
         myprint('# {} - Temp. = {} K, Dens. = {} cm-3 \n'.format(atom.atom, tem, den))
-        myprint('# Level           ' + ' '.join(('{:4}'.format(l) for l in 2+np.arange(NLevels_max-1))) + '\n')
-        myprint('# log crit. dens. ' + ' '.join(('{:4.1f}'.format(l) for l in np.log10(atom.getCritDensity(tem))[1:NLevels_max])) + '\n')
+        #myprint('# Level           ' + ' '.join(('{:4}'.format(l) for l in 2+np.arange(NLevels_max-1))) + '\n')
+        #myprint('# log crit. dens. ' + ' '.join(('{:4.1f}'.format(l) for l in np.log10(atom.getCritDensity(tem))[1:NLevels_max])) + '\n')
         for str_ in to_print:
             myprint(str_)
         logprint('{} lines printed. '.format(N_lines))
@@ -279,6 +279,6 @@ def get_atoms_by_conf():
 To make a new liste_phyat, from an ipython session:
 
 import pyssn
-pyssn.make_all(tem1=1e4, den1=1e3, cut=1e-4, filename='liste_phyat_4_3.dat', help_file='HF_4_3.dat')
+pyssn.make_all(tem1=1e4, den1=1e3, cut=1e-4, filename='liste_phyat_4_3.dat')
 
 """
