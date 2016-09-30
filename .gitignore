@@ -10,3 +10,4 @@ dist/
 .dropbox
 .directory
 **/.DS_Store
+**phyat_lists/*.dat

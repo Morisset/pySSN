@@ -15,14 +15,14 @@ from ..core.spectrum import read_data
 # ToDo : faire les ions suivant en reprenant les rapports connus et les energies adaptees.
 
 def print_liste_phyat(atom, tem, den, cut=1e-3, cut_inter=1e-5, ij_ref = None, filename=None, up_lev_rule=None,
-                      NLevels=None, E_cut=20, log_file=None, verbose=False):
+                      NLevels=None, E_cut=20, log_file=None, help_file= None, verbose=False):
     """
     atom: a string e.g. 'O3' or a pn.Atom object
     tem in K
     den in cm-3
     cut: relative intensity (to the master one) of a line to be printed
     cut_inter: largest dynamic between ref lines.
-    ij_ref: None: is computed. Otherwise must be of the form e.g. (2, 4)
+    ij_ref: None: is computed. Otherwise must be of the form e.g. (4, 2) or ((4, 2), (5, 3))
     filename: where to output the result. May be None, a string or a file object  
     up_lev_rule: 'each': each upper level are used to define a different master line
             'all': all the transitions are grouped into a single master line
@@ -30,7 +30,8 @@ def print_liste_phyat(atom, tem, den, cut=1e-3, cut_inter=1e-5, ij_ref = None, f
             None: default hard coded value is used, see up_levs below
     NLevels : max number of levels for the atom
     E_cut: max energy in eV for the energy level to give a line
-    log_file: for hte log
+    log_file: for the log
+    help_file: for the comments on the Te, Ne for each ion.
     """
     
     up_levs = {'s1': [[2, 3], 4, 5, 6],  
@@ -41,19 +42,10 @@ def print_liste_phyat(atom, tem, den, cut=1e-3, cut_inter=1e-5, ij_ref = None, f
                'p4': 'each',
                'p5': 'each'} # The others are 'all' by default (i.e. only one master line, with all the lines depending on it
 
-    if filename is None:
-        def myprint(s):
-            print(s)
-    else:
-        def myprint(s):
-            filename.write(s)
-    if log_file is None:
-        def logprint(s):
-            print(s)
-    else:
-        def logprint(s):
-            log_file.write(s)
-        
+    ij_refs = {'s1': ((2, 1),),
+               'p1': ((3, 1), (7, 1)),
+               'p3': ((4, 1),)}
+
     str_print = '{}{:02d}{:02d}{:01d}{:01d}0{:03d}{:03d} {:<8s} {:11.3f} 0.000{:10.3e}  1.000  {:02d}{:02d}{:01d}00{:03d}{:03d}   1   1.00 {}'  
     if filename is None:
         f = None
@@ -63,6 +55,38 @@ def print_liste_phyat(atom, tem, den, cut=1e-3, cut_inter=1e-5, ij_ref = None, f
             f = open(filename, 'w')
         elif type(filename) is file:
             f = filename
+
+    if filename is None:
+        def myprint(s):
+            print(s)
+    else:
+        def myprint(s):
+            f.write(s)
+
+    if log_file is None:
+        def logprint(s):
+            print(s)
+    elif type(log_file) is str:
+        lf = open(log_file, 'w')
+        def logprint(s):
+            lf.write(s)
+    elif type(log_file) is file:
+        lf = log_file            
+        def logprint(s):
+            lf.write(s)
+
+    if help_file is None:
+        def hprint(s):
+            print(s)
+    elif type(help_file) is str:
+        hf = open(log_file, 'w')
+        def hprint(s):
+            hf.write(s)
+    elif type(help_file) is file:
+        hf = help_file            
+        def hprint(s):
+            hf.write(s)
+        
     
     if type(atom) is str:
         atom = pn.Atom(atom=atom, NLevels=NLevels)
@@ -104,6 +128,13 @@ def print_liste_phyat(atom, tem, den, cut=1e-3, cut_inter=1e-5, ij_ref = None, f
     else:
         up_lev_list = up_lev_rule
         
+    if ij_ref is not None:
+        if type(ij_ref[0]) is not tuple:
+            ij_ref = (ij_ref,)
+    else:
+        if gs in ij_refs:
+            ij_ref = ij_refs[gs]
+    
     #print('up_lev_rule: {}, up_lev_list: {}'.format(up_lev_rule, up_lev_list))
     NLevels_max = 0
     print_any = False
@@ -116,25 +147,30 @@ def print_liste_phyat(atom, tem, den, cut=1e-3, cut_inter=1e-5, ij_ref = None, f
         emis_ref = 0
         i_emis_ref_loc = None
         j_emis_ref_loc = None
-        if ij_ref is None:
+        
+        for i in up_lev:
+            if i < this_NLevels+1:
+                for j in 1+np.arange(i):
+                         
+                    if ij_ref is not None and (i, j) in ij_ref:
+                            i_emis_ref_loc = i
+                            j_emis_ref_loc = j
+                            emis_ref = emis[i-1,j-1]
+        if i_emis_ref_loc is None:
             for i in up_lev:
                 if i < this_NLevels+1:
-                    for j in 1+np.arange(i):                        
+                    for j in 1+np.arange(i):
                         if emis[i-1,j-1] > emis_ref:
                             i_emis_ref_loc = i
                             j_emis_ref_loc = j
                             emis_ref = emis[i-1,j-1]
-                        if verbose:
-                            print('{} {} {}'.format(i,j,emis[i-1, j-1]))
-            if emis_ref < cut_inter * np.max(emis):
-                i_emis_ref_loc = None
-        else:
-            i_emis_ref_loc, j_emis_ref_loc = ij_ref
-            emis_ref = emis[i_emis_ref_loc, j_emis_ref_loc]
+
+        if emis_ref < cut_inter * np.max(emis):
+            i_emis_ref_loc = None
+                
         if i_emis_ref_loc is not None:
             com_ref = '{} {} {:.1f}'.format(i_emis_ref_loc, j_emis_ref_loc, wls[i_emis_ref_loc-1,j_emis_ref_loc-1])
             if i_emis_ref_loc > 9:
-                print('!!! Reference line for {} corresponds to a level {} > 9'.format(atom.atom, i_emis_ref_loc))
                 logprint('Ref line level is {}. '.format(i_emis_ref_loc))
                 ref_str=str_print.format('9', Z[atom.elem], atom.spec,i_emis_ref_loc/10 , i_emis_ref_loc%10, 0, 0, ion_name, 1.0, 1.0, 0, 0, 0, 0, 999, com_ref)
             else:      
@@ -158,6 +194,7 @@ def print_liste_phyat(atom, tem, den, cut=1e-3, cut_inter=1e-5, ij_ref = None, f
                                 to_print.append(ref_str)
                                 print_ref = False
                             i_to_print = np.min((i, 9))
+                            i_to_print = i_emis_ref_loc
                             if i_emis_ref_loc > 9:
                                 to_print.append(str_print.format(' ', Z[atom.elem], atom.spec, i_to_print, 0, i, j, ion_name, 
                                                      wls[i-1,j-1], emis[i-1,j-1]/emis_ref, Z[atom.elem], atom.spec, i_emis_ref_loc/10, i_emis_ref_loc%10, 0, com))
@@ -168,9 +205,7 @@ def print_liste_phyat(atom, tem, den, cut=1e-3, cut_inter=1e-5, ij_ref = None, f
     
 
     if print_any:
-        myprint('# {} - Temp. = {} K, Dens. = {} cm-3 \n'.format(atom.atom, tem, den))
-        #myprint('# Level           ' + ' '.join(('{:4}'.format(l) for l in 2+np.arange(NLevels_max-1))) + '\n')
-        #myprint('# log crit. dens. ' + ' '.join(('{:4.1f}'.format(l) for l in np.log10(atom.getCritDensity(tem))[1:NLevels_max])) + '\n')
+        hprint('# {} - Temp. = {} K, Dens. = {} cm-3 \n'.format(atom.atom, tem, den))
         for str_ in to_print:
             myprint(str_)
         logprint('{} lines printed. '.format(N_lines))
@@ -180,6 +215,13 @@ def print_liste_phyat(atom, tem, den, cut=1e-3, cut_inter=1e-5, ij_ref = None, f
             logprint('No up lev. ')
         if i_emis_ref_loc is None:
             logprint('No ref loc. ')
+    
+    if type(help_file) is str:
+        hf.close()
+    if type(log_file) is str:
+        lf.close()
+        
+
 
 def get_tem_den(IP=-1):
     if IP < 0:
@@ -191,20 +233,29 @@ def get_tem_den(IP=-1):
     else:
         return 1.e4, 1e3
 
-def make_all(tem1=None, den1=None, cut=1e-4, filename=None, E_cut=20, cut_inter=1e-5, verbose=False):
+
+ref_lines_dic = {}
+
+def make_all(tem1=None, den1=None, cut=1e-4, filename=None, E_cut=20, cut_inter=1e-5, verbose=False, notry=False):
     f = open(filename, 'w')
     f.write("# liste_phyat automatically generated on {} \n".format(time.ctime()))
     log_file = open('log.dat', 'w')
     log_file.write("# log_file automatically generated on {} \n".format(time.ctime()))
+    help_file = open('help.dat', 'w')
+    help_file.write("# help_file automatically generated on {} \n".format(time.ctime()))
     atoms = get_atoms_by_conf()
     printed_confs = []
-    #atoms = ['O3', 'Fe2']
+    #atoms = ['C4', 'C3', 'C2', 'O3', 'O2', 'Ne3', 'Ne2', 'Fe3']
+    
     for a in atoms:
         print(a)
+        if a in ref_lines_dic:
+            ref_lines = ref_lines_dic[a]
+        else:
+            ref_lines = None
         conf = gsFromAtom(a)
         log_file.write('{}, conf={}, '.format(a, conf))
         if conf not in printed_confs:
-            f.write('# Starting Conf {}\n'.format(conf))
             printed_confs.append(conf)
         try:
             atom = pn.Atom(atom=a, NLevels=50)
@@ -221,14 +272,19 @@ def make_all(tem1=None, den1=None, cut=1e-4, filename=None, E_cut=20, cut_inter=
             else:
                 tem = tem1
                 den = den1
-            try:
+            if notry:
                 print_liste_phyat(atom, tem, den, cut=cut, filename=f, E_cut=E_cut, log_file=log_file, 
-                                  cut_inter=cut_inter, verbose=verbose)
-                log_file.write('Done.')
-            except:
-                log_file.write('plp error.')
-        log_file.write('\n')
+                                  cut_inter=cut_inter, verbose=verbose, help_file=help_file, ij_ref=ref_lines)                
+            else:
+                try:
+                    print_liste_phyat(atom, tem, den, cut=cut, filename=f, E_cut=E_cut, log_file=log_file, 
+                                  cut_inter=cut_inter, verbose=verbose, help_file=help_file, ij_ref=ref_lines)    
+                except:
+                    log_file.write('plp error.')
+            log_file.write('\n')
+    f.write('\n')
     f.close()
+    log_file.write('\n')
     log_file.close()
 
 def phyat2model(phyat_file, model_file):
