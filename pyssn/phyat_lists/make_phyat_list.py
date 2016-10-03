@@ -7,6 +7,8 @@ import os
 import time
 from ..core.spectrum import read_data
 
+pn.atomicData.addAllChianti()
+
 #pn.atomicData.setDataFile('o_iii_atom.chianti')
 
 #pn.atomicData.setDataFile('o_iii_atom.chianti')
@@ -125,6 +127,9 @@ def print_liste_phyat(atom, tem, den, cut=1e-3, cut_inter=1e-5, ij_ref = None, f
         up_lev_list = range(2, this_NLevels+1)
     elif up_lev_rule == 'all':
         up_lev_list = [range(2, this_NLevels+1)]
+    elif 'split' in up_lev_rule:
+        N_split = int(up_lev_rule.split()[-1])
+        up_lev_list = [range(2, N_split+1), range(N_split+1, this_NLevels+1)]
     else:
         up_lev_list = up_lev_rule
         
@@ -141,7 +146,7 @@ def print_liste_phyat(atom, tem, den, cut=1e-3, cut_inter=1e-5, ij_ref = None, f
     to_print = []
     ion_name = '{:>2s}_{:<5s}'.format(atom.elem, int_to_roman(atom.spec)).strip()
     N_lines = 0
-    for up_lev in up_lev_list:
+    for i_up_lev, up_lev in enumerate(up_lev_list):
         if type(up_lev) is int:
             up_lev = [up_lev]
         emis_ref = 0
@@ -167,9 +172,10 @@ def print_liste_phyat(atom, tem, den, cut=1e-3, cut_inter=1e-5, ij_ref = None, f
 
         if emis_ref < cut_inter * np.max(emis):
             i_emis_ref_loc = None
-                
         if i_emis_ref_loc is not None:
             com_ref = '{} {} {:.1f}'.format(i_emis_ref_loc, j_emis_ref_loc, wls[i_emis_ref_loc-1,j_emis_ref_loc-1])
+            if ("split" in up_lev_rule) or ("all" in up_lev_rule):
+                i_emis_ref_loc = i_up_lev + 1
             if i_emis_ref_loc > 9:
                 logprint('Ref line level is {}. '.format(i_emis_ref_loc))
                 ref_str=str_print.format('9', Z[atom.elem], atom.spec,i_emis_ref_loc/10 , i_emis_ref_loc%10, 0, 0, ion_name, 1.0, 1.0, 0, 0, 0, 0, 999, com_ref)
@@ -234,9 +240,38 @@ def get_tem_den(IP=-1):
         return 1.e4, 1e3
 
 
-ref_lines_dic = {}
+ref_lines_dic = {'Fe7': ((4, 2),),
+                 'Fe6': ((2, 1), (5, 1),),
+                 'Fe5': ((3, 2), (7, 5),),
+                 'Fe4': ((6, 1),),
+                 'Fe3': ((2, 1), (12, 1),)
+                 }
+NLevels_dic = {'S1': 8,
+               'Ni2': 17,
+               'Fe1': 9,
+               'Ni3': 9,
+               'Ni4': 17,
+               'Fe3': 25,
+               'Fe4': 26,
+               'Fe5': 20,
+               'Fe6': 19,
+               'Fe7': 9,
+               'Fe8': 2
+               }
+up_lev_rule_dic = {'Ni2': 'split 3',
+                   'Fe1': 'split 5',
+                   'Ni3': 'split 3',
+                   'Ni4': 'split 4',
+                   'Fe3': 'split 5',
+                   'Fe4': 'all',
+                   'Fe5': 'split 5',
+                   'Fe6': 'split 4',
+                   'Fe7': 'split 3'
+                   }
 
-def make_all(tem1=None, den1=None, cut=1e-4, filename=None, E_cut=20, cut_inter=1e-5, verbose=False, notry=False):
+def make_all(tem1=None, den1=None, cut=1e-4, filename=None, E_cut=20, cut_inter=1e-5, 
+             verbose=False, notry=False, NLevels=50):
+    
     f = open(filename, 'w')
     f.write("# liste_phyat automatically generated on {} \n".format(time.ctime()))
     log_file = open('log.dat', 'w')
@@ -246,19 +281,28 @@ def make_all(tem1=None, den1=None, cut=1e-4, filename=None, E_cut=20, cut_inter=
     atoms = get_atoms_by_conf()
     printed_confs = []
     #atoms = ['C4', 'C3', 'C2', 'O3', 'O2', 'Ne3', 'Ne2', 'Fe3']
-    
+    #atoms = ['Fe1', 'Fe3','Fe4', 'Fe5','Fe6', 'Fe7','Fe8', 'Ni2','Ni3', 'Ni4']
+    #atoms = ['Fe2','Fe3', 'Fe4']
     for a in atoms:
         print(a)
         if a in ref_lines_dic:
             ref_lines = ref_lines_dic[a]
         else:
             ref_lines = None
+        if a in NLevels_dic:
+            this_NLevels = NLevels_dic[a]
+        else:
+            this_NLevels = NLevels
+        if a in up_lev_rule_dic:
+            up_lev_rule = up_lev_rule_dic[a]
+        else:
+            up_lev_rule = None
         conf = gsFromAtom(a)
         log_file.write('{}, conf={}, '.format(a, conf))
         if conf not in printed_confs:
             printed_confs.append(conf)
         try:
-            atom = pn.Atom(atom=a, NLevels=50)
+            atom = pn.Atom(atom=a, NLevels=this_NLevels)
             if atom.NLevels > 0:
                 do_it = True
             else:
@@ -274,11 +318,13 @@ def make_all(tem1=None, den1=None, cut=1e-4, filename=None, E_cut=20, cut_inter=
                 den = den1
             if notry:
                 print_liste_phyat(atom, tem, den, cut=cut, filename=f, E_cut=E_cut, log_file=log_file, 
-                                  cut_inter=cut_inter, verbose=verbose, help_file=help_file, ij_ref=ref_lines)                
+                                  cut_inter=cut_inter, verbose=verbose, help_file=help_file, ij_ref=ref_lines,
+                                  up_lev_rule=up_lev_rule)                
             else:
                 try:
                     print_liste_phyat(atom, tem, den, cut=cut, filename=f, E_cut=E_cut, log_file=log_file, 
-                                  cut_inter=cut_inter, verbose=verbose, help_file=help_file, ij_ref=ref_lines)    
+                                  cut_inter=cut_inter, verbose=verbose, help_file=help_file, ij_ref=ref_lines,
+                                  up_lev_rule=up_lev_rule)    
                 except:
                     log_file.write('plp error.')
             log_file.write('\n')
@@ -309,7 +355,7 @@ def make_conf_plots():
     f.savefig('conf_all.pdf')
 
 def get_atoms_by_name():
-    pn.atomicData.addAllChianti()
+    
     atoms = pn.atomicData.getAllAtoms()
     atoms.remove('3He2')
     return sorted(atoms)
