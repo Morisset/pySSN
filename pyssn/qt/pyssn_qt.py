@@ -352,15 +352,15 @@ class AppForm(QtGui.QMainWindow):
         self.verbosity_button = QtGui.QPushButton('Verbosity')
         s = 'Verbosity level:\n'
         for i in range(len(self.verbosity_list)):
-          s = s + '    ' + str(i) + ' - ' + self.verbosity_list[i] + '\n'
+            s = s + '    ' + str(i) + ' - ' + self.verbosity_list[i] + '\n'
         s = s + '\nSet with:\n' + '    log_level = <integer>'
         self.verbosity_button.setToolTip( s )        
         self.verbosity_ag = QtGui.QActionGroup(self, exclusive=True)
         
         self.verbosity_menu = QtGui.QMenu()
         for i in range(len(self.verbosity_list)):
-          a = self.verbosity_ag.addAction(QtGui.QAction(self.verbosity_list[i], self, checkable=True))
-          self.verbosity_menu.addAction(a)
+            a = self.verbosity_ag.addAction(QtGui.QAction(self.verbosity_list[i], self, checkable=True))
+            self.verbosity_menu.addAction(a)
         self.verbosity_button.setMenu(self.verbosity_menu)
         self.verbosity_ag.triggered.connect(self.verbosity)
         
