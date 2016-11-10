@@ -113,7 +113,7 @@ red_corr_law = 'S79 H83 CCM89'
 # definition of the structure for the limits of the plots
 x_plot_lims = None
 y1_plot_lims = None
-y2_plot_lims = (-1.5, 1.)
+y2_plot_lims = (-0.5, 1.5)
 y3_plot_lims = None
 cut_plot2 = 1.0 # used to select the line ID shown in plot2
 

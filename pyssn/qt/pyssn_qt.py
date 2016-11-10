@@ -19,6 +19,8 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 #from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT
 from matplotlib.figure import Figure
+import matplotlib.pyplot as plt
+
 import numpy as np
 from pyssn import log_, __version__
 from ..core.spectrum import spectrum
@@ -151,7 +153,8 @@ class AppForm(QtGui.QMainWindow):
         # Create the mpl Figure and FigCanvas objects. 
         #
         self.dpi = 100
-        self.fig = Figure((20.0, 15.0), dpi=self.dpi)
+        self.fig = plt.figure(figsize=(15,15))
+#        self.fig = plt.figure((figsize=(20.0, 15.0), dpi=self.dpi)
         
         log_.debug('creating figure {}'.format(id(self.fig)), calling=self.calling)
         
@@ -174,7 +177,7 @@ class AppForm(QtGui.QMainWindow):
         # Other GUI controls
         # 
         
-        self.fix_axes_cb = QtGui.QCheckBox("Fix axes")
+        self.fix_axes_cb = QtGui.QCheckBox("fix")
         self.fix_axes_cb.setChecked(False)
         self.connect(self.fix_axes_cb, QtCore.SIGNAL('stateChanged(int)'), self.fix_axes)
 
@@ -197,12 +200,20 @@ class AppForm(QtGui.QMainWindow):
         self.y3lim_min_box = QtGui.QLineEdit()
         self.y3lim_min_box.setMinimumWidth(50)
         self.connect(self.y3lim_min_box, QtCore.SIGNAL('returnPressed()'), self.save_from_lim_boxes)
+        s = 'Minimum ordinate value of the residual plot\n\n' \
+            'Set with:  \n' \
+            '    y3_plot_lims = (<ymin>, <ymax>)'
+        self.y3lim_min_box.setToolTip( s )        
         
         self.y3lim_max_box = QtGui.QLineEdit()
         self.y3lim_max_box.setMinimumWidth(50)
         self.connect(self.y3lim_max_box, QtCore.SIGNAL('returnPressed()'), self.save_from_lim_boxes)
+        s = 'Maximum ordinate value of the residual plot\n\n' \
+            'Set with:  \n' \
+            '    y3_plot_lims = (<ymin>, <ymax>)'
+        self.y3lim_max_box.setToolTip( s )        
         
-        self.select_init_button = QtGui.QPushButton("Select init file")
+        self.select_init_button = QtGui.QPushButton("Init file")
         self.connect(self.select_init_button, QtCore.SIGNAL('clicked()'), self.select_init)
         
         self.rerun_button = QtGui.QPushButton("&Rerun")
@@ -211,16 +222,34 @@ class AppForm(QtGui.QMainWindow):
         self.draw_button = QtGui.QPushButton("&Draw")
         self.connect(self.draw_button, QtCore.SIGNAL('clicked()'), self.on_draw)
 
-        self.savelines_button = QtGui.QPushButton("&Save Lines")
+        self.savelines_button = QtGui.QPushButton("&Save")
+        self.savelines_button.setMinimumWidth(50)
         self.connect(self.savelines_button, QtCore.SIGNAL('clicked()'), self.save_lines)
         
-        self.pl_ax2_cb = QtGui.QCheckBox("Lines ID")
-        self.pl_ax2_cb.setChecked(True)
-        self.connect(self.pl_ax2_cb, QtCore.SIGNAL('stateChanged(int)'), self.make_axes)
+        self.Command_GroupBox = QtGui.QGroupBox("Main commands")
+        self.Command_GroupBox.setCheckable(False)
         
-        self.pl_ax3_cb = QtGui.QCheckBox("Residus")
-        self.pl_ax3_cb.setChecked(True)
-        self.connect(self.pl_ax3_cb, QtCore.SIGNAL('stateChanged(int)'), self.make_axes)
+        self.ObsSpec_GroupBox = QtGui.QGroupBox("Parameters related to the observed spectrum")
+        self.ObsSpec_GroupBox.setCheckable(False)
+
+        self.SpecPlot_GroupBox = QtGui.QGroupBox("Plot of the spectra")
+        self.SpecPlot_GroupBox.setCheckable(False)
+
+        self.lineIDs_GroupBox = QtGui.QGroupBox("Show lines")
+        self.lineIDs_GroupBox.setCheckable(True)
+        self.lineIDs_GroupBox.setChecked(False)
+        
+#        self.lineIDs_GroupBox.setTristate(True)
+#        self.lineIDs_GroupBox.setCheckState(QtCore.Qt.PartiallyChecked)
+        
+        self.connect(self.lineIDs_GroupBox, QtCore.SIGNAL('clicked()'), self.make_axes)
+        self.lineIDs_GroupBox.setToolTip( 'Check to display the central positions of the spectral lines' )        
+
+        self.residual_GroupBox = QtGui.QGroupBox("Plot of residuals")
+        self.residual_GroupBox.setCheckable(True)
+        self.residual_GroupBox.setChecked(True)
+        self.connect(self.residual_GroupBox, QtCore.SIGNAL('clicked()'), self.make_axes)
+        self.residual_GroupBox.setToolTip( 'Check to display the residual plot' )        
 
         self.adjust_button = QtGui.QPushButton("&Update lines")
         self.adjust_button.setChecked(False)
@@ -282,70 +311,153 @@ class AppForm(QtGui.QMainWindow):
         self.cyan_label_box.setMinimumWidth(50)
         self.connect(self.cyan_label_box, QtCore.SIGNAL('returnPressed()'), self.cyan_line)
 
-        self.verbosity_cb = QtGui.QComboBox()
-        self.verbosity_cb.addItem('0: nothing')
-        self.verbosity_cb.addItem('1: Errors')
-        self.verbosity_cb.addItem('2: Errs + Warnings')
-        self.verbosity_cb.addItem('3: Errs + Warns + Messages')
-        self.verbosity_cb.addItem('4: All + Debug messages')
-        self.verbosity_cb.setCurrentIndex(log_.level)
-        self.connect(self.verbosity_cb, QtCore.SIGNAL('activated(QString)'), self.verbosity)
+
+        self.setStyleSheet("""QToolTip { 
+                           background-color: black; 
+                           color: lightgray; 
+                           min-width: 20em;
+                           font-size: 14px;
+                           font-family: "sans-serif";
+                           border: black solid 10px
+                           }""")
+
+        s =  'Color excess E(B-V)\n\n' \
+             'Set with: \n' \
+             '    e_bv = <float>\n\n' \
+             'Comment: \n' \
+            u'    E(B-V) \u2248 C(H\u03B2) / 1.5'
+        self.ebv_box.setToolTip( s )  
+        
+        s = 'Radial velocity in km/s\n\n' \
+            'Set with: \n' \
+            '    obj_velo = <float>'
+        self.obj_velo_box.setToolTip( s ) 
+        
+        s = 'Normalization factor, ratio between the intensity and the \n' \
+            u'observed flux of the reference line, 10\u2074/F(H\u03B2)\n\n' \
+             'Set with: \n' \
+             '    sp_norm = <float>'
+        self.sp_norm_box.setToolTip( s )        
+
+        s = 'Rebinning factor, the integer factor by which the number of points \n' \
+            'of the original spectrum is multiplied in the rebinning process\n\n' \
+            'Set with: \n' \
+            '    resol = <integer>\n\n' \
+            'Usage: \n' \
+            '    Set to \'1\' if the resolution of the observed spectrum is large enough' 
+              
+        self.resol_box.setToolTip( s ) 
+
+        self.verbosity_list = ['None', 'Errors', 'Errors and warnings', 'Errors, warnings, and comments', 'Debug messages' ]
+        self.verbosity_button = QtGui.QPushButton('Verbosity')
+        s = 'Verbosity level:\n'
+        for i in range(len(self.verbosity_list)):
+          s = s + '    ' + str(i) + ' - ' + self.verbosity_list[i] + '\n'
+        s = s + '\nSet with:\n' + '    log_level = <integer>'
+        self.verbosity_button.setToolTip( s )        
+        self.verbosity_ag = QtGui.QActionGroup(self, exclusive=True)
+        
+        self.verbosity_menu = QtGui.QMenu()
+        for i in range(len(self.verbosity_list)):
+          a = self.verbosity_ag.addAction(QtGui.QAction(self.verbosity_list[i], self, checkable=True))
+          self.verbosity_menu.addAction(a)
+        self.verbosity_button.setMenu(self.verbosity_menu)
+        self.verbosity_ag.triggered.connect(self.verbosity)
         
         #
         # Layout with box sizers
         # 
-        hbox0t = QtGui.QHBoxLayout()
-        hbox0 = QtGui.QHBoxLayout()
-        hbox1 = QtGui.QHBoxLayout()
-        hbox2 = QtGui.QHBoxLayout()
-        hbox3 = QtGui.QHBoxLayout()
-        hbox4 = QtGui.QHBoxLayout()
         hbox5 = QtGui.QHBoxLayout()
-        
-        for l in ['', 'xmin', 'xmax', 'y1min', 'y1max', 'y3min', 'y3max']:
-            w = QtGui.QLabel(l)
-            hbox0t.addWidget(w)
-            hbox0t.setAlignment(w, QtCore.Qt.AlignVCenter)
 
-        for w in [self.fix_axes_cb, self.xlim_min_box, self.xlim_max_box, self.y1lim_min_box, self.y1lim_max_box, self.y3lim_min_box, self.y3lim_max_box]:
-            hbox0.addWidget(w)
-            hbox0.setAlignment(w, QtCore.Qt.AlignVCenter)
-
-        for w in [self.select_init_button, self.rerun_button, self.draw_button, self.pl_ax2_cb, self.pl_ax3_cb, 
-                  self.adjust_button, self.post_proc_button]:
-            hbox1.addWidget(w)
-            hbox1.setAlignment(w, QtCore.Qt.AlignVCenter)
-
-        for l in ['sp min', 'sp max', 'sp norm', 'obj velo', 'E_B-V', 'resol', 'cut2', 'Save lines']:
-            w = QtGui.QLabel(l)
-            hbox2.addWidget(w)
-            hbox2.setAlignment(w, QtCore.Qt.AlignVCenter)
-
-        for w in [self.sp_min_box, self.sp_max_box, self.sp_norm_box, self.obj_velo_box, self.ebv_box, self.resol_box, self.cut2_box, self.savelines_button]:
-            hbox3.addWidget(w)
-            hbox3.setAlignment(w, QtCore.Qt.AlignVCenter)
-          
-        for l in ['line info', 'magenta', 'magenta txt', 'cyan', 'cyan txt', 'verbosity']:
-            w = QtGui.QLabel(l)
-            hbox4.addWidget(w)
-            hbox4.setAlignment(w, QtCore.Qt.AlignVCenter)
-
-        for w in [self.line_info_box, self.magenta_box, self.magenta_label_box, self.cyan_box, self.cyan_label_box, self.verbosity_cb]:
+        for w in [self.line_info_box, self.magenta_box, self.magenta_label_box, self.cyan_box, self.cyan_label_box]:
             hbox5.addWidget(w)
             hbox5.setAlignment(w, QtCore.Qt.AlignVCenter)
 
-        vbox = QtGui.QVBoxLayout()
+
+        CommandLayout = QtGui.QGridLayout()
+
+        wList = [self.select_init_button,self.rerun_button,self.draw_button,self.adjust_button,self.post_proc_button,self.verbosity_button]
+        Nrow = 2
+
+        for w in wList:
+            k = wList.index( w )
+            i = k%Nrow
+            j = 1+2*(k/Nrow)
+            CommandLayout.addWidget(w,i,j)
+            CommandLayout.setAlignment(w,QtCore.Qt.AlignCenter)
+
+        self.Command_GroupBox.setLayout(CommandLayout)
+
+        ObsSpecLayout = QtGui.QGridLayout()
+
+        lList = ['xmin', 'xmax', u'10\u2074/F(H\u03B2)', 'radial vel.', 'E(B-V)', 'N']
+        wList = [self.sp_min_box, self.sp_max_box, self.sp_norm_box, self.obj_velo_box, self.ebv_box, self.resol_box ]
+        Nrow = 2
+
+        for l in lList:
+            w = QtGui.QLabel(l)
+            k = lList.index( l )
+            i = k%Nrow
+            j = 2*(k/Nrow)
+            ObsSpecLayout.addWidget(w,i,j)
+            ObsSpecLayout.setAlignment(w,QtCore.Qt.AlignRight)
+
+        for w in wList:
+            k = wList.index( w )
+            i = k%Nrow
+            j = 1+2*(k/Nrow)
+            ObsSpecLayout.addWidget(w,i,j)
+            ObsSpecLayout.setAlignment(w,QtCore.Qt.AlignRight)
+
+        self.ObsSpec_GroupBox.setLayout(ObsSpecLayout)
+
+        SpecPlotLayout = QtGui.QGridLayout()
+        SpecPlotLayout.addWidget(QtGui.QLabel('xmin'),0,0)
+        SpecPlotLayout.addWidget(QtGui.QLabel('xmax'),1,0)
+        SpecPlotLayout.addWidget(QtGui.QLabel('ymin'),0,2)
+        SpecPlotLayout.addWidget(QtGui.QLabel('ymax'),1,2)
+        SpecPlotLayout.addWidget(self.xlim_min_box,0,1)
+        SpecPlotLayout.addWidget(self.xlim_max_box,1,1)
+        SpecPlotLayout.addWidget(self.y1lim_min_box,0,3)
+        SpecPlotLayout.addWidget(self.y1lim_max_box,1,3)
+        SpecPlotLayout.addWidget(self.fix_axes_cb,0,4)
+
+        self.SpecPlot_GroupBox.setLayout(SpecPlotLayout)
+
+        LineIDLayout = QtGui.QGridLayout()
+        LineIDLayout.addWidget(QtGui.QLabel('cut'),0,0)
+        LineIDLayout.addWidget(self.cut2_box,0,1)
+        LineIDLayout.addWidget(self.savelines_button,1,1)
+
+        self.lineIDs_GroupBox.setLayout(LineIDLayout)
+
+        ResidualLayout = QtGui.QGridLayout()            
+        ResidualLayout.addWidget(QtGui.QLabel('ymin'),0,0)
+        ResidualLayout.addWidget(QtGui.QLabel('ymax'),1,0)
+        ResidualLayout.addWidget(self.y3lim_min_box,0,1)
+        ResidualLayout.addWidget(self.y3lim_max_box,1,1)
+ 
+        self.residual_GroupBox.setLayout(ResidualLayout)
         
+        grid = QtGui.QGridLayout()
+
+        grid.addWidget(self.Command_GroupBox, 0, 1 )
+        grid.addWidget(self.ObsSpec_GroupBox, 0, 2 )
+        grid.addWidget(self.SpecPlot_GroupBox, 0, 3 )
+        grid.addWidget(self.residual_GroupBox, 0, 4 )
+        grid.addWidget(self.lineIDs_GroupBox, 0, 5 )
+
+        vbox = QtGui.QVBoxLayout()
         vbox.addWidget(self.canvas)
         vbox.addWidget(self.mpl_toolbar)
-        vbox.addLayout(hbox0t)
-        vbox.addLayout(hbox0)
-        vbox.addLayout(hbox1)
-        vbox.addLayout(hbox2)
-        vbox.addLayout(hbox3)
-        vbox.addLayout(hbox4)
-        vbox.addLayout(hbox5)
-        
+
+        vbox.addLayout(grid)
+
+#        QtGui.QApplication.setStyle(QtGui.QStyleFactory.create(styleName))
+#        self.changePalette()
+        QtGui.qApp.setStyle('Windows')
+        QtGui.qApp.setStyle('Cleanlooks')
+        QtGui.qApp.setStyle('Plastique')
         self.main_frame.setLayout(vbox)
         self.setCentralWidget(self.main_frame)
     
@@ -403,7 +515,10 @@ class AppForm(QtGui.QMainWindow):
         return action
 
     def on_draw(self):
-        """ Redraws the figure
+        """ Redraws        for w in [self.sp_min_box, self.ebv_box, self.resol_box]:
+            hbox3.addWidget(w)
+            hbox3.setAlignment(w, QtCore.Qt.AlignVCenter)
+ the figure
         """
         log_.debug('Entering on_drawn', calling=self.calling)
         if self.sp is None:
@@ -422,18 +537,21 @@ class AppForm(QtGui.QMainWindow):
             self.save_axes()
         self.axes.cla()
         self.sp.plot_ax1(self.axes)
-        
-        if self.pl_ax2_cb.isChecked():
+
+        if self.lineIDs_GroupBox.isChecked() and self.sp.get_conf('plot_ax2'):
             self.axes2.cla()
             self.sp.plot_ax2(self.axes2)
+#            self.sp.plot_lines(self.axes3)
         
-        if self.pl_ax3_cb.isChecked():
+        if self.residual_GroupBox.isChecked():
             self.axes3.cla()
             self.sp.plot_ax3(self.axes3)
+            if self.lineIDs_GroupBox.isChecked() and not self.sp.get_conf('plot_ax2'):
+                self.sp.plot_lines(self.axes3)
         
-        if self.pl_ax3_cb.isChecked():
+        if self.residual_GroupBox.isChecked():
             self.axes3.set_xlabel(r'Wavelength ($\AA$)')
-        elif self.pl_ax2_cb.isChecked():
+        elif self.lineIDs_GroupBox.isChecked() and self.sp.get_conf('plot_ax2'):
             self.axes2.set_xlabel(r'Wavelength ($\AA$)')
         else:
             self.axes.set_xlabel(r'Wavelength ($\AA$)')
@@ -450,19 +568,76 @@ class AppForm(QtGui.QMainWindow):
             self.save_axes()
         self.fig.clf()
 
+        i_ax1 = 0
+        i_ax2 = 1
+        i_ax3 = 2
+        rspan_ax1 = 4
+        rspan_ax2 = 1
+        rspan_ax3 = 4
+        n_subplots = rspan_ax1
+        ShowAx2 = self.lineIDs_GroupBox.isChecked() and self.sp.get_conf('plot_ax2')
+#        if self.lineIDs_GroupBox.isChecked():
+        if ShowAx2:
+            i_ax2 = n_subplots
+            n_subplots += rspan_ax2
+        if self.residual_GroupBox.isChecked():
+            i_ax3 = n_subplots
+            n_subplots += rspan_ax3
+        if self.axes is not None:
+            del(self.axes)
+        self.axes = plt.subplot2grid((n_subplots,1), (i_ax1,0), rowspan=rspan_ax1)
+        self.sp.ax1 = self.axes
+#        if self.lineIDs_GroupBox.isChecked():
+        if ShowAx2:
+            if self.axes2 is not None:
+                del(self.axes2)
+            self.axes2 = plt.subplot2grid((n_subplots,1), (i_ax2,0), rowspan=rspan_ax2, sharex=self.axes )
+            self.axes2.tick_params( left='off',labelleft='off' ) 
+            self.sp.ax2 = self.axes2
+            self.axes.get_xaxis().set_visible(False)
+        else:
+            self.axes2 = None
+            self.sp.ax2 = None
+        if self.residual_GroupBox.isChecked():
+            if self.axes3 is not None:
+                del(self.axes3)
+            self.axes3 = plt.subplot2grid((n_subplots,1), (i_ax3,0), rowspan=rspan_ax3, sharex=self.axes )
+            self.sp.ax3 = self.axes3
+            if ShowAx2:
+                self.axes2.get_xaxis().set_visible(False)
+            self.axes.get_xaxis().set_visible(False)
+        else:
+            self.axes3 = None
+            self.sp.ax3 = self.axes3
+        self.fig.subplots_adjust(hspace=0.0, bottom=0.11, right=0.98, top=0.99, left=0.1)
+        if self.call_on_draw: 
+            log_.debug('Calling on_draw from make_axes', calling=self.calling)
+            self.do_save = False
+            self.on_draw()
+            self.do_save = True
+        
+        log_.debug('Exit make_axes', calling=self.calling)
+        
+    def make_axes_original(self):
+        
+        log_.debug('Entering make_axes', calling=self.calling)
+        if self.call_on_draw: 
+            self.save_axes()
+        self.fig.clf()
+
         n_subplots = 1
         i_ax2 = 2
         i_ax3 = 2
-        if self.pl_ax2_cb.isChecked():
+        if self.lineIDs_GroupBox.isChecked():
             n_subplots += 1
             i_ax3 += 1
-        if self.pl_ax3_cb.isChecked():
+        if self.residual_GroupBox.isChecked():
             n_subplots += 1
         if self.axes is not None:
             del(self.axes)
         self.axes = self.fig.add_subplot(n_subplots, 1, 1)
         self.sp.ax1 = self.axes
-        if self.pl_ax2_cb.isChecked():
+        if self.lineIDs_GroupBox.isChecked():
             if self.axes2 is not None:
                 del(self.axes2)
             self.axes2 = self.fig.add_subplot(n_subplots, 1, i_ax2, sharex=self.axes)
@@ -471,12 +646,12 @@ class AppForm(QtGui.QMainWindow):
         else:
             self.axes2 = None
             self.sp.ax2 = None
-        if self.pl_ax3_cb.isChecked():
+        if self.residual_GroupBox.isChecked():
             if self.axes3 is not None:
                 del(self.axes3)
             self.axes3 = self.fig.add_subplot(n_subplots, 1, i_ax3, sharex=self.axes)
             self.sp.ax3 = self.axes3
-            if self.pl_ax2_cb.isChecked():
+            if self.sp.get_conf('plot_ax2'):
                 self.axes2.get_xaxis().set_visible(False)
             self.axes.get_xaxis().set_visible(False)
         else:
@@ -506,7 +681,7 @@ class AppForm(QtGui.QMainWindow):
         
         self.y2_plot_lims = self.sp.get_conf('y2_plot_lims')
         if self.y2_plot_lims is None:
-            self.y2_plot_lims = (-1.5, 1)
+            self.y2_plot_lims = (-0.5, 1.5)
         
         self.y3_plot_lims = self.sp.get_conf('y3_plot_lims')
         if self.y3_plot_lims is None:
@@ -568,8 +743,8 @@ class AppForm(QtGui.QMainWindow):
             self.do_save = False
             self.on_draw()
             self.do_save = True
-            self.pl_ax2_cb.setChecked(self.sp.get_conf('plot_ax2', True))
-            self.pl_ax3_cb.setChecked(self.sp.get_conf('plot_ax3', True))
+            self.lineIDs_GroupBox.setChecked(self.sp.get_conf('plot_ax2', True))
+            self.residual_GroupBox.setChecked(self.sp.get_conf('plot_ax3', True))
             self.restore_axes()
         else:
             if self.sp is None:
@@ -607,7 +782,7 @@ class AppForm(QtGui.QMainWindow):
         self.cyan_label_box.setText('{}'.format(self.sp.label_cyan))
         self.sp_min_box.setText('{}'.format(self.sp.get_conf('limit_sp')[0]))
         self.sp_max_box.setText('{}'.format(self.sp.get_conf('limit_sp')[1]))
-        self.verbosity_cb.setCurrentIndex(self.sp.get_conf('log_level'))
+        self.verbosity_ag.actions()[self.sp.get_conf('log_level')].setChecked(True)
             
     def rerun(self):
         self.sp.read_obs()
@@ -744,7 +919,7 @@ class AppForm(QtGui.QMainWindow):
             self.on_draw()
     
     def verbosity(self):
-        verbosity = self.verbosity_cb.currentIndex()
+        verbosity = self.verbosity_list.index(self.verbosity_ag.checkedAction().text())
         log_.debug('Change verbosity from {} to {}'.format(log_.level, verbosity), calling=self.calling)
         log_.level = verbosity
         
@@ -812,5 +987,3 @@ def main():
     
 if __name__ == "__main__":
     main()
-
-
