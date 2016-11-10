@@ -490,6 +490,7 @@ class spectrum(object):
         
         lims = ((self.w >= self.limit_sp[0]) & (self.w <= self.limit_sp[1]))
         log_.message('Observations resized from {0} to {1}'.format(len(self.w), lims.sum()), calling=self.calling)
+
         self.w = self.w[lims]
         self.f = self.f[lims]
 
@@ -1182,9 +1183,21 @@ class spectrum(object):
             i_rel = line['i_rel']
             if (abs(i_rel) > self.get_conf('cut_plot2')): 
                 ax.plot([wl, wl], [0, 1], color='blue')
-                ax.text(wl, -0.2, '{0} {1:7.4f}'.format(line['id'], i_rel), 
-                              rotation='vertical', fontsize=self.ax2_fontsize).set_clip_on(True)
+#                ax.text(wl, -0.2, '{0} {1:7.4f}'.format(line['id'], i_rel), 
+#                              rotation='vertical', fontsize=self.ax2_fontsize).set_clip_on(True)
         log_.debug('ax2 drawn on ax ID {}'.format(id(ax)), calling=self.calling)
+
+    def plot_lines(self, ax):
+                   
+        if self.sp_synth_lr is None:
+            return
+        for line in self.liste_raies:
+            wl = line['lambda'] + line['l_shift'] + self.conf['lambda_shift']
+            i_rel = line['i_rel']            
+            if (abs(i_rel) > self.get_conf('cut_plot2')): 
+#                ax.plot([wl, wl], [-100, 100], color='red')
+                ax.axvline( wl, ymin=0.85, ymax=0.95, color = 'red', linestyle = 'solid' )
+        log_.debug('Lines drawn on ax ID {}'.format(id(ax)), calling=self.calling)
         
     def plot_ax3(self, ax):     
         if self.sp_synth_lr is not None:
@@ -1261,7 +1274,7 @@ class spectrum(object):
         
         self.y2_plot_lims = self.get_conf('y2_plot_lims')
         if self.y2_plot_lims is None:
-            self.y2_plot_lims = (-1.5, 1)
+            self.y2_plot_lims = (-0.5, 1,5)
         
         self.y3_plot_lims = self.get_conf('y3_plot_lims')
         if self.y3_plot_lims is None:
@@ -1563,4 +1576,3 @@ def main():
     sp.plot2(fig=fig)
     sp.apply_post_proc()
     plt.show()
-
