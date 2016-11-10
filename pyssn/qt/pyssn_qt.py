@@ -743,7 +743,8 @@ class AppForm(QtGui.QMainWindow):
             self.do_save = False
             self.on_draw()
             self.do_save = True
-            self.lineIDs_GroupBox.setChecked(self.sp.get_conf('plot_ax2', True))
+            #self.lineIDs_GroupBox.setChecked(self.sp.get_conf('plot_ax2', True))
+            self.lineIDs_GroupBox.setChecked(False)
             self.residual_GroupBox.setChecked(self.sp.get_conf('plot_ax3', True))
             self.restore_axes()
         else:
