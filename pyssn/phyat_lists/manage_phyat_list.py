@@ -112,6 +112,15 @@ def print_phyat_list(atom, tem, den, cut=1e-3, cut_inter=1e-5, ij_ref = None, fi
     if Aij_zero  is not None:
         for ij in Aij_zero:
             atom._A[ij[0]-1, ij[1]-1] = 0.0
+    try:
+        NIST_gsconf = atom.NIST[0][0].split('.')[-1]
+        if NIST_gsconf[-1] in ('0123456789'):
+            NIST_gsconf = NIST_gsconf[-2:]
+        else:
+            NIST_gsconf = NIST_gsconf[-1] + '1'
+    except:
+        NIST_gsconf = 'unknown'
+    logprint('{}. '.format(NIST_gsconf))
     logprint('{} levels. '.format(this_NLevels))
     emis = atom.getEmissivity(tem, den)
     emis_max_tot = np.max(emis)
@@ -370,7 +379,7 @@ def make_phyat_list(filename, tem1=None, den1=None, cut=1e-4, E_cut=20, cut_inte
             else:
                 do_it = False
         except:
-            log_file.write('NIST missing')
+            log_file.write('NIST missing. \n')
             do_it = False
         if do_it:
             if tem1 is None:
