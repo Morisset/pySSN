@@ -19,9 +19,9 @@ if config.INSTALLED['PyNeb']:
     import pyneb as pn
 
 from ..utils.physics import CST, Planck, make_cont_Ercolano, gff
-from ..utils.misc import execution_path, change_size, convol, rebin, is_absorb, no_red_corr, gauss, carre, lorentz, convolgauss, vactoair, clean_label
+from ..utils.misc import execution_path, change_size, convol, rebin, is_absorb, no_red_corr, gauss, carre, lorentz, convolgauss 
+from ..utils.misc import vactoair, clean_label,  get_parser, read_data, my_execfile as execfile
 from ..core.profiles import profil_instr
-from ..utils.misc import get_parser, my_execfile as execfile
 
 """
 ToDo:
@@ -29,29 +29,6 @@ ToDo:
 2) avoid reduced tick values for lambdas when zooming.
 """
 
-def read_data(filename, NF=True):
-    dtype = 'i8, a1, a9, f, f, f, f, a1, i8, i4, f, a25'
-    if NF:
-        delimiter = [14, 1, 9, 11, 6, 10, 7, 1, 14, 4, 7, 25]
-    else:
-        delimiter = [ 9, 1, 9, 11, 6, 10, 7, 1,  9, 4, 7, 25]
-    names = ['num', 'foo', 'id', 'lambda','l_shift', 'i_rel', 'i_cor', 'foo2', 'ref', 'profile', 
-             'vitesse', 'comment']
-    usecols = (0, 2, 3, 4, 5, 6, 8, 9, 10, 11)
-    dd = np.genfromtxt(filename, dtype=dtype, delimiter=delimiter, names = names, usecols = usecols)
-
-    if np.isnan(dd['num']).sum() > 0:
-        log_.error('Some line ID are not defined {}'.format(dd['id'][np.isnan(dd['num'])]))
-    if np.isnan(dd['lambda']).sum() > 0:
-        log_.error('Some wavelengths are not defined {}'.format(dd['num'][np.isnan(dd['lambda'])]))
-    if np.isnan(dd['l_shift']).sum() > 0:
-        log_.error('Some wavelengths shifts are not defined {}'.format(dd['num'][np.isnan(dd['l_shift'])]))
-    if np.isnan(dd['i_cor']).sum() > 0:
-        log_.error('Some intensity corrections are not defined {}'.format(dd['num'][np.isnan(dd['i_cor'])]))
-    if np.isnan(dd['i_rel']).sum() > 0:
-        log_.error('Some relative intensities are not defined {}'.format(dd['num'][np.isnan(dd['i_rel'])]))
-    
-    return dd.view(np.recarray)
 
 class spectrum(object):
     

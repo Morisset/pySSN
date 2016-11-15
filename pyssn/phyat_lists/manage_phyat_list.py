@@ -5,7 +5,7 @@ from pyneb.utils.physics import Z, IP, gsFromAtom
 from pyneb.utils.misc import int_to_roman, parseAtom
 import os
 import time
-from ..core.spectrum import read_data
+from ..utils.misc import split_atom, read_data
 
 pn.atomicData.addAllChianti()
 
@@ -44,7 +44,7 @@ def print_phyat_list(atom, tem, den, cut=1e-3, cut_inter=1e-5, ij_ref = None, fi
                'p4': 'each',
                'p5': 'each'} # The others are 'all' by default (i.e. only one master line, with all the lines depending on it
 
-    ij_refs = {'s1': ((2, 1),),
+    ij_refs = {'s1': ((3, 1),),
                'p1': ((3, 1), (7, 1)),
                'p3': ((4, 1),)}
 
@@ -242,7 +242,7 @@ def print_phyat_list(atom, tem, den, cut=1e-3, cut_inter=1e-5, ij_ref = None, fi
 def make_phyat_list(filename, tem1=None, den1=None, cut=1e-4, E_cut=20, cut_inter=1e-5, 
              verbose=False, notry=False, NLevels=50, atoms=None, 
              ref_lines_dic=None, NLevels_dic=None, up_lev_rule_dic=None, Aij_zero_dic=None,
-             tem_den_dic = None):
+             tem_den_dic = None, extra_file=None):
     
     """
     filename: output file name
@@ -290,6 +290,7 @@ def make_phyat_list(filename, tem1=None, den1=None, cut=1e-4, E_cut=20, cut_inte
                        24.0: (1e4, 1e3),
                        1e6:  (1e4, 1e3)
                        }
+    extra_file: a file of pySSN data format containing data to include.
     """
     
     
@@ -348,61 +349,75 @@ def make_phyat_list(filename, tem1=None, den1=None, cut=1e-4, E_cut=20, cut_inte
     log_file.write("# log_file automatically generated on {} \n".format(time.ctime()))
     help_file = open('help.dat', 'w')
     help_file.write("# help_file automatically generated on {} \n".format(time.ctime()))
+    if extra_file is not None:
+        extra_atoms = np.array(get_extra_atoms(extra_file=extra_file))
+        with open(extra_file, 'r') as fextra:
+            extra_data = fextra.readlines()
+        extra_data = np.array(extra_data)
+    else:
+        extra_data = []
     if atoms is None:
-        atoms = get_atoms_by_conf()
+        atoms = get_atoms_by_conf(extra_file=extra_file)
+        
     printed_confs = []
     #atoms = ['C4', 'C3', 'C2', 'O3', 'O2', 'Ne3', 'Ne2', 'Fe3']
     #atoms = ['Fe1', 'Fe3','Fe4', 'Fe5','Fe6', 'Fe7','Fe8', 'Ni2','Ni3', 'Ni4']
     #atoms = ['Fe2','Fe3', 'Fe4']
     for a in atoms:
         print(a)
-        if a in ref_lines_dic:
-            ref_lines = ref_lines_dic[a]
+        if a in extra_atoms:
+            for line in extra_data[extra_atoms == a]:
+                f.write(line)
+            log_file.write('{} from file {}'.format(a, extra_file))
         else:
-            ref_lines = None
-        if a in NLevels_dic:
-            this_NLevels = NLevels_dic[a]
-        else:
-            this_NLevels = NLevels
-        if a in up_lev_rule_dic:
-            up_lev_rule = up_lev_rule_dic[a]
-        else:
-            up_lev_rule = None
-        conf = gsFromAtom(a)
-        log_file.write('{}, conf={}, '.format(a, conf))
-        if conf not in printed_confs:
-            printed_confs.append(conf)
-        try:
-            atom = pn.Atom(atom=a, NLevels=this_NLevels)
-            if atom.NLevels > 0:
-                do_it = True
+            if a in ref_lines_dic:
+                ref_lines = ref_lines_dic[a]
             else:
+                ref_lines = None
+            if a in NLevels_dic:
+                this_NLevels = NLevels_dic[a]
+            else:
+                this_NLevels = NLevels
+            if a in up_lev_rule_dic:
+                up_lev_rule = up_lev_rule_dic[a]
+            else:
+                up_lev_rule = None
+            conf = gsFromAtom(a)
+            log_file.write('{}, conf={}, '.format(a, conf))
+            if conf not in printed_confs:
+                printed_confs.append(conf)
+            try:
+                atom = pn.Atom(atom=a, NLevels=this_NLevels)
+                if atom.NLevels > 0:
+                    do_it = True
+                else:
+                    do_it = False
+            except:
+                log_file.write('NIST missing. \n')
                 do_it = False
-        except:
-            log_file.write('NIST missing. \n')
-            do_it = False
-        if do_it:
-            if tem1 is None:
-                tem, den = get_tem_den(atom.IP)
-            else:
-                tem = tem1
-                den = den1
-            if a in Aij_zero_dic:
-                Aij_zero = Aij_zero_dic[a]
-            else:
-                Aij_zero = None
-            if notry:
-                print_phyat_list(atom, tem, den, cut=cut, filename=f, E_cut=E_cut, log_file=log_file, 
-                                  cut_inter=cut_inter, verbose=verbose, help_file=help_file, ij_ref=ref_lines,
-                                  up_lev_rule=up_lev_rule, Aij_zero=Aij_zero)                
-            else:
-                try:
+            if do_it:
+                if tem1 is None:
+                    tem, den = get_tem_den(atom.IP)
+                else:
+                    tem = tem1
+                    den = den1
+                if a in Aij_zero_dic:
+                    Aij_zero = Aij_zero_dic[a]
+                else:
+                    Aij_zero = None
+                if notry:
                     print_phyat_list(atom, tem, den, cut=cut, filename=f, E_cut=E_cut, log_file=log_file, 
-                                  cut_inter=cut_inter, verbose=verbose, help_file=help_file, ij_ref=ref_lines,
-                                  up_lev_rule=up_lev_rule, Aij_zero=Aij_zero)    
-                except:
-                    log_file.write('plp error.')
-            log_file.write('\n')
+                                      cut_inter=cut_inter, verbose=verbose, help_file=help_file, ij_ref=ref_lines,
+                                      up_lev_rule=up_lev_rule, Aij_zero=Aij_zero)                
+                else:
+                    try:
+                        print_phyat_list(atom, tem, den, cut=cut, filename=f, E_cut=E_cut, log_file=log_file, 
+                                      cut_inter=cut_inter, verbose=verbose, help_file=help_file, ij_ref=ref_lines,
+                                      up_lev_rule=up_lev_rule, Aij_zero=Aij_zero)    
+                    except:
+                        log_file.write('plp error.')
+                log_file.write('\n')
+                
     f.write('\n')
     f.close()
     log_file.write('\n')
@@ -429,18 +444,51 @@ def make_conf_plots():
         at.plotGrotrian(ax=ax)
     f.savefig('conf_all.pdf')
 
-def get_atoms_by_name():
-    
-    atoms = pn.atomicData.getAllAtoms()
-    atoms.remove('3He2')
-    return sorted(atoms)
+def get_atom_str(atom):
+    """
+    return atom with leading 0.
+    eg: get_atom_str('Mg5') -> Mg005
+    """
+    ato, ion = parseAtom(atom)
+    ato2 = ''
+    for char in ato:
+        if char not in '1234567890':
+            ato2 += char
+    return('{}{:03d}'.format(ato2, int(ion)))
 
-def get_atoms_by_Z():
-    atoms = get_atoms_by_name()
+def get_extra_atoms(extra_file=None,uniq=False):
+    
+    if extra_file is None:
+        return []
+    extra_data = read_data(extra_file)
+    atoms=[]
+    for ID in extra_data.id:
+        IDs = split_atom(ID)
+        if IDs[0] is None:
+            atoms.append('{0[1]}{0[2]}'.format(split_atom(ID)))
+        else:
+            atoms.append('{0[0]}{0[1]}{0[2]}'.format(split_atom(ID)))
+    if uniq:
+        res = np.unique(atoms)
+    else:
+        res = atoms
+    return res
+
+def get_atoms_by_name(extra_file=None):
+    """
+    'phyat_list_DP_01.dat'
+    """
+    atoms = pn.atomicData.getAllAtoms()
+    atoms.extend(get_extra_atoms(extra_file, uniq=True))
+    atoms.remove('3He2')
+    return sorted(atoms, key=get_atom_str)
+
+def get_atoms_by_Z(extra_file=None):
+    atoms = get_atoms_by_name(extra_file=extra_file)
     return sorted(atoms, key=lambda k:Z[parseAtom(k)[0]])
     
-def get_atoms_by_conf():
-    atoms = get_atoms_by_Z()
+def get_atoms_by_conf(extra_file=None):
+    atoms = get_atoms_by_Z(extra_file=extra_file)
     res = []
     gss = {}
     for atom in atoms:

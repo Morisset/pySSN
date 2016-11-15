@@ -11,6 +11,36 @@ from scipy import interpolate
 import numpy as np
 import pyssn
 from pyneb.utils.physics import vactoair
+from pyneb.utils.misc import roman_to_int
+
+def read_data(filename, NF=True):
+    dtype = 'i8, a1, a9, f, f, f, f, a1, i8, i4, f, a25'
+    if NF:
+        delimiter = [14, 1, 9, 11, 6, 10, 7, 1, 14, 4, 7, 25]
+    else:
+        delimiter = [ 9, 1, 9, 11, 6, 10, 7, 1,  9, 4, 7, 25]
+    names = ['num', 'foo', 'id', 'lambda','l_shift', 'i_rel', 'i_cor', 'foo2', 'ref', 'profile', 
+             'vitesse', 'comment']
+    usecols = (0, 2, 3, 4, 5, 6, 8, 9, 10, 11)
+    dd = np.genfromtxt(filename, dtype=dtype, delimiter=delimiter, names = names, usecols = usecols)
+
+    if np.isnan(dd['num']).sum() > 0:
+        pyssn.log_.error('Some line ID are not defined {}'.format(dd['id'][np.isnan(dd['num'])]))
+    if np.isnan(dd['lambda']).sum() > 0:
+        pyssn.log_.error('Some wavelengths are not defined {}'.format(dd['num'][np.isnan(dd['lambda'])]))
+    if np.isnan(dd['l_shift']).sum() > 0:
+        pyssn.log_.error('Some wavelengths shifts are not defined {}'.format(dd['num'][np.isnan(dd['l_shift'])]))
+    if np.isnan(dd['i_cor']).sum() > 0:
+        pyssn.log_.error('Some intensity corrections are not defined {}'.format(dd['num'][np.isnan(dd['i_cor'])]))
+    if np.isnan(dd['i_rel']).sum() > 0:
+        pyssn.log_.error('Some relative intensities are not defined {}'.format(dd['num'][np.isnan(dd['i_rel'])]))
+    
+    return dd.view(np.recarray)
+
+def print_data(filename, data):
+    with open(filename, 'w') as f:
+        for d in data:
+            f.write('{0[num:14d]} {0[id:9s]}{0[lambda:11.3f]}{0[l_shift:6.3f]}{0[i_ref:10.3e]}{0[i_cor:7.3f]} {0[ref:14d]}{0[profile:4]}{0[vitesse:7.2f]}{0[comment]}'.format(d))
 
 def my_execfile(pyfile, global_vars=None, local_vars=None):
 
@@ -200,4 +230,29 @@ def get_parser():
     
     return parser
 
+def split_atom(atom_str):
+    """
+    return isotop, element, ion.
+    e.g. parse_atom('13C_III') -> 13, 'C', 3
+    """
+    iso = ''
+    elem = ''
+    iso_elem, ion_roman = atom_str.split('_')
+    
+    for char in iso_elem:
+        if char in '0123456789':
+            iso += char
+        else:
+            elem += char
+    if iso == '':
+        iso = None
+    else:
+        iso = int(iso)
+
+    ion = roman_to_int(ion_roman.strip())
+    
+    return iso, elem, ion
+    
+    
+    
     

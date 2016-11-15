@@ -1,5 +1,5 @@
 from pyssn import make_phyat_list
-
+from pyssn.phyat_lists.manage_phyat_list import get_extra_atoms, get_atom_str
 
 # Set to None (atoms = None) to generate all the available atoms
 atoms = ['C4', 'C3', 'C2', 'O3', 'O2', 'Ne3', 'Ne2', 'Fe3']
@@ -7,13 +7,13 @@ atoms = ['C4', 'C3', 'C2', 'O3', 'O2', 'Ne3', 'Ne2', 'Fe3']
 
 # Name of the output
 filename = 'liste3.dat'
-
+extra_file = 'phyat_list_DP_01.dat'
 
 ref_lines_dic = {'Fe7': ((4, 2),),
 		 'Fe6': ((2, 1), (5, 1),),
 		 'Fe5': ((3, 2), (7, 5),),
 		 'Fe4': ((6, 1),),
-		 'Fe3': ((2, 1), (12, 1),)
+		 'Fe3': ((2, 1), (12, 1),),
 		 }
 
 NLevels_dic = {'S1': 8,
@@ -51,6 +51,10 @@ tem_den_dic = {0.:   (1e4, 1e3),
 	       1e6:  (1e4, 1e3)
 	       }
 
+if extra_file is not None and atoms is not None:
+	atoms.extend(get_extra_atoms(extra_file, uniq=True))
+	atoms = sorted(atoms, key=get_atom_str)
+
 # Here we run the script the produce the phyat_list
 make_phyat_list(filename, atoms=atoms, cut=1e-4, E_cut=20, cut_inter=1e-5, 
 	       verbose=False, notry=False, NLevels=50, 
@@ -58,4 +62,5 @@ make_phyat_list(filename, atoms=atoms, cut=1e-4, E_cut=20, cut_inter=1e-5,
 	       NLevels_dic=NLevels_dic,
 	       up_lev_rule_dic=up_lev_rule_dic,
 	       Aij_zero_dic=Aij_zero_dic,
-	       tem_den_dic = tem_den_dic)
+	       tem_den_dic = tem_den_dic,
+	       extra_file=extra_file)
