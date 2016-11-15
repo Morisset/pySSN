@@ -3,7 +3,8 @@ from pyssn import make_phyat_list
 # Set to None (atoms = None) to generate all the available atoms
 atoms = None
 atoms = ['C4', 'C3', 'C2', 'O3', 'O2', 'Ne3', 'Ne2', 'Fe3']
-#
+
+# File containing additional data in the phyat_list format
 extra_file = None
 extra_file = 'phyat_list_DP_01.dat'
 
