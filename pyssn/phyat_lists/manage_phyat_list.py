@@ -349,20 +349,24 @@ def make_phyat_list(filename, tem1=None, den1=None, cut=1e-4, E_cut=20, cut_inte
     log_file.write("# log_file automatically generated on {} \n".format(time.ctime()))
     help_file = open('help.dat', 'w')
     help_file.write("# help_file automatically generated on {} \n".format(time.ctime()))
+    
     if extra_file is not None:
         extra_atoms = np.array(get_extra_atoms(extra_file=extra_file))
         with open(extra_file, 'r') as fextra:
             extra_data = fextra.readlines()
         extra_data = np.array(extra_data)
+        if atoms is not None:
+            atoms.extend(get_extra_atoms(extra_file, uniq=True))
+            atoms = get_atoms_by_conf(atoms=atoms)
     else:
         extra_data = []
+        extra_atoms = []
+    
     if atoms is None:
         atoms = get_atoms_by_conf(extra_file=extra_file)
         
     printed_confs = []
-    #atoms = ['C4', 'C3', 'C2', 'O3', 'O2', 'Ne3', 'Ne2', 'Fe3']
-    #atoms = ['Fe1', 'Fe3','Fe4', 'Fe5','Fe6', 'Fe7','Fe8', 'Ni2','Ni3', 'Ni4']
-    #atoms = ['Fe2','Fe3', 'Fe4']
+
     for a in atoms:
         print(a)
         if a in extra_atoms:
@@ -444,17 +448,25 @@ def make_conf_plots():
         at.plotGrotrian(ax=ax)
     f.savefig('conf_all.pdf')
 
+def remove_iso(atom):
+    res = ''
+    elem_done = False
+    for char in atom:
+        if not elem_done:
+            if char not in '1234567890':
+                res += char
+                elem_done = True
+        else:
+            res += char
+    return res
+
 def get_atom_str(atom):
     """
     return atom with leading 0.
     eg: get_atom_str('Mg5') -> Mg005
     """
     ato, ion = parseAtom(atom)
-    ato2 = ''
-    for char in ato:
-        if char not in '1234567890':
-            ato2 += char
-    return('{}{:03d}'.format(ato2, int(ion)))
+    return('{}{:03d}'.format(remove_iso(ato), int(ion)))
 
 def get_extra_atoms(extra_file=None,uniq=False):
     
@@ -465,9 +477,9 @@ def get_extra_atoms(extra_file=None,uniq=False):
     for ID in extra_data.id:
         IDs = split_atom(ID)
         if IDs[0] is None:
-            atoms.append('{0[1]}{0[2]}'.format(split_atom(ID)))
+            atoms.append('{0[1]}{0[2]}'.format(IDs))
         else:
-            atoms.append('{0[0]}{0[1]}{0[2]}'.format(split_atom(ID)))
+            atoms.append('{0[0]}{0[1]}{0[2]}'.format(IDs))
     if uniq:
         res = np.unique(atoms)
     else:
@@ -483,19 +495,21 @@ def get_atoms_by_name(extra_file=None):
     atoms.remove('3He2')
     return sorted(atoms, key=get_atom_str)
 
-def get_atoms_by_Z(extra_file=None):
-    atoms = get_atoms_by_name(extra_file=extra_file)
-    return sorted(atoms, key=lambda k:Z[parseAtom(k)[0]])
+def get_atoms_by_Z(extra_file=None, atoms=None):
+    if atoms is None:
+        atoms = get_atoms_by_name(extra_file=extra_file)
+    return sorted(atoms, key=lambda k:Z[parseAtom(remove_iso(k))[0]])
     
-def get_atoms_by_conf(extra_file=None):
-    atoms = get_atoms_by_Z(extra_file=extra_file)
+def get_atoms_by_conf(extra_file=None, atoms=None):
+    if atoms is None:
+        atoms = get_atoms_by_Z(extra_file=extra_file)
     res = []
     gss = {}
     for atom in atoms:
-        gss[atom] = gsFromAtom(atom)
+        gss[atom] = gsFromAtom(remove_iso(atom))
     for gs in ('s1', 's2', 'p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'd8', 'd7', 'd6', 'd5', 'd4', 'd3', 'd2', 'd1', 'unknown'):        
         for atom in atoms:
-            if gss[atom] == gs:
+            if gss[remove_iso(atom)] == gs:
                 res.append(atom)
     return res
                 
