@@ -121,7 +121,6 @@ def print_phyat_list(atom, tem, den, cut=1e-3, cut_inter=1e-5, ij_ref = None, fi
             NIST_gsconf = NIST_gsconf[-1] + '1'
     except:
         NIST_gsconf = 'unknown'
-    logprint('{}. '.format(NIST_gsconf))
     logprint('{} levels. '.format(this_NLevels))
     emis = atom.getEmissivity(tem, den)
     emis_max_tot = np.max(emis)
