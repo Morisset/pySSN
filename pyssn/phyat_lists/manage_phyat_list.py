@@ -375,9 +375,12 @@ def make_phyat_list(filename, tem1=None, den1=None, cut=1e-4, E_cut=20, cut_inte
     for a in atoms:
         print(a)
         if a in extra_atoms:
+            n_lines = 0
             for line in extra_data[extra_atoms == a]:
+                if line[0] != '9':
+                    n_lines += 1
                 f.write(line)
-            log_file.write('{} from file {}\n'.format(a, extra_file))
+            log_file.write('{}, {} lines from file {}\n'.format(a, n_lines, extra_file))
         else:
             if a in ref_lines_dic:
                 ref_lines = ref_lines_dic[a]
