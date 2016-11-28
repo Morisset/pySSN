@@ -505,10 +505,10 @@ def get_atoms_by_Z(extra_file=None, atoms=None):
         atoms = get_atoms_by_name(extra_file=extra_file)
     return sorted(atoms, key=lambda k:Z[parseAtom(remove_iso(k))[0]])
 
+ZmI = lambda atom: Z[parseAtom(remove_iso(atom))[0]] - int(parseAtom(remove_iso(atom))[1])
+
 def get_atoms_by_ZmI(extra_file=None, atoms=None):
-    if atoms is None:
-        atoms = get_atoms_by_Z(extra_file=extra_file)
-    ZmI = lambda atom: Z[parseAtom(remove_iso(atom))[0]] - int(parseAtom(remove_iso(atom))[1])
+    atoms = get_atoms_by_Z(extra_file=extra_file, atoms=atoms)
     return sorted(atoms, key=ZmI)
     
 def get_atoms_by_conf(extra_file=None, atoms=None):
