@@ -5,7 +5,7 @@ from pyneb.utils.physics import Z, IP, gsFromAtom
 from pyneb.utils.misc import int_to_roman, parseAtom
 import os
 import time
-from ..utils.misc import split_atom, read_data
+from pyssn.utils.misc import split_atom, read_data
 
 pn.atomicData.addAllChianti()
 
@@ -46,7 +46,7 @@ def print_phyat_list(atom, tem, den, cut=1e-3, cut_inter=1e-5, ij_ref = None, fi
 
     ij_refs = {'s1': ((3, 1),),
                'p1': ((3, 1), (7, 1)),
-               'p3': ((4, 1),)}
+               'p3': ((5, 1),)}
 
     str_print = '{}{:02d}{:02d}{:01d}{:01d}0{:03d}{:03d} {:<8s} {:11.3f} 0.000{:10.3e}  1.000  {:02d}{:02d}{:01d}00{:03d}{:03d}   1   1.00 {}'  
     if filename is None:
@@ -103,10 +103,11 @@ def print_phyat_list(atom, tem, den, cut=1e-3, cut_inter=1e-5, ij_ref = None, fi
         this_NLevels = np.min((atom.NLevels, N_energies))
         
     if this_NLevels <=1:
-        logprint('Atom without interesting lines. '.format(atom.atom))
+        if N_energies <= 1:
+            logprint('Atom without level below {} eV'.format(E_cut))
+        else:
+            logprint('Atom without energy levels')
         return None
-    if verbose:
-        print('this_NLevels={}'.format(this_NLevels))
     #print('Doing {} with NLevels={}'.format(atom.atom, this_NLevels))
     atom = pn.Atom(atom=atom.atom, NLevels=this_NLevels)
     if Aij_zero  is not None:
@@ -168,7 +169,6 @@ def print_phyat_list(atom, tem, den, cut=1e-3, cut_inter=1e-5, ij_ref = None, fi
         for i in up_lev:
             if i < this_NLevels+1:
                 for j in 1+np.arange(i):
-                         
                     if ij_ref is not None and (i, j) in ij_ref:
                             i_emis_ref_loc = i
                             j_emis_ref_loc = j
@@ -181,9 +181,12 @@ def print_phyat_list(atom, tem, den, cut=1e-3, cut_inter=1e-5, ij_ref = None, fi
                             i_emis_ref_loc = i
                             j_emis_ref_loc = j
                             emis_ref = emis[i-1,j-1]
-
+        """
         if emis_ref < cut_inter * np.max(emis):
+            if verbose:
+                print('reset emis ref loc {} < {} * {} (emis_ref < cut_inter * np.max(emis))'.format(emis_ref, cut_inter, np.max(emis)))
             i_emis_ref_loc = None
+        """
         if i_emis_ref_loc is not None:
             com_ref = '{} {} {:.1f}'.format(i_emis_ref_loc, j_emis_ref_loc, wls[i_emis_ref_loc-1,j_emis_ref_loc-1])
             if ("split" in up_lev_rule) or ("all" in up_lev_rule):
@@ -197,6 +200,8 @@ def print_phyat_list(atom, tem, den, cut=1e-3, cut_inter=1e-5, ij_ref = None, fi
             
             for i in up_lev:
                 print_it = False
+                if i > this_NLevels:
+                    break
                 for j in 1+np.arange(i):
                     if emis[i-1,j-1] > cut * emis_max_tot and wls[i-1,j-1] > 912:
                         print_it = True
@@ -372,7 +377,7 @@ def make_phyat_list(filename, tem1=None, den1=None, cut=1e-4, E_cut=20, cut_inte
         if a in extra_atoms:
             for line in extra_data[extra_atoms == a]:
                 f.write(line)
-            log_file.write('{} from file {}'.format(a, extra_file))
+            log_file.write('{} from file {}\n'.format(a, extra_file))
         else:
             if a in ref_lines_dic:
                 ref_lines = ref_lines_dic[a]
@@ -499,15 +504,25 @@ def get_atoms_by_Z(extra_file=None, atoms=None):
     if atoms is None:
         atoms = get_atoms_by_name(extra_file=extra_file)
     return sorted(atoms, key=lambda k:Z[parseAtom(remove_iso(k))[0]])
+
+def get_atoms_by_ZmI(extra_file=None, atoms=None):
+    if atoms is None:
+        atoms = get_atoms_by_Z(extra_file=extra_file)
+    ZmI = lambda atom: Z[parseAtom(remove_iso(atom))[0]] - int(parseAtom(remove_iso(atom))[1])
+    return sorted(atoms, key=ZmI)
     
 def get_atoms_by_conf(extra_file=None, atoms=None):
     if atoms is None:
-        atoms = get_atoms_by_Z(extra_file=extra_file)
+        atoms = get_atoms_by_ZmI(extra_file=extra_file)
     res = []
     gss = {}
     for atom in atoms:
-        gss[atom] = gsFromAtom(remove_iso(atom))
-    for gs in ('s1', 's2', 'p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'd8', 'd7', 'd6', 'd5', 'd4', 'd3', 'd2', 'd1', 'unknown'):        
+        gss[remove_iso(atom)] = gsFromAtom(remove_iso(atom))
+    for gs in ('s1', 's2', 
+               'p1', 'p2', 'p3', 'p4', 'p5', 'p6', 
+               'd1', 'd2', 'd3', 'd4', 'd5', 'd6', 'd7', 'd8', 'd9', 'd10', 
+               'f1', 'f2', 'f3', 'f4', 'f5', 'f6', 'f7', 'f8', 'f9', 'f10', 'f11', 'f12', 'f13', 'f14', 
+               'unknown'):        
         for atom in atoms:
             if gss[remove_iso(atom)] == gs:
                 res.append(atom)

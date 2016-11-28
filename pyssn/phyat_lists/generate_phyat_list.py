@@ -2,14 +2,14 @@ from pyssn import make_phyat_list
 
 # Set to None (atoms = None) to generate all the available atoms
 atoms = None
-atoms = ['C4', 'C3', 'C2', 'O3', 'O2', 'Ne3', 'Ne2', 'Fe3']
+#atoms = ['C4', 'C3', 'C2', 'O3', 'O2', 'Ne3', 'Ne2', 'Fe3']
 
 # File containing additional data in the phyat_list format
 extra_file = None
 extra_file = 'phyat_list_DP_01.dat'
 
 # Name of the output
-filename = 'liste3.dat'
+filename = 'liste4.dat'
 
 ref_lines_dic = {'Fe7': ((4, 2),),
 		 'Fe6': ((2, 1), (5, 1),),
@@ -35,6 +35,7 @@ up_lev_rule_dic = {'Ni2': 'split 3',
 		   'Fe1': 'split 5',
 		   'Ni3': 'split 3',
 		   'Ni4': 'split 4',
+		   'Fe2': 'all',
 		   'Fe3': 'split 5',
 		   'Fe4': 'all',
 		   'Fe5': 'split 5',
@@ -55,7 +56,7 @@ tem_den_dic = {0.:   (1e4, 1e3),
 
 # Here we run the script the produce the phyat_list
 make_phyat_list(filename, atoms=atoms, cut=1e-4, E_cut=20, cut_inter=1e-5, 
-	       verbose=False, notry=False, NLevels=50, 
+	       verbose=True, notry=False, NLevels=50, 
 	       ref_lines_dic=ref_lines_dic,
 	       NLevels_dic=NLevels_dic,
 	       up_lev_rule_dic=up_lev_rule_dic,
