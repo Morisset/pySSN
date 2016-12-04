@@ -16,6 +16,21 @@ pn.atomicData.addAllChianti()
 
 # ToDo : faire les ions suivant en reprenant les rapports connus et les energies adaptees.
 
+def unique(array, orderby='first'):
+    array = np.asarray(array)
+    order = array.argsort(kind='mergesort')
+    array = array[order]
+    diff = array[1:] != array[:-1]
+    if orderby == 'first':
+        diff = np.concatenate([[True], diff])
+    elif orderby == 'last':
+        diff = np.concatenate([diff, [True]])
+    else:
+        raise ValueError
+    uniq = array[diff]
+    index = order[diff]
+    return uniq[index.argsort()]
+
 def print_phyat_list(atom, tem, den, cut=1e-3, cut_inter=1e-5, ij_ref = None, filename=None, up_lev_rule=None,
                       NLevels=None, E_cut=20, log_file=None, help_file= None, verbose=False, Aij_zero = None):
     """
@@ -369,8 +384,9 @@ def make_phyat_list(filename, tem1=None, den1=None, cut=1e-4, E_cut=20, cut_inte
     
     if atoms is None:
         atoms = get_atoms_by_conf(extra_file=extra_file)
-    atoms = np.unique(atoms)
-    extra_atoms = np.unique(extra_atoms)
+        
+    atoms = unique(atoms)
+    extra_atoms = unique(extra_atoms)
     
     printed_confs = []
     
