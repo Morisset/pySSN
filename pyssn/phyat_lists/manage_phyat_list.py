@@ -23,7 +23,7 @@ def print_phyat_list(atom, tem, den, cut=1e-3, cut_inter=1e-5, ij_ref = None, fi
     tem in K
     den in cm-3
     cut: relative intensity (to the master one) for a line to be printed
-    cut_inter: largest dynamic between ref lines.
+    cut_inter [deprecated]: largest dynamic between ref lines.
     ij_ref: None: is computed. Otherwise must be of the form e.g. (4, 2) or ((4, 2), (5, 3))
     filename: where to output the result. May be None, a string or a file object  
     up_lev_rule: 'each': each upper level are used to define a different master line
@@ -202,14 +202,14 @@ def print_phyat_list(atom, tem, den, cut=1e-3, cut_inter=1e-5, ij_ref = None, fi
                 if i > this_NLevels:
                     break
                 for j in 1+np.arange(i):
-                    if emis[i-1,j-1] > cut * emis_max_tot and wls[i-1,j-1] > 912:
+                    if emis[i-1,j-1] > cut * emis_ref and wls[i-1,j-1] > 912:
                         print_it = True
                         print_any = True
                         if i > NLevels_max:
                             NLevels_max = i
                 if print_it:                
                     for j in 1+np.arange(i):
-                        if emis[i-1,j-1] > cut * emis_max_tot and wls[i-1,j-1] > 912:
+                        if emis[i-1,j-1] > cut * emis_ref and wls[i-1,j-1] > 912:
                             com = '{} {}'.format(i, j)
                             ion_name = '{:>2s}_{:<5s}'.format(atom.elem, int_to_roman(atom.spec)).strip()
                             if print_ref:
