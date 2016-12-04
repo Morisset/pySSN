@@ -353,7 +353,8 @@ def make_phyat_list(filename, tem1=None, den1=None, cut=1e-4, E_cut=20, cut_inte
     log_file.write("# log_file automatically generated on {} \n".format(time.ctime()))
     help_file = open('help.dat', 'w')
     help_file.write("# help_file automatically generated on {} \n".format(time.ctime()))
-    
+
+    # The following is very badly programmed, need to make it better...
     if extra_file is not None:
         extra_atoms = np.array(get_extra_atoms(extra_file=extra_file))
         with open(extra_file, 'r') as fextra:
@@ -368,9 +369,11 @@ def make_phyat_list(filename, tem1=None, den1=None, cut=1e-4, E_cut=20, cut_inte
     
     if atoms is None:
         atoms = get_atoms_by_conf(extra_file=extra_file)
-        
+    atoms = np.unique(atoms)
+    extra_atoms = np.unique(extra_atoms)
+    
     printed_confs = []
-
+    
     for a in atoms:
         print(a)
         if a in extra_atoms:
