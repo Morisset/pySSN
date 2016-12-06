@@ -17,6 +17,8 @@ pn.atomicData.addAllChianti()
 # ToDo : faire les ions suivant en reprenant les rapports connus et les energies adaptees.
 
 def unique(array, orderby='first'):
+    if len(array) == 0:
+        return array
     array = np.asarray(array)
     order = array.argsort(kind='mergesort')
     array = array[order]
