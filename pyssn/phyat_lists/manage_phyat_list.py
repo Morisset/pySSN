@@ -429,7 +429,7 @@ def make_phyat_list(filename, tem1=None, den1=None, cut=1e-4, E_cut=20, cut_inte
                 do_it = False
             if do_it:
                 if tem1 is None:
-                    tem, den = get_tem_den(atom.IP)
+                    tem, den = get_tem_den(atom.IP_up)
                 else:
                     tem = tem1
                     den = den1
