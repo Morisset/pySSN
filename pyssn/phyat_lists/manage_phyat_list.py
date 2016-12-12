@@ -9,12 +9,6 @@ from pyssn.utils.misc import split_atom, read_data
 
 pn.atomicData.addAllChianti()
 
-#pn.atomicData.setDataFile('o_iii_atom.chianti')
-
-#pn.atomicData.setDataFile('o_iii_atom.chianti')
-#pn.atomicData.setDataFile('o_iii_coll.chianti')
-
-# ToDo : faire les ions suivant en reprenant les rapports connus et les energies adaptees.
 
 def unique(array, orderby='first'):
     if len(array) == 0:
@@ -377,21 +371,20 @@ def make_phyat_list(filename, tem1=None, den1=None, cut=1e-4, E_cut=20, cut_inte
         with open(extra_file, 'r') as fextra:
             extra_data = fextra.readlines()
         extra_data = np.array(extra_data)
-        if atoms is not None:
-            atoms.extend(get_extra_atoms(extra_file, uniq=True))
-            atoms = get_atoms_by_conf(atoms=atoms)
     else:
         extra_data = []
         extra_atoms = []
     
     if atoms is None:
         atoms = get_atoms_by_conf(extra_file=extra_file)
+    else:
+        atoms.extend(get_extra_atoms(extra_file, uniq=True))
+        atoms = get_atoms_by_conf(atoms=atoms)
         
     atoms = unique(atoms)
-    extra_atoms = unique(extra_atoms)
     
     printed_confs = []
-    
+    #atoms = []
     for a in atoms:
         print(a)
         if a in extra_atoms:
@@ -509,7 +502,7 @@ def get_extra_atoms(extra_file=None,uniq=False):
         else:
             atoms.append('{0[0]}{0[1]}{0[2]}'.format(IDs))
     if uniq:
-        res = np.unique(atoms)
+        res = unique(atoms)
     else:
         res = atoms
     return res
