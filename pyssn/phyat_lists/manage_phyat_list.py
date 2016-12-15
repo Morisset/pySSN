@@ -257,7 +257,7 @@ def print_phyat_list(atom, tem, den, cut=1e-3, cut_inter=1e-5, ij_ref = None, fi
 def make_phyat_list(filename, tem1=None, den1=None, cut=1e-4, E_cut=20, cut_inter=1e-5, 
              verbose=False, notry=False, NLevels=50, atoms=None, 
              ref_lines_dic=None, NLevels_dic=None, up_lev_rule_dic=None, Aij_zero_dic=None,
-             tem_den_dic = None, extra_file=None):
+             Del_ion = (), tem_den_dic = None, extra_file=None):
     
     """
     filename: output file name
@@ -383,6 +383,11 @@ def make_phyat_list(filename, tem1=None, den1=None, cut=1e-4, E_cut=20, cut_inte
         
     atoms = unique(atoms)
     
+    for ion in Del_ion:
+        try:
+            atoms.remove(ion)
+        except:
+            pass
     printed_confs = []
     #atoms = []
     for a in atoms:
