@@ -65,6 +65,9 @@ wave_unit = 'Angstrom'
 fic_modele = 'liste_modele.dat'
 fic_cosmetik = 'liste_cosmetik.dat'
 
+# To take into account 'fic_cosmetik' data
+do_cosmetik = True
+
 # If you want to read the list of lines, let it to True.
 # Set it to False if you just want to run a new synthesis with 
 # the same lines (modification of the profiles, lambda-calibration...)
@@ -93,8 +96,9 @@ delta_limit_sp =  0.1 # %
 
 
 # initialisation of the continuum flux 
-cont_in_lambda = False #set to True if the continuum is in wavelength
-cont_unred = True #set to True if redeening is to be applied to cont
+cont_plot = False #Set True to plot continuum spectrum
+cont_in_lambda = True #Set to True if the continuum is in wavelength
+cont_unred = True #set to True if reddening is to be applied to cont
 cont_lambda = 0.
 cont_pix = 0.
 cont_intens = 0.
@@ -102,12 +106,12 @@ cont_bb_t = 11000.
 cont_bb_i = 0.
 cont_pl_alpha = 1.
 cont_pl_i = 0.
-cont_ihi = 1.e4
-cont_ihei = 3.e2
-cont_iheii = 0.e3
-cont_Thi = 1e4
-cont_Thei = 1e4
-cont_Theii = 1e4
+cont_hi_i = 1.e4
+cont_hei_i = 3.e2
+cont_heii_i = 0.e3
+cont_hi_t = 1e4
+cont_hei_t = 1e4
+cont_heii_t = 1e4
 cont_edens = 1e3
 
 # Wavelength of the reference line for the reddening.
@@ -130,6 +134,45 @@ label_cyan = ''
 # Plot the second and third panels
 plot_ax2 = True
 plot_ax3 = True
+
+# Show line ticks 
+show_line_ticks = True
+
+# line_tick_ax: 0 - On plot of spectra, 1 - On plot of residuals, 2 - On separate plot
+line_tick_ax = 0
+
+# line_tick_pos: 0 - Top, 1 - Middle, 2 - Bottom
+line_tick_pos = 0
+
+# Show line ticks for selected ions only
+show_selected_ions_only = True
+
+# Show line ticks for selected ions only
+show_selected_intensities_only = True
+
+# Differentiate line sequences of a same ion according to the reference
+differentiate_lines = True
+
+# Allow editing line parameters in line info dialog
+allow_editing_lines = True
+
+# Automatically update synthesis after editing line parameters in line info dialog
+update_after_editing_lines = True
+
+# Color of line ticks 
+line_tick_color = 'black'
+
+# Plot lines of selected ions
+plot_lines_of_selected_ions = True
+
+# Color of selected line ticks 
+color_selected_ions = [ 'DeepSkyBlue', 'magenta', 'BlueViolet', 'LightGreen' ]
+
+# List of selected ions 
+selected_ions = []
+
+# Index to cycle the selected ions
+index_of_selected_ions = -1
 
 # Scale factor for the plot of the theoretical (individual) spectra. Still in devel
 fact_multi_synth =  1.
@@ -156,6 +199,23 @@ ghost =  {"do_ghost":0, "delta_lambda" : 0. , "intens" : [ 0.00]}
 #                      3.50000e-05, $
 #                      8.00000e-06] }
 
-line_saved_ordered_by = 'lambda' # lambda or i_rel or id
+
+
+# Fields to be printed 
+line_field_print   = [ 'id', 'lambda', 'l_shift', 'i_rel', 'i_cor' ]
+
+# Printed header  
+line_saved_header = True
+
+# line_saved_ordered_by: 0 - Wavelength, 1 - Intensity, 2 - ion
+line_saved_ordered_by = 0
+
 line_saved_format = 'tex' # tex or csv
 line_saved_filename = 'lines.dat'
+
+plot_filename = 'plot.pdf'
+'lines.dat'
+
+plot_filename = 'plot.pdf'
+
+show_dialogs = True
