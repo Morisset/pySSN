@@ -144,9 +144,9 @@ class spectrum(object):
         
         if do_synth:
             if do_read_liste:
-                self.phyat_arr, self.n_data = self.read_phyat(self.phyat_file)
                 self.fic_model = self.get_conf('fic_modele', message='error')
                 self.model_arr = self.read_model(self.fic_model)
+                self.phyat_arr, self.n_data = self.read_phyat(self.phyat_file)
                 self.n_models = len(self.model_arr)
                 
                 self.fic_cosmetik = self.get_conf('fic_cosmetik', message='warn')
@@ -437,7 +437,8 @@ class spectrum(object):
             
             if bool(self.get_conf('reverse_spectra', undefined=False)) :
                     self.f = self.f[::-1]
-                    
+        if self.get_conf('wave_unit') == 'mu':
+            self.w *= 10000.
         self.n_lambda = len(self.f)
         self.tab_pix = np.arange(self.n_lambda)
         

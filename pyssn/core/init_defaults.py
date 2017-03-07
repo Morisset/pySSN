@@ -52,9 +52,13 @@ resol = 1  # Resol must be small if the obs resol is large
 # If you want to make a synthesis, let it to True.
 # Set it to False if you don't want to make a synthesis. In this case an observation must be given and will be displayed
 do_synth = True
+do_cosmetik = True
 
 # The limit of the spectrum to be computed
 limit_sp = [0, 1.0e+10]
+
+# The wavelengths are in "Angstrom" or "mu" 
+wave_unit = 'Angstrom'
 
 # Here are the 2 filenames of the data. The filename 
 # of the atomic database is hard-coded 
