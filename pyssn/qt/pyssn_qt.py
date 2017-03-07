@@ -493,6 +493,7 @@ class AppForm(QtGui.QMainWindow):
             '    resol = <integer>\n\n' \
             'Usage: \n' \
             '    Set to \'1\' if the resolution of the observed spectrum is large enough' 
+            
         self.resol_box.setToolTip(s) 
         
         s = 'Minimum relative intensity of lines to be shown. \n\n' \
@@ -510,6 +511,24 @@ class AppForm(QtGui.QMainWindow):
              '    \'Fe, N\' to show the lines of all Fe and N ions\n' \
              '    <line code number> to show the lines of that same ion'                
         self.ion_box.setToolTip(s)        
+              
+        self.resol_box.setToolTip( s ) 
+
+        self.verbosity_list = ['None', 'Errors', 'Errors and warnings', 'Errors, warnings, and comments', 'Debug messages' ]
+        self.verbosity_button = QtGui.QPushButton('Verbosity')
+        s = 'Verbosity level:\n'
+        for i in range(len(self.verbosity_list)):
+            s = s + '    ' + str(i) + ' - ' + self.verbosity_list[i] + '\n'
+        s = s + '\nSet with:\n' + '    log_level = <integer>'
+        self.verbosity_button.setToolTip( s )        
+        self.verbosity_ag = QtGui.QActionGroup(self, exclusive=True)
+        
+        self.verbosity_menu = QtGui.QMenu()
+        for i in range(len(self.verbosity_list)):
+            a = self.verbosity_ag.addAction(QtGui.QAction(self.verbosity_list[i], self, checkable=True))
+            self.verbosity_menu.addAction(a)
+        self.verbosity_button.setMenu(self.verbosity_menu)
+        self.verbosity_ag.triggered.connect(self.verbosity)
         
         #
         # Layout with box sizers
@@ -1737,6 +1756,11 @@ class AppForm(QtGui.QMainWindow):
             self.do_save = False
             self.on_draw()
             self.do_save = True
+
+            #self.lineIDs_GroupBox.setChecked(self.sp.get_conf('plot_ax2', True))
+            self.lineIDs_GroupBox.setChecked(False)
+            self.residual_GroupBox.setChecked(self.sp.get_conf('plot_ax3', True))
+
             self.restore_axes()
         else:
             if self.sp is None:

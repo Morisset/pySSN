@@ -19,15 +19,16 @@ if config.INSTALLED['PyNeb']:
     import pyneb as pn
 
 from ..utils.physics import CST, Planck, make_cont_Ercolano, gff
-from ..utils.misc import execution_path, change_size, convol, rebin, is_absorb, no_red_corr, gauss, carre, lorentz, convolgauss, vactoair, clean_label
+from ..utils.misc import execution_path, change_size, convol, rebin, is_absorb, no_red_corr, gauss, carre, lorentz, convolgauss 
+from ..utils.misc import vactoair, clean_label,  get_parser, read_data, my_execfile as execfile
 from ..core.profiles import profil_instr
-from ..utils.misc import get_parser, my_execfile as execfile
 
 """
 ToDo:
 1) Define the special lines in a table or dictionnary where ref, color, style are set up.
 2) avoid reduced tick values for lambdas when zooming.
 """
+
 
 def save_data(filename, array_to_save, NF=True):
     #dtype = 'i8, a1, a9, f, f, f, f, a1, i8, i4, f, a25'
@@ -85,6 +86,7 @@ def read_data(filename, NF=True):
         log_.error('Some relative intensities are not defined {}'.format(dd['num'][np.isnan(dd['i_rel'])]))
     
     return dd.view(np.recarray)
+
 
 class spectrum(object):
     

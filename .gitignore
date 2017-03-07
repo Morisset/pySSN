@@ -11,3 +11,5 @@ dist/
 .directory
 **/.DS_Store
 **phyat_lists/*.dat
+**phyat_lists/test*
+**docs/*.dat
