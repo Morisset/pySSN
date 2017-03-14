@@ -97,7 +97,7 @@ delta_limit_sp =  0.1 # %
 
 # initialisation of the continuum flux 
 cont_plot = False #Set True to plot continuum spectrum
-cont_in_lambda = True #Set to True if the continuum is in wavelength
+cont_in_lambda = False #Set to True if the continuum is in wavelength
 cont_unred = True #set to True if reddening is to be applied to cont
 cont_lambda = 0.
 cont_pix = 0.
