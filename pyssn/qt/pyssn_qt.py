@@ -68,7 +68,11 @@ class NavigationToolbar( NavigationToolbar2QT ):
         icon=QtGui.QIcon(pm)
         
         ac = self.addAction(icon, "Toggle Curs") 
-        ac.setCheckable(True) 
+        ac.setCheckable(True)
+        
+        #Ver como inicializar
+        #ac.setChecked(True)
+        
         ac.toggled.connect(self.curs_toggle)        
         
         self.ac = ac
@@ -288,10 +292,6 @@ class AppForm(QtGui.QMainWindow):
         
         self.draw_button = QtGui.QPushButton("Draw")
         self.connect(self.draw_button, QtCore.SIGNAL('clicked()'), self.on_draw)
-
-#        self.savelines_button = QtGui.QPushButton("&Save")
-#        self.savelines_button.setMinimumWidth(50)
-#        self.connect(self.savelines_button, QtCore.SIGNAL('clicked()'), self.save_lines)
         
         self.Command_GroupBox = QtGui.QGroupBox("Execute")
         self.Command_GroupBox.setCheckable(False)
@@ -304,10 +304,7 @@ class AppForm(QtGui.QMainWindow):
 
         self.lineIDs_GroupBox = QtGui.QGroupBox("Show lines")
         self.lineIDs_GroupBox.setCheckable(True)
-        self.lineIDs_GroupBox.setChecked(False)
-        
-#        self.lineIDs_GroupBox.setTristate(True)
-#        self.lineIDs_GroupBox.setCheckState(QtCore.Qt.PartiallyChecked)
+        self.lineIDs_GroupBox.setChecked(True)
         
         self.connect(self.lineIDs_GroupBox, QtCore.SIGNAL('clicked()'), self.show_lines_clicked)
         self.lineIDs_GroupBox.setToolTip( 'Check to show ticks at the central positions of the spectral lines and plot the lines of selected ions' )        
@@ -529,16 +526,10 @@ class AppForm(QtGui.QMainWindow):
             self.verbosity_menu.addAction(a)
         self.verbosity_button.setMenu(self.verbosity_menu)
         self.verbosity_ag.triggered.connect(self.verbosity)
-        
+
         #
         # Layout with box sizers
         # 
-        hbox5 = QtGui.QHBoxLayout()
-
-        for w in [self.line_info_box, self.magenta_box, self.magenta_label_box, self.cyan_box, self.cyan_label_box]:
-            hbox5.addWidget(w)
-            hbox5.setAlignment(w, QtCore.Qt.AlignVCenter)
-
 
         CommandLayout = QtGui.QGridLayout()
 
@@ -621,11 +612,6 @@ class AppForm(QtGui.QMainWindow):
         vbox.addWidget(self.mpl_toolbar)
 
         vbox.addLayout(grid)
-#        vbox.addLayout(hbox5)
-#        QtGui.QApplication.setStyle(QtGui.QStyleFactory.create(styleName))
-#        self.changePalette()
-        QtGui.qApp.setStyle('Windows')
-        QtGui.qApp.setStyle('Cleanlooks')
         QtGui.qApp.setStyle('Plastique')
         self.main_frame.setLayout(vbox)
         self.setCentralWidget(self.main_frame)
@@ -1621,54 +1607,6 @@ class AppForm(QtGui.QMainWindow):
             self.do_save = True
         
         log_.debug('Exit make_axes', calling=self.calling)
-        
-    def make_axes_original(self):
-        
-        log_.debug('Entering make_axes', calling=self.calling)
-        if self.call_on_draw: 
-            self.save_axes()
-        self.fig.clf()
-
-        n_subplots = 1
-        i_ax2 = 2
-        i_ax3 = 2
-        if self.show_line_ticks_action.isChecked():
-            n_subplots += 1
-            i_ax3 += 1
-        if self.residual_GroupBox.isChecked():
-            n_subplots += 1
-        if self.axes is not None:
-            del(self.axes)
-        self.axes = self.fig.add_subplot(n_subplots, 1, 1)
-        self.sp.ax1 = self.axes
-        if self.show_line_ticks_action.isChecked():
-            if self.axes2 is not None:
-                del(self.axes2)
-            self.axes2 = self.fig.add_subplot(n_subplots, 1, i_ax2, sharex=self.axes)
-            self.sp.ax2 = self.axes2
-            self.axes.get_xaxis().set_visible(False)
-        else:
-            self.axes2 = None
-            self.sp.ax2 = None
-        if self.residual_GroupBox.isChecked():
-            if self.axes3 is not None:
-                del(self.axes3)
-            self.axes3 = self.fig.add_subplot(n_subplots, 1, i_ax3, sharex=self.axes)
-            self.sp.ax3 = self.axes3
-            if self.sp.get_conf('plot_ax2'):
-                self.axes2.get_xaxis().set_visible(False)
-            self.axes.get_xaxis().set_visible(False)
-        else:
-            self.axes3 = None
-            self.sp.ax3 = self.axes3
-        self.fig.subplots_adjust(hspace=0.0, bottom=0.11, right=0.97, top=0.97, left=0.1)
-        if self.call_on_draw: 
-            log_.debug('Calling on_draw from make_axes', calling=self.calling)
-            self.do_save = False
-            self.on_draw()
-            self.do_save = True
-        
-        log_.debug('Exit make_axes', calling=self.calling)
 
     def init_axes(self):
         self.x_plot_lims = self.sp.get_conf('x_plot_lims')
@@ -1756,11 +1694,6 @@ class AppForm(QtGui.QMainWindow):
             self.do_save = False
             self.on_draw()
             self.do_save = True
-
-            #self.lineIDs_GroupBox.setChecked(self.sp.get_conf('plot_ax2', True))
-            self.lineIDs_GroupBox.setChecked(False)
-            self.residual_GroupBox.setChecked(self.sp.get_conf('plot_ax3', True))
-
             self.restore_axes()
         else:
             if self.sp is None:
@@ -2122,6 +2055,7 @@ class AppForm(QtGui.QMainWindow):
               self.line_field_menu.actions()[i].setChecked(True)
             else:
               self.line_field_menu.actions()[i].setChecked(False)
+              
     def set_show_header(self):
         if self.show_header_action.isChecked():
           self.sp.set_conf('line_saved_header', True)
