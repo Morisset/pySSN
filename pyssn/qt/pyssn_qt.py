@@ -1976,7 +1976,7 @@ class AppForm(QtGui.QMainWindow):
         k = self.line_tick_pos_list.index(self.line_tick_pos_ag.checkedAction().text())
         self.sp.set_conf('line_tick_pos',k)
         if self.show_line_ticks_action.isChecked():
-          self.make_axes()
+            self.make_axes()
         
     def verbosity(self):
         verbosity = self.verbosity_list.index(self.verbosity_ag.checkedAction().text())
@@ -2011,7 +2011,7 @@ class AppForm(QtGui.QMainWindow):
         old_limit_sp = self.sp.get_conf('limit_sp')
         new_limit_sp = limit_sp = (np.float(self.sp_min_box.text()), np.float(self.sp_max_box.text()))
         if old_limit_sp == new_limit_sp:
-          return
+            return
         self.sp.set_conf('limit_sp', new_limit_sp)
         log_.message('Changing limit_sp. Old: {}, New: {}'.format(old_limit_sp, new_limit_sp), calling=self.calling)
         self.statusBar().showMessage('Changing the synthesis wavelength limits ...') 

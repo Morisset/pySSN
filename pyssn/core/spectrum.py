@@ -50,7 +50,7 @@ def save_data(filename, array_to_save, NF=True):
     #np.savetxt(filename, array_to_save, fmt=fmt)
 
     for line in array_to_save:
-      print('{0[num]:>14d} {0[id]:9s}{0[lambda]:11.3f}{0[l_shift]:6.3f}{0[i_rel]:10.3e}{0[i_cor]:7.3f} {0[ref]:>14d}{0[profile]:5d}{0[vitesse]:7.2f}{1:1s}'.format(line, line['comment'].strip()))
+        print('{0[num]:>14d} {0[id]:9s}{0[lambda]:11.3f}{0[l_shift]:6.3f}{0[i_rel]:10.3e}{0[i_cor]:7.3f} {0[ref]:>14d}{0[profile]:5d}{0[vitesse]:7.2f}{1:1s}'.format(line, line['comment'].strip()))
 
 def read_data(filename, NF=True):
     #dtype = 'i8, a1, a9, f, f, f, f, a1, i8, i4, f, a25'
