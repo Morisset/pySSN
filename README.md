@@ -19,3 +19,7 @@ If you don't have Qt4 installed, you can still call pySSN with an init file (man
 
 `pySSN -f s6302_n_c_init.py`
 
+Acknowledgements
+================
+
+This project is partly supported by grants DGAPA/PAPIIT-107215 and CONACyT-CB2015-254132.
