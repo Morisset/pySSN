@@ -61,12 +61,6 @@ class _Config(object):
             self.INSTALLED['PyNeb'] = True
         except:
             self.INSTALLED['PyNeb'] = False
-        try:
-            import yaml
-            self.INSTALLED['YAML'] = True
-        except:
-            self.INSTALLED['YAML'] = False
-            self.log_.message('YAML config files not available', calling=self.calling)
         
         self.DataPaths = []
         self.addDataFilePath('../data/', inpySSN=True)
