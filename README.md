@@ -1,6 +1,28 @@
 # pySSN
 
-pySSN is better running with Qt4. Once installed, you can call it from command line:
+
+Installation
+=======
+
+Easily installed form github:
+
+`pip install -U git+https://github.com/Morisset/pySSN.git`
+
+Dependencies
+=========
+
+pySSN requieres numpy, matplotlib, scipy
+
+It also requires PyNeb if you want to have reddening correction. https://github.com/Morisset/PyNeb_devel
+
+pySSN is better running with Qt4.
+
+Qt5 is still not supported
+
+Usage
+====
+
+Once installed, you can call it from command line:
 
 `pySSN [-f s6302_n_c_init.py]`
 
