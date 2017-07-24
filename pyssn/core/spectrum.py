@@ -1439,7 +1439,7 @@ class spectrum(object):
             ax.step(self.w, self.sp_synth, c='green')
 
         selected_ions = self.get_conf('selected_ions')
-        if selected_ions <> [] and self.get_conf('plot_lines_of_selected_ions'):
+        if selected_ions != [] and self.get_conf('plot_lines_of_selected_ions'):
             ref_list = self.get_ref_list(selected_ions)
             ion_color_dic, ion_ls_dic = self.get_color_and_linestyle_dic(selected_ions)
             ref_color_dic, ref_ls_dic = self.get_color_and_linestyle_dic(ref_list)
