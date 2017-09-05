@@ -961,7 +961,7 @@ class spectrum(object):
             for fic_atm, coeff_atm, shift_atm in zip(self.get_conf('fic_atm'), self.get_conf('coeff_atm'), self.get_conf('shift_atm')):
                 try:
                     d = np.genfromtxt(fic_atm, dtype=None, names=('wl', 'abs'))
-                    d['wl'] = vactoair(d['wl'])
+                    d['wl'] = vactoair(d['wl'], self.conf['vactoair_inf'], self.conf['vactoair_sup'])
                     if type(coeff_atm) not in (list, tuple):
                         coeff_atm = (coeff_atm, )
                     if type(shift_atm) not in (list, tuple):

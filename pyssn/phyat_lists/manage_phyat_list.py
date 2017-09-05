@@ -1,11 +1,11 @@
 import numpy as np
 import pyneb as pn
 import matplotlib.pyplot as plt
-from pyneb.utils.physics import Z, IP, gsFromAtom
+from pyneb.utils.physics import Z, IP, gsFromAtom, Z_inv
 from pyneb.utils.misc import int_to_roman, parseAtom
 import os
 import time
-from pyssn.utils.misc import split_atom, read_data
+from pyssn.utils.misc import split_atom, read_data, execution_path
 
 pn.atomicData.addAllChianti()
 
@@ -53,13 +53,26 @@ def print_phyat_list(atom, tem, den, cut=1e-3, cut_inter=1e-5, ij_ref = None, fi
                'p2': 'each',
                'p3': [2, 3, [4, 5]],
                'p4': 'each',
-               'p5': 'each'} # The others are 'all' by default (i.e. only one master line, with all the lines depending on it
+               'p5': 'each',
+               'd2': 'split 3',
+               'd3': 'split 4',
+               'd4': 'split 5',
+               'd6': 'split 5',
+               'd7': 'split 3',
+               'd8': 'split 3',
+               'd9': 'split 3'} # The others are 'all' by default (i.e. only one master line, with all the lines depending on it
 
     ij_refs = {'s1': ((3, 1),),
                'p1': ((3, 1), (7, 1)),
-               'p3': ((5, 1),)}
+               'p3': ((4, 2),),
+               'd6': ((4, 2),),
+               'd5': ((2, 1), (5, 1),),
+               'd4': ((3, 2), (7, 5),),
+               'd3': ((6, 1),),
+               'd2': ((2, 1), (12, 1),)               
+               }
 
-    str_print = '{}{:02d}{:02d}{:01d}{:01d}0{:03d}{:03d} {:<8s} {:11.3f} 0.000{:10.3e}  1.000  {:02d}{:02d}{:01d}00{:03d}{:03d}   1   1.00 {}'  
+    str_print = '{}{:02d}{:02d}{:01d}{:01d}0{:03d}{:03d} {:<8s} {:11.3f} 0.000{:10.3e}  1.000  {:02d}{:02d}{:01d}{:01d}0{:03d}{:03d}   1   1.00 {}'  
     if filename is None:
         f = None
     else:
@@ -203,11 +216,15 @@ def print_phyat_list(atom, tem, den, cut=1e-3, cut_inter=1e-5, ij_ref = None, fi
                 i_emis_ref_loc = i_up_lev + 1
             if i_emis_ref_loc > 9:
                 logprint('Ref line level is {}. '.format(i_emis_ref_loc))
-                ref_str=str_print.format('9', Z[atom.elem], atom.spec,i_emis_ref_loc/10 , i_emis_ref_loc%10, 0, 0, ion_name, 1.0, 1.0, 0, 0, 0, 0, 999, com_ref)
+                ref_str=str_print.format('9', Z[atom.elem], atom.spec, 3, i_emis_ref_loc/10 , i_emis_ref_loc%10, 0, 
+                                         ion_name, 1.0, emis_ref, 
+                                         0, 0, 0, 0, 0, 999, com_ref)
             else:      
-                ref_str=str_print.format('9', Z[atom.elem], atom.spec,i_emis_ref_loc , 0, 0, 0, ion_name, 1.0, 1.0, 0, 0, 0, 0, 999, com_ref)
+                ref_str=str_print.format('9', Z[atom.elem], atom.spec, 3, i_emis_ref_loc , 0, 0, 
+                                         ion_name, 1.0, emis_ref, 
+                                         0, 0, 0, 0, 0, 999, com_ref)
             print_ref = True 
-            
+            print('emis_ref', emis_ref)
             for i in up_lev:
                 print_it = False
                 if i > this_NLevels:
@@ -229,11 +246,14 @@ def print_phyat_list(atom, tem, den, cut=1e-3, cut_inter=1e-5, ij_ref = None, fi
                             i_to_print = np.min((i, 9))
                             i_to_print = i_emis_ref_loc
                             if i_emis_ref_loc > 9:
-                                to_print.append(str_print.format(' ', Z[atom.elem], atom.spec, i_to_print, 0, i, j, ion_name, 
-                                                     wls[i-1,j-1], emis[i-1,j-1]/emis_ref, Z[atom.elem], atom.spec, i_emis_ref_loc/10, i_emis_ref_loc%10, 0, com))
+                                to_print.append(str_print.format(' ', Z[atom.elem], atom.spec, 3, i_to_print, i, j, 
+                                                                 ion_name, wls[i-1,j-1], emis[i-1,j-1]/emis_ref, 
+                                                                 Z[atom.elem], atom.spec, 3, i_emis_ref_loc/10, i_emis_ref_loc%10, 0, 
+                                                                 com))
                             else:
-                                to_print.append(str_print.format(' ', Z[atom.elem], atom.spec, i_to_print, 0, i, j, ion_name, 
-                                                     wls[i-1,j-1], emis[i-1,j-1]/emis_ref, Z[atom.elem], atom.spec, i_emis_ref_loc, 0, 0, com))                                
+                                to_print.append(str_print.format(' ', Z[atom.elem], atom.spec, 3, i_to_print, i, j, 
+                                                                 ion_name, wls[i-1,j-1], emis[i-1,j-1]/emis_ref, 
+                                                                 Z[atom.elem], atom.spec, 3, i_emis_ref_loc, 0, 0, com))                                
                             N_lines += 1
     
 
@@ -257,7 +277,7 @@ def print_phyat_list(atom, tem, den, cut=1e-3, cut_inter=1e-5, ij_ref = None, fi
 def make_phyat_list(filename, tem1=None, den1=None, cut=1e-4, E_cut=20, cut_inter=1e-5, 
              verbose=False, notry=False, NLevels=50, atoms=None, 
              ref_lines_dic=None, NLevels_dic=None, up_lev_rule_dic=None, Aij_zero_dic=None,
-             Del_ion = (), tem_den_dic = None, extra_file=None):
+             Del_ion = None, tem_den_dic = None, extra_file=None):
     
     """
     filename: output file name
@@ -291,12 +311,7 @@ def make_phyat_list(filename, tem1=None, den1=None, cut=1e-4, E_cut=20, cut_inte
     up_lev_rule_dic: e.g. {'Ni2': 'split 3',
                            'Fe1': 'split 5',
                            'Ni3': 'split 3',
-                           'Ni4': 'split 4',
-                           'Fe3': 'split 5',
-                           'Fe4': 'all',
-                           'Fe5': 'split 5',
-                           'Fe6': 'split 4',
-                           'Fe7': 'split 3'
+                           'Ni4': 'split 4'
                            }
     Aij_zero_dic: e.g. {'C3': ((2,1),)
                         }
@@ -309,15 +324,29 @@ def make_phyat_list(filename, tem1=None, den1=None, cut=1e-4, E_cut=20, cut_inte
     """
     
     
-    if ref_lines_dic is None:
-        ref_lines_dic = {'Fe7': ((4, 2),),
+    ref_lines_dic_def = {'Fe7': ((4, 2),),
                          'Fe6': ((2, 1), (5, 1),),
                          'Fe5': ((3, 2), (7, 5),),
                          'Fe4': ((6, 1),),
-                         'Fe3': ((2, 1), (12, 1),)
+                         'Fe3': ((2, 1), (12, 1),),
+                         'Fe2': ((2, 1), (14, 6)),
+                         'Ca2': (2, 3 , (4, 5), 6),
+                         'Sc2': ((2, 1),),
+                         'O4': ((3, 1), (6, 3)),
+                         'Si2': ((3, 1), (6, 1)),
+                         'Co4': ((2, 1),),
+                         'Ni5': ((2, 1),),
+                         'Cu6': ((2, 1),)
                          }
-    if NLevels_dic is None:
-        NLevels_dic = {'S1': 8,
+    
+    if ref_lines_dic is None:
+        ref_lines_dic = ref_lines_dic_def
+    else:
+        for k in ref_lines_dic_def:
+            if k not in ref_lines_dic:
+                ref_lines_dic[k] = ref_lines_dic_def[k]
+        
+    NLevels_dic_def = {'S1': 8,
                        'Ni2': 17,
                        'Fe1': 9,
                        'Ni3': 9,
@@ -327,24 +356,55 @@ def make_phyat_list(filename, tem1=None, den1=None, cut=1e-4, E_cut=20, cut_inte
                        'Fe5': 20,
                        'Fe6': 19,
                        'Fe7': 9,
-                       'Fe8': 2
+                       'Fe8': 2,
+                       'Fe14': 10,
+                       'F5': 2,
+                       'Mg6':49,
+                       'Mg4':45,
+                       'Si7':45,
+                       'Na3':45,
+                       'Si6':45,
+                       'Ar10':45,
+                       'Ar9':45
                        }
+    if NLevels_dic is None:
+        NLevels_dic = NLevels_dic_def
+    else:
+        for k in NLevels_dic_def:
+            if k not in NLevels_dic:
+                NLevels_dic[k] = NLevels_dic_def[k]
         
-    if up_lev_rule_dic is None:
-        up_lev_rule_dic = {'Ni2': 'split 3',
-                           'Fe1': 'split 5',
+    up_lev_rule_dic_def = {'Fe1': 'split 5',
+                           'Fe2': 'split 9',
+                           'Mn2': 'split 9',
+                           'Sc2': 'split 9',
+                           'Ni2': 'split 3',
                            'Ni3': 'split 3',
-                           'Ni4': 'split 4',
-                           'Fe3': 'split 5',
-                           'Fe4': 'all',
-                           'Fe5': 'split 5',
-                           'Fe6': 'split 4',
-                           'Fe7': 'split 3'
+                           'Ni4': 'split 4'
                            }
-        
+    if up_lev_rule_dic is None:
+        up_lev_rule_dic = up_lev_rule_dic_def
+    else:
+        for k in up_lev_rule_dic_def:
+            if k not in up_lev_rule_dic:
+                up_lev_rule_dic[k] = up_lev_rule_dic_def[k]
+
+    Aij_zero_dic_def = {'C3': ((2, 1),)}
     if Aij_zero_dic is None:
-        Aij_zero_dic = {'C3': ((2,1),)
-                        }
+        Aij_zero_dic = Aij_zero_dic_def 
+    else:
+        for k in Aij_zero_dic_def:
+            if k not in Aij_zero_dic:
+                Aij_zero_dic[k] = Aij_zero_dic_def[k]
+    
+    Del_ion_def = ['Ne7', 'Na8', 'Mg9', 'Al10', 'Ar7', 'Ca9', 'Ca14', 'Ti16', 'Cr18', 'Zn28', 'Mg11', 'Al12', 'Si13', 'P14', 'S15',
+           'Zn27', 'Zn29', 'Ni27', 'Fe25', 'Ca19', 'Fe15', 'Ni17', 'Fe22', 'Si6']
+    if Del_ion is None:
+        Del_ion = Del_ion_def
+    else:
+        for ion in Del_ion_def:
+            if ion not in Del_ion_def:
+                Del_ion.append(ion)
     
     if tem_den_dic is None:
         tem_den_dic = {0.:   (1e4, 1e3),
@@ -382,89 +442,113 @@ def make_phyat_list(filename, tem1=None, den1=None, cut=1e-4, E_cut=20, cut_inte
         atoms = get_atoms_by_conf(atoms=atoms)
         
     atoms = unique(atoms)
-    
-    for ion in Del_ion:
-        try:
-            atoms.remove(ion)
-        except:
-            pass
     printed_confs = []
     #atoms = []
     for a in atoms:
-        print(a)
-        if a in extra_atoms:
-            n_lines = 0
-            for line in extra_data[extra_atoms == a]:
-                if line[0] != '9':
-                    n_lines += 1
-                f.write(line)
-            log_file.write('{}, {} lines from file {}\n'.format(a, n_lines, extra_file))
-        else:
-            if a in ref_lines_dic:
-                ref_lines = ref_lines_dic[a]
+        if a not in Del_ion:
+            print(a)
+            if a in extra_atoms:
+                n_lines = 0
+                for line in extra_data[extra_atoms == a]:
+                    if line[0] != '9':
+                        n_lines += 1
+                    f.write(line)
+                log_file.write('{}, {} lines from file {}\n'.format(a, n_lines, extra_file))
             else:
-                ref_lines = None
-            if a in NLevels_dic:
-                this_NLevels = NLevels_dic[a]
-            else:
-                this_NLevels = NLevels
-            if a in up_lev_rule_dic:
-                up_lev_rule = up_lev_rule_dic[a]
-            else:
-                up_lev_rule = None
-            conf = gsFromAtom(a)
-            log_file.write('{}, conf={}, '.format(a, conf))
-            if conf not in printed_confs:
-                printed_confs.append(conf)
-            try:
-                atom = pn.Atom(atom=a, NLevels=this_NLevels)
-                if atom.NLevels > 0:
-                    do_it = True
+                if a in ref_lines_dic:
+                    ref_lines = ref_lines_dic[a]
                 else:
+                    ref_lines = None
+                if a in NLevels_dic:
+                    this_NLevels = NLevels_dic[a]
+                else:
+                    this_NLevels = NLevels
+                if a in up_lev_rule_dic:
+                    up_lev_rule = up_lev_rule_dic[a]
+                else:
+                    up_lev_rule = None
+                conf = gsFromAtom(a)
+                log_file.write('{}, conf={}, '.format(a, conf))
+                if conf not in printed_confs:
+                    printed_confs.append(conf)
+                try:
+                    atom = pn.Atom(atom=a, NLevels=this_NLevels)
+                    if atom.NLevels > 0:
+                        do_it = True
+                    else:
+                        do_it = False
+                except:
+                    log_file.write('NIST missing. \n')
                     do_it = False
-            except:
-                log_file.write('NIST missing. \n')
-                do_it = False
-            if do_it:
-                if tem1 is None:
-                    tem, den = get_tem_den(atom.IP_up)
-                else:
-                    tem = tem1
-                    den = den1
-                if a in Aij_zero_dic:
-                    Aij_zero = Aij_zero_dic[a]
-                else:
-                    Aij_zero = None
-                if notry:
-                    print_phyat_list(atom, tem, den, cut=cut, filename=f, E_cut=E_cut, log_file=log_file, 
-                                      cut_inter=cut_inter, verbose=verbose, help_file=help_file, ij_ref=ref_lines,
-                                      up_lev_rule=up_lev_rule, Aij_zero=Aij_zero)                
-                else:
-                    try:
+                if do_it:
+                    if tem1 is None:
+                        tem, den = get_tem_den(atom.IP_up)
+                    else:
+                        tem = tem1
+                        den = den1
+                    if a in Aij_zero_dic:
+                        Aij_zero = Aij_zero_dic[a]
+                    else:
+                        Aij_zero = None
+                    if notry:
                         print_phyat_list(atom, tem, den, cut=cut, filename=f, E_cut=E_cut, log_file=log_file, 
-                                      cut_inter=cut_inter, verbose=verbose, help_file=help_file, ij_ref=ref_lines,
-                                      up_lev_rule=up_lev_rule, Aij_zero=Aij_zero)    
-                    except:
-                        log_file.write('plp error.')
-                log_file.write('\n')
-                
-    f.write('\n')
+                                          cut_inter=cut_inter, verbose=verbose, help_file=help_file, ij_ref=ref_lines,
+                                          up_lev_rule=up_lev_rule, Aij_zero=Aij_zero)                
+                    else:
+                        try:
+                            print_phyat_list(atom, tem, den, cut=cut, filename=f, E_cut=E_cut, log_file=log_file, 
+                                          cut_inter=cut_inter, verbose=verbose, help_file=help_file, ij_ref=ref_lines,
+                                          up_lev_rule=up_lev_rule, Aij_zero=Aij_zero)    
+                        except:
+                            log_file.write('plp error.')
+                    log_file.write('\n')
+                    
+    #f.write('\n')
     f.close()
     log_file.write('\n')
     log_file.close()
 
-def phyat2model(phyat_file, model_file):
+def phyat2model(phyat_file, model_file, norm=1.237e-29, ab_dic=None, ion_frac_dic=None):
     """  
-    generate a model_file file from a phyat_file, setting all the master lines to I=1.0
+    generate a model_file file from a phyat_file, setting all the master lines to I=i_rel/norm
+    norm by default corresponds to Hbeta = 1e4 at Te=1e4K for Ne=1e3cm-3
     """
-    
+    if ab_dic is None:
+        ab_data = np.genfromtxt(execution_path('asplund_2009.dat'), dtype=None, names = 'elem, abund, foo')
+        
+    if type(ion_frac_dic) is str:
+        ion_frac_data = np.genfromtxt(execution_path(ion_frac_dic), dtype=None, names = 'ion, ion_frac')
+        ion_frac_dic = {}
+        for record in ion_frac_data:
+            ion_frac_dic[record['ion']] = record['ion_frac']
+        
+        
     list_phyat = read_data(phyat_file)
     with open(model_file, 'w') as f:
         for line in list_phyat:
             if line['ref'] == 999:
-                new_num = line['num']-90000000000000
-                f.write('{0:14d} {1[id]:9s}      1.000 0.000 1.000e+04  1.000  0000000000000   1   1.00 {1[comment]:>15s}'.format(new_num, line))
-
+                num = line['num']
+                new_num = int(str(num)[1::])
+                Z = int(str(num)[1:3])
+                spec = int(str(num)[3:5])
+                type_ = int(str(num)[5:6])
+                if type_ == 3:
+                    spec -= 1                
+                elem = Z_inv[Z]
+                ion = elem + str(spec)
+                abund = 10**(ab_data[ab_data['elem'] == elem]['abund'][0]-12)
+                ion_frac = 1.0
+                if ion_frac_dic is not None:
+                    if ion in ion_frac_dic:
+                        ion_frac = ion_frac_dic[ion]
+                        print(line['num'], Z, Z_inv[Z], spec, abund, ion_frac)
+                    else:
+                        # TODO we need to look for the available ion with similar structure
+                        ionFe = 'Fe' + str(spec)
+                        ion_frac = ion_frac_dic[ionFe]                    
+                
+                intens = line['i_rel'] / norm * abund * ion_frac
+                f.write('{0:14d} {1[id]:9s}      1.000 0.000{2:10.3e}  1.000  0000000000000   1   1.00 {1[comment]:>15s}'.format(new_num, line, intens))
                         
 def make_conf_plots():
     
@@ -548,7 +632,6 @@ def get_atoms_by_conf(extra_file=None, atoms=None):
             if gss[remove_iso(atom)] == gs:
                 res.append(atom)
     return res
-                
         
 """
 To make a new liste_phyat, from an ipython session:

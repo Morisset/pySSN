@@ -13,5 +13,7 @@ dist/
 **phyat_lists/*.dat
 **phyat_lists/test*
 **docs/*.dat
-
-docs/Gmail - contact synthèse.pdf
+fortran/
+*Results.txt*
+r*.d
+pyneb_data/

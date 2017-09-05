@@ -1,0 +1,12 @@
+Code used in column 5 of the line IDs
+
+0 Rec
+1 Rec
+2 Dielectronic
+3 Collisional 
+4 Bowen
+5 FREE
+6 FREE
+7 Fluorecence
+8 Charge Exchange
+9 Rec. fixed ones.

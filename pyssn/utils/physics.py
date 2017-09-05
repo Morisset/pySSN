@@ -159,3 +159,35 @@ def gff(Z, T, lam):
         G[i] = B[0] - B[2]
 
     return G
+
+def make_ion_frac(N):
+
+    import pandas as pd
+    import pymysql
+    from pyneb.utils.physics import IP, sym2name, Z
+    import numpy as np
+        
+    co = pymysql.connect(host='132.248.1.102', db='3MdB', user='OVN_user', passwd='oiii5007') 
+    res = pd.read_sql("select * from abion where N = {}".format(N), con=co)
+    co.close()
+    
+    elems = np.unique([s.split('_')[1].lower() for s in res.keys()[2::]])
+    f = open('{}_ionfrac.dat'.format(N), 'w')
+    
+    for sym in sorted(sym2name):
+        if sym[0] not in '0123456789':
+            if sym2name[sym] in elems:
+                for i in range(30):
+                    ion = '{}{}'.format(sym, i)
+                    ion_frac_str = 'A_{}_vol_{}'.format(sym2name[sym].upper(), i)
+                    if ion_frac_str in res.keys():
+                        f.write('{} {}\n'.format(ion, res[ion_frac_str][0]))
+    f.close()
+            
+            
+            
+            
+            
+            
+            
+    

@@ -84,6 +84,8 @@ fic_atm = None
 coeff_atm = 0.0
 shift_atm = 0.0
 
+vactoair_inf = 2000.
+vactoair_sup = 20000.
 
 # Here is the name of the function used for the emission profiles:
 profil_emis_name = 'profil_emis'

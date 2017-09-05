@@ -162,8 +162,8 @@ def read_HITRAN_stick(file_):
                          names=('ID', 'ISO','nu','I','A', 'V', 'Vself'))
     return data
 
-def vactoair(wl):
-    mask = ( wl >= 2000. ) & ( wl < 20000. )
+def vactoair(wl, wl_inf=2000., wl_sup=20000.):
+    mask = ( wl >= wl_inf ) & ( wl < wl_sup )
     fact = 1. + 2.735182e-4 + 131.4182/wl**2 + 2.76249e8/(wl**4.)
     return wl / (mask * fact + (1 - mask))
 

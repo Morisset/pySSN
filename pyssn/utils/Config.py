@@ -61,6 +61,7 @@ class _Config(object):
             self.INSTALLED['PyNeb'] = True
         except:
             self.INSTALLED['PyNeb'] = False
+            self.log_.warn('PyNeb not available. No reddening correction can be done', calling=self.calling)
         
         self.DataPaths = []
         self.addDataFilePath('../data/', inpySSN=True)
