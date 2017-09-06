@@ -634,7 +634,7 @@ extra_file = None
 # filename = 'listeCIIIt1.5_4.6.4.dat'
 # filename = 'liste_test_DP.dat'
 # filename = 'liste_extrafile_none_noBaIIgenerate.dat'
-filename = 'listeAll.dat'
+filename = 'liste_phyat_coll.dat'
 
 ref_lines_dic = {}
 
