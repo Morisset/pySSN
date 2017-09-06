@@ -8,6 +8,7 @@ import time
 from pyssn.utils.misc import split_atom, read_data, execution_path
 
 pn.atomicData.addAllChianti()
+pn.config.vactoair_high_wl = 20000.
 
 
 def unique(array, orderby='first'):
@@ -508,10 +509,10 @@ def make_phyat_list(filename, tem1=None, den1=None, cut=1e-4, E_cut=20, cut_inte
     log_file.write('\n')
     log_file.close()
 
-def phyat2model(phyat_file, model_file, norm=1.237e-29, ab_dic=None, ion_frac_dic=None):
+def phyat2model(phyat_file, model_file, norm_hbeta=1e4, ab_dic=None, ion_frac_dic=None, ion_frac_min=1e-4):
     """  
     generate a model_file file from a phyat_file, setting all the master lines to I=i_rel/norm
-    norm by default corresponds to Hbeta = 1e4 at Te=1e4K for Ne=1e3cm-3
+    norm by default corresponds to Hbeta = 1e4
     """
     if ab_dic is None:
         ab_data = np.genfromtxt(execution_path('asplund_2009.dat'), dtype=None, names = 'elem, abund, foo')
@@ -524,6 +525,10 @@ def phyat2model(phyat_file, model_file, norm=1.237e-29, ab_dic=None, ion_frac_di
         
         
     list_phyat = read_data(phyat_file)
+    Hbeta_num = 90101000000000
+    Ibeta = list_phyat[list_phyat['num'] == Hbeta_num]['i_rel'][0]
+    norm = Ibeta / norm_hbeta * ion_frac_dic['H1']
+    
     with open(model_file, 'w') as f:
         for line in list_phyat:
             if line['ref'] == 999:
@@ -536,20 +541,36 @@ def phyat2model(phyat_file, model_file, norm=1.237e-29, ab_dic=None, ion_frac_di
                     spec -= 1                
                 elem = Z_inv[Z]
                 ion = elem + str(spec)
-                abund = 10**(ab_data[ab_data['elem'] == elem]['abund'][0]-12)
-                ion_frac = 1.0
-                if ion_frac_dic is not None:
-                    if ion in ion_frac_dic:
-                        ion_frac = ion_frac_dic[ion]
-                        print(line['num'], Z, Z_inv[Z], spec, abund, ion_frac)
-                    else:
-                        # TODO we need to look for the available ion with similar structure
-                        ionFe = 'Fe' + str(spec)
-                        ion_frac = ion_frac_dic[ionFe]                    
-                
+                if Z < 90:
+                    abund = 10**(ab_data[ab_data['elem'] == elem]['abund'][0]-12)
+                    ion_frac = 1.0
+                    if ion_frac_dic is not None:
+                        if ion in ion_frac_dic:
+                            ion_frac = ion_frac_dic[ion]
+                        else:
+                            # TODO we need to look for the available ion with similar structure
+                            ionFe = 'Fe' + str(spec)
+                            ion_frac = ion_frac_dic[ionFe]                    
+                else:
+                    abund = norm
+                    ion_frac = 1.0
+                if ion_frac < ion_frac_min:
+                    ion_frac = ion_frac_min
+                print(line['num'], Z, Z_inv[Z], spec, abund, ion_frac)
                 intens = line['i_rel'] / norm * abund * ion_frac
-                f.write('{0:14d} {1[id]:9s}      1.000 0.000{2:10.3e}  1.000  0000000000000   1   1.00 {1[comment]:>15s}'.format(new_num, line, intens))
-                        
+                line['comment'] = line['comment'].strip()
+                f.write('{0:14d} {1[id]:9s}      1.000 0.000{2:10.3e}  1.000  0000000000000   1   1.00 {1[comment]:<100s}\n'.format(new_num, line, intens))
+
+def merge_files(fs, f_out):
+    """
+    example: merge_files(('liste_phyat_rec.dat', 'liste_phyat_coll.dat', 'liste_phyat_others.dat'), 'liste_phyat_test1.dat')
+    """
+    import shutil
+    with open(f_out,'wb') as wfd:
+        for f in fs:
+            with open(f,'rb') as fd:
+                shutil.copyfileobj(fd, wfd, 1024*1024*10)
+          
 def make_conf_plots():
     
     at_list = [pn.Atom(atom=at) for at in ('C4', 'C3', 'C2', 'O3', 'O2', 'Ne3', 'Ne2')]
