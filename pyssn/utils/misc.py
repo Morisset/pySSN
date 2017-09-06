@@ -14,11 +14,11 @@ from pyneb.utils.physics import vactoair
 from pyneb.utils.misc import roman_to_int
 
 def read_data(filename, NF=True):
-    dtype = 'i8, a1, a9, f, f, f, f, a1, i8, i4, f, a25'
+    dtype = 'i8, a1, a9, f, f, f, f, a1, i8, i4, f, a100'
     if NF:
-        delimiter = [14, 1, 9, 11, 6, 10, 7, 1, 14, 4, 7, 25]
+        delimiter = [14, 1, 9, 11, 6, 10, 7, 1, 14, 4, 7, 100]
     else:
-        delimiter = [ 9, 1, 9, 11, 6, 10, 7, 1,  9, 4, 7, 25]
+        delimiter = [ 9, 1, 9, 11, 6, 10, 7, 1,  9, 4, 7, 100]
     names = ['num', 'foo', 'id', 'lambda','l_shift', 'i_rel', 'i_cor', 'foo2', 'ref', 'profile', 
              'vitesse', 'comment']
     usecols = (0, 2, 3, 4, 5, 6, 8, 9, 10, 11)
