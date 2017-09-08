@@ -1,0 +1,12 @@
+  0  0    1.e4 2.e4 3.e4 4.e4 5.e4 6.e4 7.e4 8.e4 9.e4 1.e5 1.5e5 2.e5 4.e5 6.e5 8.e5 1.e6
+  1  2    1.00 2.00 2.90 3.25 3.27 3.22 3.17 3.09 3.02 2.94  2.64 2.41 1.85 1.53 1.32 1.17
+*** Fe X        'Effective collision strengths Omega'
+*** ATOM iron
+*** SPECTRUM 10
+*** N_LEVELS 2
+*** T_UNIT	'K' 
+*** SOURCE1	'Tayal, S. 2000, ApJ 544, 575' 
+*** NOTE1 	'Effective Collision Strengths Omega' 
+*** NOTE2 	'T=(1,2,3)e4K: see Morisset, C. & Péquignot, D. 1996, A&A 313, 611 and Pelan 1995, private communication' 
+*** NOTE3 	'Discarded: Aggarwal, K. M. & Keenan, F. P. 2005, A&A 439, 1215; Pelan, J., Berrington, K. A. 1995, A&A Suppl. 110, 209; Mohan, M. et al. 1994, ApJ 434, 389' 
+*** GSCONFIG 3p5

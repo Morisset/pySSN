@@ -1,0 +1,9 @@
+0 0 2.0e-01 4.0e-01 6.0e-01 8.0e-01 1.0e+00 1.2e+00 1.4e+00 1.6e+00 1.8e+00 2.0e+00 5.0e+00
+1 2   3.680   3.544   3.865   4.307   4.738   5.121   5.449   5.726   5.960   6.157   7.039
+*** Nb XI effective collision strengths Omega
+*** ATOM 'niobium'
+*** SPECTRUM 11
+*** N_LEVELS 2
+*** T_UNIT      'K/10000'
+*** SOURCE1     'Schoning & Butler 1998, AA Suppl. 128, 581'
+*** NOTE1	'DP: Omega taken identical to Xe VI from SB98' 

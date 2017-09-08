@@ -1,0 +1,13 @@
+Energy Stat_Weight Aij
+cm-1 none 1/s 1/s 1/s 1/s 1/s 1/s 1/s
+     0.00000000    4  0.00E+00  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     19868.5000    4  1.436E+2  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     26991.4000    6  2.584E+1  2.441E-0  0.00E+00  0.00E+00  0.00E+00
+     40697.3000    2  2.963E+2  1.610E+1  1.870E-1  0.00E+00  0.00E+00
+     57710.2000    4  8.454E+1  5.365E+2  1.278E+2  2.989E+1  0.00E+00
+*** La VII   'Energy and transition probability data'
+*** N_LEVELS 5
+*** SOURCE1	'Gayasov, R. R. et al. 1998, Phys. Scr. 57, 565' 
+*** NOTE1 	'Energy levels; 4S 2D 2P' 
+*** SOURCE2	'Biemont E. et al. 1995, A&A Suppl. 111, 333' 
+*** NOTE2	'Transition Probabilities, Aij BHQZ95' 

@@ -160,16 +160,22 @@ def gff(Z, T, lam):
 
     return G
 
-def make_ion_frac(N):
+def make_ion_frac(N, co=None):
 
     import pandas as pd
     import pymysql
     from pyneb.utils.physics import IP, sym2name, Z
     import numpy as np
-        
-    co = pymysql.connect(host='132.248.1.102', db='3MdB', user='OVN_user', passwd='oiii5007') 
+    
+    sym2name['S'] = 'sulphur'
+    if co is None:
+        co = pymysql.connect(host='132.248.1.102', db='3MdB', user='OVN_user', passwd='oiii5007') 
+        close_after=True
+    else:
+        close_after=False
     res = pd.read_sql("select * from abion where N = {}".format(N), con=co)
-    co.close()
+    if close_after:
+        co.close()
     
     elems = np.unique([s.split('_')[1].lower() for s in res.keys()[2::]])
     f = open('{}_ionfrac.dat'.format(N), 'w')

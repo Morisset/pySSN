@@ -1,0 +1,13 @@
+Energy Stat_Weight Aij
+cm-1 none 1/s 1/s 1/s 1/s 1/s 1/s 1/s
+     0.00000000    1  0.00E+00  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     17634.0000    3  8.835E+1  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     27144.0000    5  2.575E-1  8.142E-0  0.00E+00  0.00E+00  0.00E+00
+     54744.0000    5  3.000E-4  2.126E+2  1.813E+2  0.00E+00  0.00E+00
+     84827.0000    1  1.00E-10  1.662E+3  2.524E+1  5.005E+0  0.00E+00
+*** Mo XI energy and Aij data
+*** N_LEVELS 5
+*** SOURCE1	'Litzén, U. & Reader, J. 1989, Phys. Scr. 39 468'
+*** NOTE1 	'Energy levels, e' 
+*** SOURCE2	'E. Biémont & J. E. Hansen 1986, Phys. Scr. 33, 117' 
+*** NOTE2	'Transition Probabilities, A' 

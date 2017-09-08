@@ -1,0 +1,13 @@
+Energy Stat_Weight Aij
+cm-1 none 1/s 1/s 1/s 1/s 1/s 1/s 1/s
+     0.00000000    1  0.00E+00  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     1742.40000    3  9.592E-2  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     3936.00000    5  1.682E-4  1.344E-1  0.00E+00  0.00E+00  0.00E+00
+     13032.0000    5  2.358E-4  7.984E-1  1.210E+0  0.00E+00  0.00E+00
+     28128.7000    1  1.00E-10  1.705E+1  5.832E-1  2.840E+0  0.00E+00
+*** Se III energy and Aij data
+*** N_LEVELS 5
+*** SOURCE1	'Tauheed, A., Hala 2012, Phys. Scr. 85, 304' 
+*** NOTE1 	'Energy levels, e; (NIST_3/2017: 1741,3937,13032,28250)' 
+*** SOURCE2	'E. Biémont & J. E. Hansen 1986, Phys. Scr. 33, 117' 
+*** NOTE2	'Transition Probabilities, A' 

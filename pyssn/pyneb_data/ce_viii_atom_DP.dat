@@ -1,0 +1,13 @@
+Energy Stat_Weight Aij
+cm-1 none 1/s 1/s 1/s 1/s 1/s 1/s 1/s
+     0.00000000    4  0.00E+00  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     22937.0000    4  2.443E+2  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     30422.0000    6  4.572E+1  2.771E-0  0.00E+00  0.00E+00  0.00E+00
+     45526.0000    2  4.708E+2  1.608E+1  2.249E-1  0.00E+00  0.00E+00
+     66210.0000    4  9.840E+1  8.610E+2  2.033E+2  5.282E+1  0.00E+00
+*** Ce VIII   'Energy and transition probability data'
+*** N_LEVELS 5
+*** SOURCE1	'**energies extrapol Biémont+' 
+*** NOTE1 	'Energy levels; err <~ 20' 
+*** SOURCE2	'Biemont E. et al. 1995, A&A Suppl. 111, 333' 
+*** NOTE2	'Transition Probabilities, Aij BHQZ95' 

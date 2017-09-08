@@ -1,0 +1,14 @@
+Energy Stat_Weight Aij
+      cm-1    none  1/s      1/s      1/s      1/s
+      0.0000    6  0.00E-0  0.00E-0  0.00E-0  0.00E-0
+   2253.0000    8  1.00E-1  0.00E-0  0.00E-0  0.00E-0
+  49737.0000    4  8.56E+7  0.00E-0  0.00E-0  0.00E-0
+  52226.0000    6  4.56E+6  8.41E+7  0.00E-0  0.00E-0
+*** Ce IV       'Energy and transition probability data'
+*** SOURCE1	'Martin, W. C. et al. 1978, NSRDS-NBS 60'
+*** NOTE1 	'Energy levels, E: 5p6.4f 2F*, 5p6.5d 2D' 
+*** SOURCE2	'Savukov, I. M. et al. 2003, Phys. Rev. A 67, 042504'
+*** NOTE2	'Transition Probabilities, Aij' 
+*** NOTE3	'DP: Aij(2-1) arbitrary' 
+*** NOTE4	'Resonance 4f-5d optical depths' 
+*** GSCONFIG f1

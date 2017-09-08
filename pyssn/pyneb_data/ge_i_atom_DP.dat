@@ -1,0 +1,13 @@
+Energy Stat_Weight Aij
+cm-1 none 1/s 1/s 1/s 1/s 1/s 1/s 1/s
+     0.00000000    1  0.00E+00  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     557.134100    3  3.241E-3  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     1409.96090    5  5.016E-6  7.972E-3  0.00E+00  0.00E+00  0.00E+00
+     7125.29890    5  4.330E-5  5.056E-2  9.870E-2  0.00E+00  0.00E+00
+     16367.3332    1  1.00E-10  1.408E+0  7.751E-2  1.252E+0  0.00E+00
+*** Ge I energy and Aij data
+*** N_LEVELS 5
+*** SOURCE1	'J. E. Sansonetti and W. C. Martin, J. Phys. Chem. Ref. Data 34, 1559 (2005) ' 
+*** NOTE1 	'Energy levels, e' 
+*** SOURCE2	'E. Biémont & J. E. Hansen 1986, Phys. Scr. 33, 117' 
+*** NOTE2	'Transition Probabilities, A' 

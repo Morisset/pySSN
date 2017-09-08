@@ -1,0 +1,12 @@
+Energy Stat_Weight Aij 
+     cm-1       none  1/s      1/s    
+     0.000000    6  0.000e+0  0.00e+0
+     14660.00    4  5.123e+1  0.00e+0
+*** Sr XII      'Energy and transition probability data'
+*** N_LEVELS 2
+*** SOURCE1	'Ryabtsev, A. N. & Reader J. 1982, JOSA 72, 710' 
+*** NOTE1 	'Energy levels 3d9 2D' 
+*** SOURCE2	'Biémont, E. & Hansen, J.E. 1989, Phys. Scr. 39, 308'
+*** NOTE2	'Transition Probabilities, Aij' 
+*** NOTE3       '(next: y13 17230 zr14 20140 nb15 23380 mo16 27020)' 
+*** GSCONFIG d9

@@ -1,0 +1,13 @@
+Energy Stat_Weight Aij
+cm-1 none 1/s 1/s 1/s 1/s 1/s 1/s 1/s
+     0.00000000    5  0.00E+00  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     16588.8000    1  1.238E-1  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     20576.3000    3  1.759E+2  8.240E-1  0.00E+00  0.00E+00  0.00E+00
+     35674.5000    5  1.959E+2  1.165E-2  5.587E+0  0.00E+00  0.00E+00
+     72884.6000    1  5.403E-0  1.00E-20  1.662E+3  1.688E+1  0.00E+00
+*** Mo IX energy and transition probability data
+*** N_LEVELS 5
+*** SOURCE1	'Reader, J. & Acquista, N. 1976, J. Opt. Soc. Am. 66, 896' 
+*** NOTE1 	'Energy levels, e'
+*** SOURCE2	'E. Biémont & J. E. Hansen 1986, Phys. Scr. 34, 116' 
+*** NOTE2	'Transition Probabilities, Aij' 

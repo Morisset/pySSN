@@ -1,0 +1,9 @@
+0 0 2.0e-01 4.0e-01 6.0e-01 8.0e-01 1.0e+00 1.2e+00 1.4e+00 1.6e+00 1.8e+00 2.0e+00 5.0e+00
+1 2   2.622   2.892   3.172   3.468   3.744   3.987   4.196   4.375   4.529   4.663   5.491
+*** La V effective collision strengths Omega
+*** ATOM 'lanthanum'
+*** SPECTRUM 5
+*** N_LEVELS 2
+*** T_UNIT      'K/10000'
+*** SOURCE1     'Schoning & Butler 1998, AA Suppl. 128, 581'
+*** SOURCE2	'DP: Omega taken identical to Ba IV from SB98' 

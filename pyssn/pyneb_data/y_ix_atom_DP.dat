@@ -1,0 +1,10 @@
+Energy Stat_Weight Aij
+cm-1 none 1/s 1/s 1/s 1/s 1/s 1/s 1/s
+     0.00000000    2  0.00E+00  0.00E+00
+     16322.0000    4  3.938E+1  0.00E+00
+*** Y IX energy and Aij data
+*** N_LEVELS 2
+*** SOURCE1	'Reader et al. 1986, JOSA B3, 874'
+*** NOTE1 	'Energy levels, e; \pm 2/cm' 
+*** SOURCE2	'Biémont & Hansen 1987, Nucl. Inst. & Meth. in Phys. Res. B23, 274' 
+*** NOTE2	'Transition Probabilities, A' 

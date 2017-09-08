@@ -1,0 +1,11 @@
+Energy Stat_Weight Aij 
+     cm-1       none  1/s      1/s    
+     0.000000    6  0.000e+0  0.00e+0
+     12360.00    4  3.078e+1  0.00e+0
+*** Rb XI       'Energy and transition probability data'
+*** N_LEVELS 2
+*** SOURCE1	'Sansonetti, J. E. 2006, J. Phys. Chem. Ref. Data 35, 301; Erratum: 37, 1183' 
+*** NOTE1 	'Energy levels 3d9 2D' 
+*** SOURCE2	'Biémont, E. & Hansen, J.E. 1989, Phys. Scr. 39, 308' 
+*** NOTE2	'Transition Probabilities, Aij' 
+*** GSCONFIG d9

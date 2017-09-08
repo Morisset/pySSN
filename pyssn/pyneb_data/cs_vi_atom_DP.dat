@@ -1,0 +1,13 @@
+Energy Stat_Weight Aij
+cm-1 none 1/s 1/s 1/s 1/s 1/s 1/s 1/s
+     0.00000000    1  0.00E+00  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     12176.0000    3  2.884E+1  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     17628.2000    5  2.542E-1  1.407E+0  0.00E+00  0.00E+00  0.00E+00
+     35061.4000    5  1.511E-2  6.054E+1  5.040E+1  0.00E+00  0.00E+00
+     52410.3000    1  1.00E-10  4.174E+2  1.942E+1  2.377E+0  0.00E+00
+*** Cs VI energy and Aij data
+*** N_LEVELS 5
+*** SOURCE1	'Tauheed et al. 1991, Phys. Scr. 44, 579' 
+*** NOTE1 	'Energy levels, e' 
+*** SOURCE2	'Biémont, et al. 1995, A&A Suppl. 111, 333' 
+*** NOTE2	'Transition Probabilities, A' 

@@ -1,0 +1,11 @@
+Energy Stat_Weight Aij 
+     cm-1       none  1/s      1/s    
+     0.000000    6  0.000e+0  0.00e+0
+     8600.000    4  1.023e+1  0.00e+0
+*** Br IX       'Energy and transition probability data'
+*** N_LEVELS 2
+*** SOURCE1	'8570/cm: Joshi, Y. N. & van Kleef, Th. A. M. 1981, Phys. Scr. 23, 249' 
+*** SOURCE2	'8582/cm ?: van Kleef, Th. A. M. & Uylings, P. 1986, Phys. Scr. 33, 61' 
+*** NOTE1 	'Energy levels 3d9 2D' 
+*** SOURCE2	'8570/cm: Biémont, E. & Hansen, J.E. 1989, Phys. Scr. 39, 308' 
+*** NOTE2	'Transition Probabilities, Aij' 

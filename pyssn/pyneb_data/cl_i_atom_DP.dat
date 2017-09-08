@@ -1,0 +1,10 @@
+Energy Stat_Weight Aij
+      cm-1 none    1/s        1/s
+     0.000   4  0.000E+00  0.000E+00
+  882.3515   2  1.230e-02  0.000E+00
+*** Cl I        'Energy and transition probability data'
+*** SOURCE1	'Radziemski, Jr., L. J. & Kaufman, V. 1969, J. Opt. Soc. Am. 59, 424'
+*** NOTE1 	'Energy levels 3s2.3p5 2P*'
+*** SOURCE2	'Wiese, W. L. et al. 1969, NIST'
+*** NOTE2	'Transition Probabilities, Aij' 
+*** GSCONFIG 3p5

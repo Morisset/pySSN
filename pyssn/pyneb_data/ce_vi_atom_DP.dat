@@ -1,0 +1,10 @@
+Energy Stat_Weight Aij
+cm-1 none 1/s 1/s 1/s 1/s 1/s 1/s 1/s
+     0.00000000    4  0.00E+00  0.00E+00
+     25984.0000    2  3.198E+2  0.00E+00
+*** Ce VI energy and Aij data
+*** N_LEVELS 2
+*** SOURCE1	'Reader, J. & Ekberg, J. O. 1972, J. Opt. Soc. Am. 62, 464'
+*** NOTE1 	'Energy levels, e: 2P0.5; \pm 3 cm-1' 
+*** SOURCE2	'Biémont, et al. 1988, Phys. Scr. 37, 850' 
+*** NOTE2	'Transition Probabilities, A' 

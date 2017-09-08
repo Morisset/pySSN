@@ -1,0 +1,13 @@
+Energy Stat_Weight Aij
+cm-1 none 1/s 1/s 1/s 1/s 1/s 1/s 1/s
+     0.00000000    5  0.00E+00  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     14561.4000    1  7.897E-2  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     16821.0000    3  9.751E+1  1.452E-1  0.00E+00  0.00E+00  0.00E+00
+     31196.7000    5  1.176E+2  5.932E-3  4.265E+0  0.00E+00  0.00E+00
+     64468.0000    1  4.080E-0  1.00E-20  1.051E+3  1.266E+1  0.00E+00
+*** Nb VIII energy and transition probability data
+*** N_LEVELS 5
+*** SOURCE1	'Reader, J. & Acquista, N. 1976, J. Opt. Soc. Am. 66, 896' 
+*** NOTE1 	'Energy levels, e' 
+*** SOURCE2	'E. Biémont & J. E. Hansen 1986, Phys. Scr. 34, 116' 
+*** NOTE2	'Transition Probabilities, Aij' 

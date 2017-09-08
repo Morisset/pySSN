@@ -1,0 +1,14 @@
+Energy Stat_Weight Aij
+cm-1 none 1/s 1/s 1/s 1/s 1/s 1/s 1/s
+     0.00000000    4  0.00E+00  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     20134.7000    4  1.573E+1  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     23527.0000    6  9.499E-1  3.749E-1  0.00E+00  0.00E+00  0.00E+00
+     38531.1000    2  4.701E+1  1.589E+1  1.725E-1  0.00E+00  0.00E+00
+     43566.9000    4  7.104E+1  5.720E+1  2.081E+1  9.319E-1  0.00E+00
+*** Sr VI       'Energy and transition probability data'
+*** N_LEVELS 5
+*** SOURCE1	'Persson, W. & Pettersson, S.-G. 1984, Phys. Scr. 29, 308' 
+*** NOTE1 	'Energy levels: 4s2.4p3 4S* 2D* 2P*' 
+*** SOURCE2	'E. Biémont & J. E. Hansen 1986, Phys. Scr. 34, 116' 
+*** NOTE2	'Transition Probabilities, Aij: HXR/3+HFR*2/3' 
+*** GSCONFIG p3

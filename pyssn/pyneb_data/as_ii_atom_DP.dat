@@ -1,0 +1,13 @@
+Energy Stat_Weight Aij
+cm-1 none 1/s 1/s 1/s 1/s 1/s 1/s 1/s
+     0.00000000    1  0.00E+00  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     1063.49000    3  2.204E-2  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     2541.35000    5  3.522E-5  4.134E-2  0.00E+00  0.00E+00  0.00E+00
+     10095.8200    5  1.257E-4  2.428E-1  4.196E-1  0.00E+00  0.00E+00
+     22598.6000    1  1.00E-10  5.970E+0  2.494E-1  2.051E+0  0.00E+00
+*** As II energy and Aij data
+*** N_LEVELS 5
+*** SOURCE1	'J.E. Sansonetti and W.C. Martin, J. Phys. Chem. Ref. Data 34, 1559 (2005)' 
+*** NOTE1 	'Energy levels, e' 
+*** SOURCE2	'E. Biémont & J. E. Hansen 1986, Phys. Scr. 33, 117' 
+*** NOTE2	'Transition Probabilities, A' 

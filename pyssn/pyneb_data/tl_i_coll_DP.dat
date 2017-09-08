@@ -1,0 +1,9 @@
+0 0 2.0e-01 4.0e-01 6.0e-01 8.0e-01 1.0e+00 1.2e+00 1.4e+00 1.6e+00 1.8e+00 2.0e+00 5.0e+00
+1 2   .0940   .1880   .2820   .3760   .4700   .5640   .6580   .7520   .8460   .9400   2.350
+*** Tl I    'Effective collision strengths Omega'
+*** ATOM 'thallium'
+*** SPECTRUM 1
+*** N_LEVELS 2
+*** T_UNIT      'K/10000'
+*** SOURCE1     'Schoening & Butler 1998, AA Suppl. 128, 581'
+*** SOURCE2	'DP: Omega arbitrary 0.47*T/10000 adopted' 

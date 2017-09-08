@@ -1,0 +1,10 @@
+Energy Stat_Weight Aij
+cm-1 none 1/s 1/s 1/s 1/s 1/s 1/s 1/s
+     0.00000000    2  0.00E+00  0.00E+00
+     9222.60000    4  1.662E+1  0.00E+00
+*** Te IV energy and Aij data
+*** N_LEVELS 2
+*** SOURCE1	'Crooker A. M. & Joshi, Y. N. 1964, J. Opt. Soc. Am. 54 553; Tauheed, A. et al. 1999, J. Phys. B 32, 2917'
+*** NOTE1 	'Energy levels, e; 2P, ? *ADD? 4P: 2 4 6 69465.9 73770.1 78281.1' 
+*** SOURCE2	'Biémont, et al. 1995, A&A Suppl. 111, 333' 
+*** NOTE2	'Transition Probabilities, A' 

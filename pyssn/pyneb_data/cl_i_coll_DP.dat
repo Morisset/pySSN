@@ -1,0 +1,12 @@
+  0  0    3.20 3.40 3.60 3.80 4.00 4.20 4.40 4.60 4.80 5.00 5.20
+  1  2    2.48 2.54 2.63 2.77 2.93 3.09 3.19 3.20 3.13 2.97 2.71
+*** Cl I        'Effective collision strengths Omega'
+*** ATOM chlorine
+*** SPECTRUM 1
+*** N_LEVELS 2
+*** T_UNIT	'K' 
+*** T_UNIT	'log(K)' 
+*** SOURCE1	'Pelan, J., Berrington, K. A. 1995, A&A Suppl. 110, 209' 
+*** NOTE1 	'Effective Collision Strengths Omega' 
+*** NOTE2 	'Omega taken identical to Ar II; **TO BE CHANGED' 
+*** GSCONFIG 3p5

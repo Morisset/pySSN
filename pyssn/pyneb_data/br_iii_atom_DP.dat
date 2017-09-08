@@ -1,0 +1,13 @@
+Energy Stat_Weight Aij
+cm-1 none 1/s 1/s 1/s 1/s 1/s 1/s 1/s
+     0.00000000    4  0.00E+00  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     15250.0000    4  1.150E-0  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     16307.7000    6  5.568E-2  1.302E-2  0.00E+00  0.00E+00  0.00E+00
+     27199.0000    2  5.726E+0  2.715E+0  1.168E-1  0.00E+00  0.00E+00
+     28672.5000    4  1.160E+1  5.781E+0  2.849E+0  2.469E-2  0.00E+00
+*** Br III   'energy and transition probability data'
+*** N_LEVELS 5
+*** SOURCE1	'Jabeen, S., Tauheed, A. 2015, JQSRT 154, 9' 
+*** NOTE1 	'Energy levels' 
+*** SOURCE2	'E. Biémont & J. E. Hansen 1986, Phys. Scr. 34, 116' 
+*** NOTE2	'Transition Probabilities, Aij: HXR/3+HFR*2/3' 

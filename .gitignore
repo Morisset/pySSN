@@ -10,10 +10,7 @@ dist/
 .dropbox
 .directory
 **/.DS_Store
-**phyat_lists/*.dat
-**phyat_lists/test*
 **docs/*.dat
 fortran/
 *Results.txt*
 r*.d
-pyneb_data/

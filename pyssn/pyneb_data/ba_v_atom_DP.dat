@@ -1,0 +1,15 @@
+Energy Stat_Weight Aij
+cm-1 none 1/s 1/s 1/s 1/s 1/s 1/s 1/s
+     0.00000000    5  0.00E+00  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     11301.9000    1  1.253e-1  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     16429.1000    3  9.080e+1  1.953e-0  0.00E+00  0.00E+00  0.00E+00
+     24720.5000    5  8.609e+1  2.278e-2  1.317e-0  0.00E+00  0.00E+00
+     51180.7000    1  5.343e+0  1.00e-10  6.570e+2  1.645e+1  0.00E+00
+*** Ba V energy and Aij data
+*** N_LEVELS 5
+*** GSCONFIG 5p4
+*** SOURCE1	'Reader, J. 1983, J. Opt. Soc. Am. 73, 349; confirmed Sharma, M. K. et al. 2014, JQRST 133, 281' 
+*** NOTE1 	'Energy levels, e' 
+*** SOURCE2	'Biémont, et al. 1995, A&A Suppl. 111, 333' 
+*** NOTE2	'Transition Probabilities, A' 
+*** NOTE3	'Order Energies 3P0 & 3P1 inverted' 

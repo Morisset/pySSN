@@ -1,0 +1,10 @@
+Energy Stat_Weight Aij
+cm-1 none 1/s 1/s 1/s 1/s 1/s 1/s 1/s
+     0.00000000    4  0.00E+00  0.00E+00
+     21634.1000    2  1.848E+2  0.00E+00
+*** La V energy and Aij data
+*** N_LEVELS 2
+*** SOURCE1	'G. L. Epstein & J. Reader 1976, J. Opt. Soc. Am. 66, 590'
+*** NOTE1 	'Energy levels, e; \pm 1.0 cm-1' 
+*** SOURCE2	'Biémont, et al. 1988, Physica Scipta 37, 850' 
+*** NOTE2	'Transition Probabilities, A' 

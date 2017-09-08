@@ -1,0 +1,11 @@
+0 0 2.000e-1 4.000e-1 6.000e-1 8.000e-1 1.000e+0 1.200e+0 1.400e+0 1.600e+0 1.800e+0 2.000e+0 5.000e+0
+1 2 8.000e+0 8.000e+0 8.000e+0 8.000e+0 8.000e+0 8.000e+0 8.000e+0 8.000e+0 8.000e+0 8.000e+0 8.000e+0
+*** Nd VI       'Effective collision strengths data'
+*** ATOM 'neodymium'
+*** SPECTRUM 6
+*** N_LEVELS 2
+*** T_UNIT	'K/10000' 
+*** SOURCE1	'Schoning & Butler 1998, A&AS 128, 581' 
+*** NOTE1 	'Effective Collision Strengths Omega' 
+*** NOTE2 	'DP: Omega taken identical to La III' 
+*** GSCONFIG f1

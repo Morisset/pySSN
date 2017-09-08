@@ -1,0 +1,10 @@
+Energy Stat_Weight Aij
+cm-1 none 1/s 1/s 1/s 1/s 1/s 1/s 1/s
+     0.00000000    2  0.00E+00  0.00E+00
+     744.500000    4  3.70E-03  0.00E+00
+*** F V energy and Aij data
+*** N_LEVELS 2
+*** SOURCE1	'NIST'
+*** NOTE1 	'Energy levels, e' 
+*** SOURCE2	'NIST' 
+*** NOTE2	'Transition Probabilities, A' 

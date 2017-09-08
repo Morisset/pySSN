@@ -1,0 +1,13 @@
+Energy Stat_Weight Aij
+cm-1 none 1/s 1/s 1/s 1/s 1/s 1/s 1/s
+     0.00000000    1  0.00E+00  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     15506.6000    3  5.870E+1  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     21499.2000    5  5.392E-1  1.746E+0  0.00E+00  0.00E+00  0.00E+00
+     42514.2000    5  5.862E-2  1.105E+2  9.165E+1  0.00E+00  0.00E+00
+     61082.5000    1  1.00E-10  6.859E+2  3.075E+1  2.416E+0  0.00E+00
+*** Ba VII energy and Aij data
+*** N_LEVELS 5
+*** SOURCE1	'Tauheed & Joshi 1992, Phys. Scr. 46, 403' 
+*** NOTE1 	'Energy levels, e: 3P, 1D, 1S; confirmed Sharma, M. K. et al. 2013, JQRST 119, 32' 
+*** SOURCE2	'Biémont, et al. 1995, A&A Suppl. 111, 333' 
+*** NOTE2	'Transition Probabilities, A' 

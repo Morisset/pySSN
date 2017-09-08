@@ -1,0 +1,10 @@
+Energy Stat_Weight Aij
+cm-1 none 1/s 1/s 1/s 1/s 1/s 1/s 1/s
+     0.00000000    2  0.00E+00  0.00E+00
+    28464.00000    4  2.086E+2  0.00E+00
+*** Mo XII energy and Aij data
+*** N_LEVELS 2
+*** SOURCE1	'Sugar, J. & Musgrove, A. 1988, J. Phys. Chem. Ref. Data 17, 155'
+*** NOTE1 	'Energy levels, e' 
+*** SOURCE2	'Biémont & Hansen 1987, Nucl. Inst. & Meth. in Phys. Res. B23, 274' 
+*** NOTE2	'Transition Probabilities, A' 

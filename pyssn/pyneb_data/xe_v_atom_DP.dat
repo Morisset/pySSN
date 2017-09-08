@@ -1,0 +1,13 @@
+Energy Stat_Weight Aij
+cm-1 none 1/s 1/s 1/s 1/s 1/s 1/s 1/s
+     0.00000000    1  0.00E+00  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     9291.10000    3  1.302E+1  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     14125.8000    5  1.093E-1  1.049E+0  0.00E+00  0.00E+00  0.00E+00
+     28410.7000    5  3.544E-3  3.090E+1  2.609E+1  0.00E+00  0.00E+00
+     44469.8000    1  1.00E-10  2.407E+2  1.170E+1  2.284E+0  0.00E+00
+*** Xe V energy and Aij data
+*** N_LEVELS 5
+*** SOURCE1	'Tauheed et al. 1991, Phys. Scr. 44, 579; revised Tauheed et al. 1993, J. Opt. Soc. Am. B 10, 561' 
+*** NOTE1 	'Energy levels, e' 
+*** SOURCE2	'Biémont, et al. 1995, A&A Suppl. 111, 333' 
+*** NOTE2	'Transition Probabilities, A' 

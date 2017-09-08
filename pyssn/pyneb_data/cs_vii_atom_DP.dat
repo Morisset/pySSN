@@ -1,0 +1,10 @@
+Energy Stat_Weight Aij
+cm-1 none 1/s 1/s 1/s 1/s 1/s 1/s 1/s
+     0.00000000    2  0.00E+00  0.00E+00
+     19379.3000    4  6.646E+1  0.00E+00
+*** Cs VII energy and Aij data
+*** N_LEVELS 2
+*** SOURCE1	'J. E. Sansonetti, J. Phys. Chem. Ref. Data 38, 761 (2009)'
+*** NOTE1 	'Energy levels, e' 
+*** SOURCE2	'Biémont, et al. 1995, A&A Suppl. 111, 333' 
+*** NOTE2	'Transition Probabilities, A' 

@@ -1,0 +1,13 @@
+Energy Stat_Weight Aij
+cm-1 none 1/s 1/s 1/s 1/s 1/s 1/s 1/s
+     0.00000000    1  0.00E+00  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     3742.86000    3  3.227E-1  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     7595.34000    5  6.172E-4  3.321E-1  0.00E+00  0.00E+00  0.00E+00
+     19722.9300    5  3.770E-4  2.122E+0  2.849E+0  0.00E+00  0.00E+00
+     39203.9200    1  1.00E-10  3.928E+1  1.098E+0  3.302E+0  0.00E+00
+*** Kr V energy and transition probability data
+*** N_LEVELS 5
+*** SOURCE1	'E. B. Saloman, J. Phys. Chem. Ref. Data 36, 215–386 (2007)' 
+*** NOTE1 	'Energy levels, e' 
+*** SOURCE2	'E. Biémont & J. E. Hansen 1986, Phys. Scr. 33, 117' 
+*** NOTE2	'Transition Probabilities, Aij' 

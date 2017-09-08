@@ -1,0 +1,9 @@
+       0       0   3.000   3.301   3.477   3.602   3.699   3.778   3.903   4.000   4.301   4.477   4.602
+       1       2   1.000   1.000   1.000   1.000   1.000   1.000   1.000   1.000   1.000   1.000   1.000
+*** Al IX effective collision strengths data
+*** ATOM aluminium
+*** SPECTRUM 9
+*** N_LEVELS 2
+*** T_UNIT	'log(K)' 
+*** SOURCE1	'No' 
+*** NOTE1 	'Effective Collision Strengths Omega' 

@@ -1,0 +1,13 @@
+Energy Stat_Weight Aij
+cm-1 none 1/s 1/s 1/s 1/s 1/s 1/s 1/s
+     0.00000000    1  0.00E+00  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     2625.60000    3  3.227E-1  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     5616.30000    5  6.172E-4  3.321E-1  0.00E+00  0.00E+00  0.00E+00
+     16193.1000    5  3.770E-4  2.122E+0  2.849E+0  0.00E+00  0.00E+00
+     33576.3000    1  1.00E-10  3.928E+1  1.098E+0  3.302E+0  0.00E+00
+*** Br IV energy and Aij data
+*** N_LEVELS 5
+*** SOURCE1	'Tauheed et al. 2008, Phys. Scr. 78, 305; (NOT NIST)' 
+*** NOTE1 	'Energy levels, e; \pm 0.4/cm' 
+*** SOURCE2	'E. Biémont & J. E. Hansen 1986, Phys. Scr. 33, 117' 
+*** NOTE2	'Transition Probabilities, A' 

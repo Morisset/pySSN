@@ -73,7 +73,7 @@ def print_phyat_list(atom, tem, den, cut=1e-3, cut_inter=1e-5, ij_ref = None, fi
                'd2': ((2, 1), (12, 1),)               
                }
 
-    str_print = '{}{:02d}{:02d}{:01d}{:01d}0{:03d}{:03d} {:<8s} {:11.3f} 0.000{:10.3e}  1.000  {:02d}{:02d}{:01d}{:01d}0{:03d}{:03d}   1   1.00 {}'  
+    str_print = '{}{:02d}{:02d}{:01d}{:01d}0{:03d}{:03d} {:<8s} {:11.3f} 0.000{:10.3e}  1.000  {:02d}{:02d}{:01d}{:01d}0{:03d}{:03d}  -1   1.00 {}'  
     if filename is None:
         f = None
     else:
@@ -275,15 +275,13 @@ def print_phyat_list(atom, tem, den, cut=1e-3, cut_inter=1e-5, ij_ref = None, fi
     if type(log_file) is str:
         lf.close()
 
-def make_phyat_list(filename, tem1=None, den1=None, cut=1e-4, E_cut=20, cut_inter=1e-5, 
+def make_phyat_list(filename, cut=1e-4, E_cut=20, cut_inter=1e-5, 
              verbose=False, notry=False, NLevels=50, atoms=None, 
              ref_lines_dic=None, NLevels_dic=None, up_lev_rule_dic=None, Aij_zero_dic=None,
-             Del_ion = None, tem_den_dic = None, extra_file=None):
+             Del_ion = None, phy_cond_file = 'phy_cond.dat', extra_file=None):
     
     """
     filename: output file name
-    tem1: temperature in K
-    den1: density in cm-3
     cut: relative intensity (to the master one) for a line to be printed
     E_cut: max energy in eV for the energy level to give a line
     cut_inter: largest dynamic between ref lines.
@@ -316,11 +314,7 @@ def make_phyat_list(filename, tem1=None, den1=None, cut=1e-4, E_cut=20, cut_inte
                            }
     Aij_zero_dic: e.g. {'C3': ((2,1),)
                         }
-    tem_den_dic: e.g. {0.:   (1e4, 1e3),
-                       13.6: (1e4, 1e3),
-                       24.0: (1e4, 1e3),
-                       1e6:  (1e4, 1e3)
-                       }
+    
     extra_file: a file of pySSN data format containing data to include.
     """
     
@@ -407,17 +401,35 @@ def make_phyat_list(filename, tem1=None, den1=None, cut=1e-4, E_cut=20, cut_inte
             if ion not in Del_ion_def:
                 Del_ion.append(ion)
     
-    if tem_den_dic is None:
-        tem_den_dic = {0.:   (1e4, 1e3),
-                       13.6: (1e4, 1e3),
-                       24.0: (1e4, 1e3),
-                       1e6:  (1e4, 1e3)
-                       }
-    
-    def get_tem_den(IP):
-        for k in sorted(tem_den_dic.keys()):
-            if IP < k: 
-                return tem_den_dic[k]
+    phycond = np.genfromtxt(phy_cond_file, dtype=None, names='name, value, RC, temp, dens')
+    dic_temp_ion = {}
+    dic_dens_ion = {}
+    tab_ips = []
+    tab_temps = []
+    tab_denss = []
+    for record in phycond:
+        if 'C' in record['RC']:
+            if record['name'] == 'IP':
+                tab_ips.append(record['value'])
+                tab_temps.append(record['temp'])
+                tab_denss.append(record['dens'])
+            else:
+                dic_temp_ion['{}{}'.format(record['name'], int(record['value']))] = record['temp']
+                dic_dens_ion['{}{}'.format(record['name'], int(record['value']))] = record['dens']
+    tab_temp_dens = np.array(zip(tab_ips, tab_temps, tab_denss), dtype=[('IP', float), ('temp', float), ('dens', float)])
+    tab_temp_dens.sort()
+
+    def get_tem_den(atom):
+        if atom.atom in dic_temp_ion:
+            temp = dic_temp_ion[atom.atom]
+            dens = dic_dens_ion[atom.atom]
+            return temp, dens
+        else:
+            for temp_dens in tab_temp_dens:
+                if temp_dens['IP'] > atom.IP_up:
+                    temp = temp_dens['temp']
+                    dens = temp_dens['dens']
+                    return temp, dens
     
     f = open(filename, 'w')
     f.write("# liste_phyat automatically generated on {} \n".format(time.ctime()))
@@ -482,11 +494,7 @@ def make_phyat_list(filename, tem1=None, den1=None, cut=1e-4, E_cut=20, cut_inte
                     log_file.write('NIST missing. \n')
                     do_it = False
                 if do_it:
-                    if tem1 is None:
-                        tem, den = get_tem_den(atom.IP_up)
-                    else:
-                        tem = tem1
-                        den = den1
+                    tem, den = get_tem_den(atom)
                     if a in Aij_zero_dic:
                         Aij_zero = Aij_zero_dic[a]
                     else:
@@ -509,20 +517,19 @@ def make_phyat_list(filename, tem1=None, den1=None, cut=1e-4, E_cut=20, cut_inte
     log_file.write('\n')
     log_file.close()
 
-def phyat2model(phyat_file, model_file, norm_hbeta=1e4, ab_dic=None, ion_frac_dic=None, ion_frac_min=1e-4):
+def phyat2model(phyat_file, model_file, ion_frac_file, norm_hbeta=1e4, abund_file='asplund_2009.dat', ion_frac_min=1e-4):
     """  
     generate a model_file file from a phyat_file, setting all the master lines to I=i_rel/norm
     norm by default corresponds to Hbeta = 1e4
     """
-    if ab_dic is None:
-        ab_data = np.genfromtxt(execution_path('asplund_2009.dat'), dtype=None, names = 'elem, abund, foo')
         
-    if type(ion_frac_dic) is str:
-        ion_frac_data = np.genfromtxt(execution_path(ion_frac_dic), dtype=None, names = 'ion, ion_frac')
-        ion_frac_dic = {}
-        for record in ion_frac_data:
-            ion_frac_dic[record['ion']] = record['ion_frac']
-        
+    ab_data = np.genfromtxt(execution_path(abund_file), dtype=None, names = 'elem, abund, foo')
+                
+    ion_frac_data = np.genfromtxt(execution_path(ion_frac_file), dtype=None, names = 'ion, ion_frac')
+    ion_frac_dic = {}
+    for record in ion_frac_data:
+        ion_frac_dic[record['ion']] = record['ion_frac']
+    
         
     list_phyat = read_data(phyat_file)
     Hbeta_num = 90101000000000
@@ -654,6 +661,115 @@ def get_atoms_by_conf(extra_file=None, atoms=None):
                 res.append(atom)
     return res
         
+def make_ionrec_file(phy_cond_file = 'phy_cond.dat', abund_file=None, ion_frac_file=None,
+                   out_file='ions_rec.dat', ion=None, 
+                   iwr_phyat=1, vzero=13., 
+                   liste_phyat_rec_name='liste_phyat_rec.dat', 
+                   outputcond_name='outputcond.dat', IP_cut = 300.):
+    
+    elems = ('H', 'D', 'He', '3He', 'Li', 'C', 'N', 'O', 'Ne', 'Mg', 'Si', 'S')
+    
+    Z['3He'] = 2
+    IP['3He'] = IP['He']
+    IP['D'] = IP['H']
+    phycond = np.genfromtxt(phy_cond_file, dtype=None, names='name, value, RC, temp, dens')
+    dic_temp_ion = {}
+    dic_dens_ion = {}
+    tab_ips = []
+    tab_temps = []
+    tab_denss = []
+    for record in phycond:
+        if 'R' in record['RC']:
+            if record['name'] == 'IP':
+                tab_ips.append(record['value'])
+                tab_temps.append(record['temp'])
+                tab_denss.append(record['dens'])
+            else:
+                dic_temp_ion['{}{}'.format(record['name'], int(record['value']))] = record['temp']
+                dic_dens_ion['{}{}'.format(record['name'], int(record['value']))] = record['dens']
+    tab_temp_dens = np.array(zip(tab_ips, tab_temps, tab_denss), dtype=[('IP', float), ('temp', float), ('dens', float)])
+    tab_temp_dens.sort()
+
+    ab_data = np.genfromtxt(execution_path(abund_file), dtype=None, names = 'elem, abund, foo')
+    ab_dic = {}
+    for record in ab_data:
+        ab_dic[record['elem']] = record['abund']
+    ab_dic['3He'] = 1e-3
+                
+    ion_frac_data = np.genfromtxt(execution_path(ion_frac_file), dtype=None, names = 'ion, ion_frac')
+    ion_frac_dic = {}
+    for record in ion_frac_data:
+        ion_frac_dic[record['ion']] = record['ion_frac']
+    ion_frac_dic['H0'] = 0.0
+    ion_frac_dic['H1'] = 1.0
+    ion_frac_dic['D0'] = ion_frac_dic['H0']
+    ion_frac_dic['D1'] = ion_frac_dic['H1']    
+    ion_frac_dic['3He0'] = ion_frac_dic['He0']
+    ion_frac_dic['3He1'] = ion_frac_dic['He1']
+    ion_frac_dic['3He2'] = ion_frac_dic['He2']
+    
+    with open(out_file, 'w') as f:
+        f.write("""   {} iwr_phyat I4 ; =0 --> .res, =1 --> .res and WILL CHANGE liste_phyat
+{:6.2f} vzero km/s E6.  CAUTION: CHECK OUTPUT .res  BEFORE USING OPTION iwr_phyat=1
+{:30s}A30 
+{:30s}A30 
+0=no,1=yes y/n Te     Ne      Ionab 
+""".format(iwr_phyat, vzero, liste_phyat_rec_name, outputcond_name))
+        for elem in elems:
+            for z in np.arange(Z[elem]):
+                ion_str = '{}{}'.format(elem, z+1)
+                ion_roman = '{}{}'.format(elem, int_to_roman(int(z+1)))
+                thisIP = IP[elem][z]
+                if thisIP < IP_cut:
+                    ion_abund = 10**(ab_dic[elem]-12) * ion_frac_dic[ion_str]
+                    if ion is None:
+                        yn_code = 1
+                    else:
+                        if ion_str == ion:
+                            yn_code = 1
+                        else:
+                            yn_code = 0
+                    if ion_str in dic_temp_ion:
+                        temp = dic_temp_ion[ion_str]
+                        dens = dic_dens_ion[ion_str]
+                    else:
+                        for temp_dens in tab_temp_dens:
+                            if temp_dens['IP'] > thisIP:
+                                temp = temp_dens['temp']
+                                dens = temp_dens['dens']
+                                break
+                    f.write('{:7s} {:1} {:8.2e} {:8.2e} {:8.2e}\n'.format(ion_roman, yn_code, temp, dens, ion_abund))
+
+def get_models_3MdB():
+    import pandas as pd
+    import pymysql
+    from pyneb.utils.physics import IP, sym2name, Z
+    import numpy as np
+    from ..utils.physics import make_ion_frac
+    
+    sym2name['S'] = 'sulphur'
+    
+    co = pymysql.connect(host='132.248.1.102', db='3MdB', user='OVN_user', passwd='oiii5007')
+    
+    for cut in ('R', 'M60'):
+        for logU in (-3, -2, -1):
+            for Teff in (25, 50, 75, 100, 150, 300):
+                res1 = pd.read_sql("""SELECT N
+    FROM tab 
+    WHERE com1='BB' AND com2='C' AND com3='{}' AND com4='S' AND com5='N' AND ref = 'PNe_2014' AND abs(atm1/1e3 - {}) < 1 
+    ORDER BY  abs(logU_mean-{})
+    LIMIT 1
+""".format(cut, Teff, logU), con=co)
+                if len(res1) > 0:
+                    print('cut: {}, logU: {}, Teff: {}, N: {}'.format(cut, logU, Teff, res1['N'][0]))
+                    make_ion_frac(res1['N'][0], co)
+                else:
+                    print('cut: {}, logU: {}, Teff: {}, NO MODEL'.format(cut, logU, Teff))
+    co.close()
+    
+    
+    
+
 """
 To make a new liste_phyat, from an ipython session:
 

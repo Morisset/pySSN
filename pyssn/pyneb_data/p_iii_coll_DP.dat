@@ -1,0 +1,11 @@
+  0  0   3.00  3.70  3.90  4.10  4.30  4.50  4.70  4.90  5.10  5.30  5.50
+  1  2   4.50 5.230 5.311 5.354 5.328 5.168 4.809 4.267 3.647 3.070 2.605
+*** P III       'Effective collision strengths Omega'
+*** ATOM phosphorus
+*** SPECTRUM 3
+*** N_LEVELS 2
+*** T_UNIT	'log(K)' 
+*** SOURCE1	'Aggarwal, K. M. & Keenan, F. P. 2014, Mon. Not. R. Astron. Soc. 445, 2015' 
+*** NOTE1 	'Effective Collision Strengths Omega' 
+*** NOTE2 	'DP: Omega taken identical to Si II' 
+*** GSCONFIG 3p1

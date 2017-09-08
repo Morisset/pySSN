@@ -1,0 +1,10 @@
+Energy Stat_Weight Aij
+cm-1 none 1/s 1/s 1/s 1/s 1/s 1/s 1/s
+     0.00000000    2  0.00E+00  0.00E+00
+     826.190000    4  5.102E-3  0.00E+00
+*** Ga I energy and Aij data
+*** N_LEVELS 2
+*** SOURCE1	'T. Shirai, et al. J. Phys. Chem. Ref. Data 36, 509 (2007)'
+*** NOTE1 	'Energy levels, e' 
+*** SOURCE2	'Biémont & Hansen 1987, Nucl. Inst. & Meth. in Phys. Res. B23, 274' 
+*** NOTE2	'Transition Probabilities, A' 

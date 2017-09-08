@@ -635,6 +635,7 @@ extra_file = None
 # filename = 'liste_test_DP.dat'
 # filename = 'liste_extrafile_none_noBaIIgenerate.dat'
 filename = 'liste_phyat_coll.dat'
+phy_cond_file = 'phy_cond.dat'
 
 ref_lines_dic = {}
 
@@ -647,13 +648,6 @@ Del_ion = []
 # Transitions set to 0.0
 Aij_zero_dic = {}
 
-# Temperatures and densities for IP below the given value
-tem_den_dic = {0.:   (1.e4, 1.e3),
-	       13.6: (1.e4, 1.e3),
-	       24.0: (1.e4, 1.e3),
-	       1e8:  (1.e4, 1.e3)
-	       }
-
 # Here we run the script to produce the phyat_list
 make_phyat_list(filename, atoms=atoms, cut=1e-4, E_cut=20,
 	      verbose=False, notry=False, NLevels=50, 
@@ -662,5 +656,5 @@ make_phyat_list(filename, atoms=atoms, cut=1e-4, E_cut=20,
 	      up_lev_rule_dic=up_lev_rule_dic,
 	      Aij_zero_dic=Aij_zero_dic,
 	      Del_ion = Del_ion,
-	      tem_den_dic = tem_den_dic,
+	      phy_cond_file = phy_cond_file,
 	      extra_file=extra_file)

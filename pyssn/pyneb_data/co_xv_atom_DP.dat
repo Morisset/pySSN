@@ -1,0 +1,10 @@
+Energy Stat_Weight Aij
+      cm-1 none    1/s        1/s
+     0.000   2  0.000E+00  0.000E+00
+ 18852.500   4  1.090E+02  0.000E+00
+*** Co XV       'Energy and transition probability data'
+*** SOURCE1	'Sugar, J. & Corliss, C. 1985, J. Phys. Chem. Ref. Data 14, Suppl. 2, 1'
+*** NOTE1 	'Energy levels 3s2.3p1 2P*'
+*** SOURCE2	'Fuhr, J. R. et al. 1988, J. Phys. Chem. Ref. Data 17, Suppl. 4, 1; ** see E. Träbert+ 2012'
+*** NOTE2	'Transition Probabilities, Aij' 
+*** GSCONFIG 3p1

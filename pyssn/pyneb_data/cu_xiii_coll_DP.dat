@@ -1,0 +1,11 @@
+  0  0    4.80 5.00 5.20 5.40 5.60 5.80 6.00 6.20 6.40 6.60 6.80 7.00
+  1  2    1.60 1.68 1.67 1.51 1.26 0.99 0.76 0.58 0.44 0.34 0.28 0.23
+*** Cu XIII     'Effective collision strengths Omega'
+*** ATOM copper
+*** SPECTRUM 13
+*** N_LEVELS 2
+*** T_UNIT	'log(K)' 
+*** SOURCE1	'Pelan, J., Berrington, K. A. 1995, A&A Suppl. 110, 209' 
+*** NOTE1 	'Effective Collision Strengths Omega' 
+*** NOTE2 	'DP: Omega taken identical to Ni XII' 
+*** GSCONFIG 3p5

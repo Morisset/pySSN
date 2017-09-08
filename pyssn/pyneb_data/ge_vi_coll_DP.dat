@@ -1,0 +1,11 @@
+   0   0  0.5e4  1.0e4  2.5e4  5.0e4  10.e4  25.e4  50.e4 100.e4
+   1   2   1.60   1.62   2.16   2.35   2.47   2.62   2.32   1.71
+*** Ge VI       'effective collision strengths Omega'
+*** ATOM        'germanium'
+*** SPECTRUM 6
+*** N_LEVELS 2
+*** T_UNIT	'K' 
+*** SOURCE1	'Tayal, S.S. & Zatsarinny, O. 2011, ApJ 743, 206' 
+*** NOTE1 	'Effective Collision Strengths Omega' 
+*** NOTE2 	'DP: Omega taken identical to Fe VIII' 
+*** GSCONFIG d9

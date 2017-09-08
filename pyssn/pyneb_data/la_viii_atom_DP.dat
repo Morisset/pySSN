@@ -1,0 +1,13 @@
+Energy Stat_Weight Aij
+cm-1 none 1/s 1/s 1/s 1/s 1/s 1/s 1/s
+     0.00000000    1  0.00E+00  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     19320.8000    3  1.115E+2  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     25727.0000    5  1.046E-0  1.981E+0  0.00E+00  0.00E+00  0.00E+00
+     50738.8000    5  2.372E-1  1.898E+2  1.577E+2  0.00E+00  0.00E+00
+     70544.7000    1  1.00E-10  1.078E+3  4.738E+1  2.447E+0  0.00E+00
+*** La VIII energy and Aij data
+*** N_LEVELS 5
+*** SOURCE1	'Tauheed, A. et al. 2008, Phys. Scr. 77, 5301' 
+*** NOTE1 	'Energy levels, e' 
+*** SOURCE2	'Biémont, et al. 1995, A&A Suppl. 111, 333' 
+*** NOTE2	'Transition Probabilities, A' 

@@ -1,0 +1,13 @@
+Energy Stat_Weight Aij
+cm-1 none 1/s 1/s 1/s 1/s 1/s 1/s 1/s
+     0.00000000    1  0.00E+00  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     14287.0000    3  4.751E+1  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     22832.0000    5  1.308E-1  6.196E-0  0.00E+00  0.00E+00  0.00E+00
+     46777.0000    5  3.000E-6  1.264E+2  1.104E+2  0.00E+00  0.00E+00
+     75254.0000    1  1.00E-10  1.091E+3  1.724E+1  4.856E+0  0.00E+00
+*** Nb X energy and Aij data
+*** N_LEVELS 5
+*** SOURCE1	'Litzén, U. & Reader, J. 1989, Phys. Scr. 39 468'
+*** NOTE1 	'Energy levels, e' 
+*** SOURCE2	'E. Biémont & J. E. Hansen 1986, Phys. Scr. 33, 117' 
+*** NOTE2	'Transition Probabilities, A' 

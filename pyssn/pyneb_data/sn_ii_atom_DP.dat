@@ -1,0 +1,10 @@
+Energy Stat_Weight Aij
+cm-1 none 1/s 1/s 1/s 1/s 1/s 1/s 1/s
+     0.00000000    2  0.00E+00  0.00E+00
+     4251.49400    4  6.969E-1  0.00E+00
+*** Sn II energy and Aij data
+*** N_LEVELS 2
+*** SOURCE1	'Haris, K. et al. 2014, Phys. Scr. 89, 115403'
+*** NOTE1 	'Energy levels, e' 
+*** SOURCE2	'Biémont, et al. 1995, A&A Suppl. 111, 333' 
+*** NOTE2	'Transition Probabilities, A' 

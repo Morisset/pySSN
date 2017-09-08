@@ -1,0 +1,18 @@
+Energy Stat_Weight Aij 
+     cm-1       none  1/s      1/s      1/s      1/s      1/s      1/s      1/s      1/s      1/s
+     0.00000000    5  0.00e+0  0.00e+0  0.00e+0  0.00e+0  0.00e+0  0.00e+0  0.00e+0  0.00e+0  0.00e+0
+     750.000000    7  1.23e-2  0.00e+0  0.00e+0  0.00e+0  0.00e+0  0.00e+0  0.00e+0  0.00e+0  0.00e+0
+     1671.00000    9  5.0e-10  1.81e-2  0.00e+0  0.00e+0  0.00e+0  0.00e+0  0.00e+0  0.00e+0  0.00e+0
+     15339.0000    5  1.66e-1  2.77e-1  1.01e-3  0.00e+0  0.00e+0  0.00e+0  0.00e+0  0.00e+0  0.00e+0
+     17779.0000    1  8.19e-2  2.0e-15  3.0e-19  1.64e-7  0.00e+0  0.00e+0  0.00e+0  0.00e+0  0.00e+0
+     18052.0000    3  2.98e-2  4.72e-2  8.0e-16  2.27e-2  4.16e-4  0.00e+0  0.00e+0  0.00e+0  0.00e+0
+     18620.0000    5  7.92e-3  3.51e-2  4.63e-2  7.15e-2  4.20e-9  2.81e-3  0.00e+0  0.00e+0  0.00e+0
+     25506.0000    9  3.42e-4  1.41e-1  2.09e-1  1.18e-3  3.0e-24  5.0e-21  1.17e-5  0.00e+0  0.00e+0
+     59261.0000    1  9.89e-2  2.0e-14  2.0e-17  1.98e+1  0.00e+0  3.21e+0  8.57e-1  9.0e-16  0.00e+0
+*** Mn VI       'Energy and transition probability data'
+*** N_LEVELS 9
+*** SOURCE1	'Ekberg, J. O. & Feldman, U. 2003 ApJ Suppl. 148, 567' 
+*** NOTE1 	'Energy levels 3F, 1D, 3P, 1G, 1S ; not yet updated in NIST on 3/2017' 
+*** SOURCE2	'Fuhr, J. R. & Wiese, W. L. 2005, in CRC Handb of Chem & Phys, 86th Ed., 10 (D. R. Lide, Ed., CRC Press, Boca Raton, FL)' 
+*** NOTE2	'Transition Probabilities, Aij' 
+*** NOTE3	'other Aij?' 

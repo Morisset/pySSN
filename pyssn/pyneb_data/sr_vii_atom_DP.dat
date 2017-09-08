@@ -1,0 +1,13 @@
+Energy Stat_Weight Aij
+cm-1 none 1/s 1/s 1/s 1/s 1/s 1/s 1/s
+     0.00000000    1  0.00E+00  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     6845.00000    3  5.500E-0  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     12545.0000    5  1.284E-2  2.075E-0  0.00E+00  0.00E+00  0.00E+00
+     28490.0000    5  6.100E-4  2.182E+1  2.144E+1  0.00E+00  0.00E+00
+     51814.0000    1  1.00E-10  2.604E+2  5.002E+0  4.293E+0  0.00E+00
+*** Sr VII energy and Aij data
+*** N_LEVELS 5
+*** SOURCE1	'Litzén, U. & Reader, J. 1989, Phys. Scr. 39 468'
+*** NOTE1 	'Energy levels, e' 
+*** SOURCE2	'E. Biémont & J. E. Hansen 1986, Phys. Scr. 33, 117' 
+*** NOTE2	'Transition Probabilities, A' 

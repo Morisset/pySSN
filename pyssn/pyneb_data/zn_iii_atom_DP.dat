@@ -1,0 +1,15 @@
+Energy Stat_Weight Aij 
+     cm-1     none   1/s       1/s       1/s       1/s      1/s
+      0.0000    1  0.000e+0  0.000e+0  0.000e+0  0.000e+0 0.000e+0
+  78096.3000    7  4.000e-0  0.000e+0  0.000e+0  0.000e+0 0.000e+0
+  79273.6000    5  2.000e-0  3.000e-1  0.000e+0  0.000e+0 0.000e+0
+  80850.2000    3  0.000e+1  0.000e+0  1.000e-0  0.000e+0 0.000e+0
+  83500.3000    5  3.000e+1  4.000e-0  3.000e-0  5.000e-1 0.000e+0
+*** Zn III      'Energy and transition probability data'
+*** N_LEVELS 5
+*** SOURCE1	'Sugar, J. &  Musgrove, A. 1995, J. Phys. Chem. Ref. Data 24, 1803' 
+*** NOTE1 	'Energy levels 3d10 1S, 3d9.4s 3D 1D' 
+*** SOURCE2	'DP: extrapolated from Cu II' 
+*** NOTE2	'Transition Probabilities, Aij' 
+*** NOTE3	'? ATT: See 'Ni-like ions'	Träber+?, U. I. Safronova?' 
+*** GSCONFIG d10

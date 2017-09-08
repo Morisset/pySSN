@@ -1,0 +1,13 @@
+Energy Stat_Weight Aij
+cm-1 none 1/s 1/s 1/s 1/s 1/s 1/s 1/s
+     0.00000000    1  0.00E+00  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     1691.80600    3  8.903E-2  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     3427.67300    5  6.842E-4  5.930E-2  0.00E+00  0.00E+00  0.00E+00
+     8612.95500    5  1.654E-4  4.565E-1  5.303E-1  0.00E+00  0.00E+00
+     17162.4990    1  1.00E-10  7.076E+0  6.831E-1  1.155E+0  0.00E+00
+*** Sn I energy and Aij data
+*** N_LEVELS 5
+*** SOURCE1	'Moore 1958, At En. Lev., Vol. III, NBS Circ. 467; NIST' 
+*** NOTE1 	'Energy levels, e' 
+*** SOURCE2	'Biémont, et al. 1995, A&A Suppl. 111, 333' 
+*** NOTE2	'Transition Probabilities, A' 

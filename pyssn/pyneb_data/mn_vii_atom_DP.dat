@@ -1,0 +1,10 @@
+Energy Stat_Weight Aij 
+     cm-1       none  1/s      1/s    
+     0.00000000    4  0.000e+0  0.00e+0
+     1338.00000    6  2.665e-2  0.00e+0
+*** Mn VII      'Energy and transition probability data'
+*** N_LEVELS 2
+*** SOURCE1	'Sugar, J. & Corliss, C. 1985, J. Phys. Chem. Ref. Data 14, Suppl. 2, 1' 
+*** NOTE1 	'Energy levels 3d2D' 
+*** SOURCE2	'Biémont, E. & Hansen, J.E. 1989, Phys. Scr. 39, 308' 
+*** NOTE2	'Transition Probabilities, Aij' 

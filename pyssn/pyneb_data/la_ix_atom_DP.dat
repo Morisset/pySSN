@@ -1,0 +1,11 @@
+Energy Stat_Weight Aij
+cm-1 none 1/s 1/s 1/s 1/s 1/s 1/s 1/s
+     0.00000000    2  0.00E+00  0.00E+00
+     28269.0000    4  2.069E+2  0.00E+00
+*** La IX energy and Aij data
+*** N_LEVELS 2
+*** SOURCE1	'Kaufman & Sugar 1987, JOSA 4, 1924'
+*** NOTE1 	'Energy levels, e' 
+*** SOURCE2	'Biémont, et al. 1995, A&A Suppl. 111, 333' 
+*** NOTE2	'Transition Probabilities, A' 
+*** NOTE3 	'DP Extrapolated Energy: 28264 cm-1, not used' 

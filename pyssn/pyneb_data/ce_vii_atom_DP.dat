@@ -1,0 +1,15 @@
+Energy Stat_Weight Aij
+cm-1 none 1/s 1/s 1/s 1/s 1/s 1/s 1/s
+     0.00000000    5  0.00E+00  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     14210.0000    1  2.437e-1  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     24709.0000    3  3.105e+2  1.595e+1  0.00E+00  0.00E+00  0.00E+00
+     33138.0000    5  2.548e+2  9.292e-2  1.781e-0  0.00E+00  0.00E+00
+     69293.0000    1  1.915e+1  1.00e-10  1.789e+3  4.296e+1  0.00E+00
+*** Ce VII      'Energy and Aij data'
+*** N_LEVELS 5
+*** SOURCE1	'Energies extrapolated DP; see also Biémont'
+*** NOTE1 	'Energy levels, E: 3P 2D 1S' 
+*** SOURCE2	'Biémont, et al. 1995, A&A Suppl. 111, 333' 
+*** NOTE2	'Transition Probabilities, A' 
+*** NOTE3	'Order Energies 3P0 & 3P1 inverted' 
+*** GSCONFIG 5p4

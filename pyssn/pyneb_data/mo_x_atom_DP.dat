@@ -1,0 +1,13 @@
+Energy Stat_Weight Aij
+cm-1 none 1/s 1/s 1/s 1/s 1/s 1/s 1/s
+     0.00000000    4  0.00E+00  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     26886.0000    4  1.670E+2  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     35522.0000    6  1.889E+1  5.258E-0  0.00E+00  0.00E+00  0.00E+00
+     55313.0000    2  3.876E+2  6.372E+1  2.467E-1  0.00E+00  0.00E+00
+     70544.0000    4  3.033E+2  6.056E+2  1.591E+2  2.291E+1  0.00E+00
+*** Mo X   'energy and transition probability data'
+*** N_LEVELS 5
+*** SOURCE1	'Reader, J. & Acquista, N. 1981, J. Opt. Soc. Am., 71, 434' 
+*** NOTE1 	'Energy levels \pm 3' 
+*** SOURCE2	'E. Biémont & J. E. Hansen 1986, Phys. Scr. 34, 116' 
+*** NOTE2	'Transition Probabilities, Aij: HXR/3+HFR*2/3' 

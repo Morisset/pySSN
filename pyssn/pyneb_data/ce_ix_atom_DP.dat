@@ -1,0 +1,15 @@
+Energy Stat_Weight Aij
+cm-1 none 1/s 1/s 1/s 1/s 1/s 1/s 1/s
+     0.00000000    1  0.00E+00  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     23610.0000    3  2.011E+2  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     30430.0000    5  1.807E-0  1.927E+0  0.00E+00  0.00E+00  0.00E+00
+     59860.0000    5  1.873E-0  3.007E+2  2.496E+2  0.00E+00  0.00E+00
+     80944.0000    1  1.00E-10  1.632E+3  7.140E+1  2.521E+0  0.00E+00
+*** Ce IX energy and Aij data
+*** N_LEVELS 5
+*** SOURCE1	'Biémont, et al. 1995 extrapolation ; DP extrapol' 
+*** NOTE1 	'Energy levels, e' 
+*** SOURCE2	'Biémont, et al. 1995, A&A Suppl. 111, 333' 
+*** NOTE2	'Transition Probabilities, A' 
+*** SOURCE3	'E = 2.3689, 3.0240, 5.9210, 8.0738 Biémont extrapol' 
+*** NOTE3	'E adopted: DP extrapol' 

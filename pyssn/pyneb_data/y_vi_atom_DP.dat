@@ -1,0 +1,13 @@
+Energy Stat_Weight Aij
+cm-1 none 1/s 1/s 1/s 1/s 1/s 1/s 1/s
+     0.00000000    5  0.00E+00  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     10598.4000    1  2.573E-2  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     10724.4000    3  2.565E+1  1.60E-12  0.00E+00  0.00E+00  0.00E+00
+     23564.3000    5  3.825E+1  1.675E-3  2.240E+0  0.00E+00  0.00E+00
+     50180.3000    1  2.154E-0  1.00E-20  3.764E+2  7.609E+0  0.00E+00
+*** Y VI energy and transition probability data
+*** N_LEVELS 5
+*** SOURCE1	'Persson, W. & Reader, J. 1986, J. Opt. Soc. Am. B3, 959' 
+*** NOTE1 	'Energy levels, e' 
+*** SOURCE2	'E. Biémont & J. E. Hansen 1986, Phys. Scr. 34, 116' 
+*** NOTE2	'Transition Probabilities, Aij' 

@@ -1,0 +1,10 @@
+  0  0    4.80 5.00 5.20 5.40 5.60 5.80 6.00 6.20 6.40 6.60 6.80
+  1  2    2.48 2.58 2.50 2.24 1.87 1.48 1.13 0.85 0.64 0.49 0.39 
+*** Mn IX       'Effective collision strengths Omega'
+*** ATOM manganese
+*** SPECTRUM 9 
+*** N_LEVELS 2
+*** T_UNIT	'log(K)' 
+*** SOURCE1	'Pelan, J., Berrington, K. A. 1995, A&A Suppl. 110, 209' 
+*** NOTE1 	'Effective Collision Strengths Omega' 
+*** GSCONFIG 3p5

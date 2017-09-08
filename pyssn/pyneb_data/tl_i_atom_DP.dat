@@ -1,0 +1,10 @@
+Energy Stat_Weight Aij
+cm-1 none 1/s 1/s 1/s 1/s 1/s 1/s 1/s
+     0.00000000    2  0.00E+00  0.00E+00
+     7792.70000    4  4.466E+0  0.00E+00
+*** Tl I      'Energy and Aij data'
+*** N_LEVELS 2
+*** SOURCE1	'Moore C.E., 1958, NBS Circ. 467, Vol. III, 1958'
+*** NOTE1 	'Energy levels, e; V. A. Zilitis, 2000 Opt. Spectrosc. 88(2), 158?' 
+*** SOURCE2	'Biémont, E. & Quinet, P. 1996, Phys. Scr. 54, 36' 
+*** NOTE2	'Transition Probabilities, Aij' 

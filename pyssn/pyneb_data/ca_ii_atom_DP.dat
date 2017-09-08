@@ -1,0 +1,17 @@
+Energy Stat_Weight Aij
+     cm-1     none 1/s      1/s       1/s       1/s       1/s    
+      0.000    2  0.000E+0  0.000E+0  0.000E+0  0.000E+0  0.000E+0
+  13650.190    4  8.376E-1  0.000E+0  0.000E+0  0.000E+0  0.000E+0
+  13710.880    6  8.598E-1  2.406E-6  0.000E+0  0.000E+0  0.000E+0
+  25191.510    2  1.360E+8  9.100E+6  0.000E+0  0.000E+0  0.000E+0
+  25414.400    4  1.397E+8  9.600E+5  8.550E+6  0.000E+0  0.000E+0
+*** Ca II       'Energy and transition probability data'
+*** SOURCE1	'Sugar, J. & Corliss, C. 1985, J. Phys. Chem. Ref. Data 14, Suppl. 2, 1'
+*** NOTE1 	'Energy levels, E: 3p6.4s 2S, 3d 2D, 4p 2P*, 5s 2S' 
+*** SOURCE2	'Melendez, M. et al. 2007, Astron. Astrophys. 469, 1203'
+*** SOURCE3	's-d: Safronova, U. I. et al. 2017, Phys. Rev. A 95, 042507'
+*** SOURCE4	's-p, d-p: Safronova, U. I. et al. 2011, Can. J. Phys. 89, 465'
+*** NOTE2	'Transition Probabilities, Aij' 
+*** NOTE3	'Resonance 4s-4p optical depths' 
+*** GSCONFIG s1
+*** N_LEVELS 5

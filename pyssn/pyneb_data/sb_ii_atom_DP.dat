@@ -1,0 +1,13 @@
+Energy Stat_Weight Aij
+cm-1 none 1/s 1/s 1/s 1/s 1/s 1/s 1/s
+     0.00000000    1  0.00E+00  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     3054.60000    3  5.003E-1  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     5658.20000    5  3.732E-3  1.921E-1  0.00E+00  0.00E+00  0.00E+00
+     12789.8000    5  2.188E-4  1.985E+0  2.007E+0  0.00E+00  0.00E+00
+     23905.5000    1  1.00E-10  2.509E+1  1.900E+0  1.716E+0  0.00E+00
+*** Sb II energy and Aij data
+*** N_LEVELS 5
+*** SOURCE1	'Arcimowicz et al. 1989, Can. J. Phys. 67, 572'
+*** NOTE1 	'Energy levels, e' 
+*** SOURCE2	'Biémont, et al. 1995, A&A Suppl. 111, 333' 
+*** NOTE2	'Transition Probabilities, A' 

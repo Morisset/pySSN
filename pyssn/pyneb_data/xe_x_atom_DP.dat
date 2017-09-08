@@ -1,0 +1,11 @@
+Energy Stat_Weight Aij 
+     cm-1       none  1/s      1/s    
+     0.000000    6  0.000e+0  0.00e+0
+    16720.000    4  8.000e+1  0.00e+0
+*** Xe X        'Energy and transition probability data'
+*** N_LEVELS 2
+*** SOURCE1	'Churilov, S. S. & Joshi, Y. N. 2002 Phys. Scr. 65, 40: 16725\pm10; also: Takács, E. et al. 2006, Phys. Rev. A 73, 052505' 
+*** NOTE1 	'Energy levels 4d9 2D' 
+*** SOURCE2	'Biémont, E. & Hansen, J.E. 1989, Phys. Scr. 39, 308' 
+*** NOTE2	'Transition Probabilities, Aij' 
+*** NOTE3	'DP: Aij scaled from Ga V' 

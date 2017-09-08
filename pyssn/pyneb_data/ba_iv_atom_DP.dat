@@ -1,0 +1,10 @@
+Energy Stat_Weight Aij
+cm-1 none 1/s 1/s 1/s 1/s 1/s 1/s 1/s
+     0.00000000    4  0.00E+00  0.00E+00
+     17550.0000    2  9.841E+1  0.00E+00
+*** Ba IV    'energy and Aij data'
+*** N_LEVELS 2
+*** SOURCE1	'Sharma, M. K. et al. 2014, JQSRT 147, 102; (Sansonetti et al. 1993: 17549.5)'
+*** NOTE1 	'Energy levels, e; \pm 0.4 cm-1' 
+*** SOURCE2	'Biémont, et al. 1988, Physica Scipta 37, 850' 
+*** NOTE2	'Transition Probabilities, A' 

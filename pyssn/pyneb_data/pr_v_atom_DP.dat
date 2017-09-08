@@ -1,0 +1,11 @@
+Energy Stat_Weight Aij
+       cm-1   none  1/s      1/s
+      0.0000    6  0.00E-0  0.00E-0
+   3027.4000    8  3.00E-1  0.00E-0
+*** Pr V        'Energy and transition probability data'
+*** SOURCE1	'Martin, W. C. et al. 1978, NSRDS-NBS 60'
+*** SOURCE1	'Martin, W. C. et al. 1978, NSRDS-NBS 60'
+*** NOTE1 	'Energy levels, E: 5p6.4f 2F*'
+*** SOURCE2	'DP: Aij arbitrary' 
+*** NOTE2	'Transition Probabilities, Aij' 
+*** GSCONFIG f1

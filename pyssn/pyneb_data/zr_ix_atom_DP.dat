@@ -1,0 +1,13 @@
+Energy Stat_Weight Aij
+cm-1 none 1/s 1/s 1/s 1/s 1/s 1/s 1/s
+     0.00000000    1  0.00E+00  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     11362.0000    3  2.449E+1  0.00E+00  0.00E+00  0.00E+00  0.00E+00
+     18977.0000    5  6.386E-2  4.547E-0  0.00E+00  0.00E+00  0.00E+00
+     39776.0000    5  2.089E-4  7.286E+1  6.578E+1  0.00E+00  0.00E+00
+     66604.0000    1  1.00E-10  7.003E+2  1.165E+1  4.703E+0  0.00E+00
+*** Zr IX energy and Aij data
+*** N_LEVELS 5
+*** SOURCE1	'Litzén, U. & Reader, J. 1989, Phys. Scr. 39 468'
+*** NOTE1 	'Energy levels, e' 
+*** SOURCE2	'E. Biémont & J. E. Hansen 1986, Phys. Scr. 33, 117' 
+*** NOTE2	'Transition Probabilities, A' 
