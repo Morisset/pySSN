@@ -11,6 +11,7 @@ dist/
 .directory
 **/.DS_Store
 **docs/*.dat
-fortran/
-*Results.txt*
+*.res
+lines*_dr
 r*.d
+*Results.txt
