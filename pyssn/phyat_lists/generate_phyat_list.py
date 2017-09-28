@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 
 # Usage: python generate_phyat_list.py
 
@@ -648,8 +649,7 @@ Del_ion = []
 # Transitions set to 0.0
 Aij_zero_dic = {}
 
-# Here we run the script to produce the phyat_list
-make_phyat_list(filename, atoms=atoms, cut=1e-4, E_cut=20,
+def generate_col(filename, atoms=atoms, cut=1e-4, E_cut=20,
 	      verbose=False, notry=False, NLevels=50, 
 	      ref_lines_dic=ref_lines_dic,
 	      NLevels_dic=NLevels_dic,
@@ -657,4 +657,18 @@ make_phyat_list(filename, atoms=atoms, cut=1e-4, E_cut=20,
 	      Aij_zero_dic=Aij_zero_dic,
 	      Del_ion = Del_ion,
 	      phy_cond_file = phy_cond_file,
+	      extra_file=extra_file):
+    
+    make_phyat_list(filename, atoms=atoms, cut=cut, E_cut=E_cut,
+	      verbose=verbose, notry=notry, NLevels=NLevels, 
+	      ref_lines_dic=ref_lines_dic,
+	      NLevels_dic=NLevels_dic,
+	      up_lev_rule_dic=up_lev_rule_dic,
+	      Aij_zero_dic=Aij_zero_dic,
+	      Del_ion = Del_ion,
+	      phy_cond_file = phy_cond_file,
 	      extra_file=extra_file)
+    
+
+if __name__ == '__main__':
+    generate_col()
