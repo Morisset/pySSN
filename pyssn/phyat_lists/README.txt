@@ -8,7 +8,7 @@ Par exemple 1789409_ionfrac.dat
 
 3) determiner quelles abondances vont etre utilisées, par exemple: asplund_2009.dat
 
-4) generer le fichier ion_rec pour XSSN, depuis IPYTHON:
+4) generer le fichier ions_rec.dat pour XSSN, depuis IPYTHON:
 
 from pyssn.phyat_lists.manage_phyat_list import make_ionrec_file
 make_ionrec_file(abund_file='asplund_2009.dat', ion_frac_file='1789409_ionfrac.dat')
