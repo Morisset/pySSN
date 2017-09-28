@@ -13,8 +13,8 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.md')) as f:
     long_description = f.read()
 
-ext1 = numpy.distutils.core.Extension(name = ' XSSN_Phyat.exe',
-				      sources = ['fortran/XSSN_Phyat.f'])
+ext1 = numpy.distutils.core.Extension(name = 'XSSN_Phyat.exe',
+				      sources = ['pyssn/fortran/XSSN_Phyat.f'])
 # setup(name='pySSN', 
 numpy.distutils.core.setup(name='pySSN', 
 	  version=__version__,
