@@ -3,9 +3,7 @@
 
 #from distutils.core import setup
 from os import path
-from setuptools import setup, find_packages, Extension
-# import numpy.distutils.core
-# import numpy.distutils.fcompiler
+from setuptools import setup, find_packages
 from pyssn.version import __version__
 
 # Get the long description from the README file
@@ -13,10 +11,7 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.md')) as f:
     long_description = f.read()
 
-ext1 = Extension(name = 'XSSN_Phyat.exe',
-				      sources = ['pyssn/fortran/XSSN_Phyat.f'])
 setup(name='pySSN', 
-# numpy.distutils.core.setup(name='pySSN', 
 	  version=__version__,
       description='Python Spectral Synthesis for Nebulae',
       long_description=long_description,
@@ -29,7 +24,6 @@ setup(name='pySSN',
       package_data={'pyssn':['data/*']},
       entry_points={'console_scripts': ['pySSN = pyssn.pySSN_exec:main',
 					'pySSN_generate_col = pyssn.phyat_lists.generate_phyat_list:generate_col']},
-			   ext_modules = [ext1],
      )
 
 
