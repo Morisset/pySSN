@@ -29,6 +29,7 @@ numpy.distutils.core.setup(name='pySSN',
       package_data={'pyssn':['data/*']},
       entry_points={'console_scripts': ['pySSN = pyssn.pySSN_exec:main',
 					'pySSN_generate_col = pyssn.phyat_lists.generate_phyat_list:generate_col']},
+			   ext_modules = [ext1],
      )
 
 
