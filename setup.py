@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 
-# to be used with python setup.py dist
 
 #from distutils.core import setup
 from os import path
 from setuptools import setup, find_packages
+import numpy.distutils.core
+import numpy.distutils.fcompiler
 from pyssn.version import __version__
 
 here = path.abspath(path.dirname(__file__))
@@ -12,8 +13,11 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.md')) as f:
     long_description = f.read()
 
-setup(name='pySSN', 
-      version=__version__,
+ext1 = numpy.distutils.core.Extension(name = ' XSSN_Phyat.exe',
+				      sources = ['fortran/XSSN_Phyat.f'])
+# setup(name='pySSN', 
+numpy.distutils.core.setup(name='pySSN', 
+	  version=__version__,
       description='Python Spectral Synthesis for Nebulae',
       long_description=long_description,
       author='Christophe Morisset, Daniel Pequignot',
