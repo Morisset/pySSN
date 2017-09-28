@@ -651,7 +651,7 @@ Del_ion = []
 # Transitions set to 0.0
 Aij_zero_dic = {}
 
-def generate_col(filename, atoms=atoms, cut=1e-4, E_cut=20,
+def generate_col(filename=filename, atoms=atoms, cut=1e-4, E_cut=20,
 	      verbose=False, notry=False, NLevels=50, 
 	      ref_lines_dic=ref_lines_dic,
 	      NLevels_dic=NLevels_dic,
