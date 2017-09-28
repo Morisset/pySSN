@@ -24,7 +24,7 @@ setup(name='pySSN',
 		'pyssn.phyat_lists'],
       package_data={'pyssn':['data/*']},
       entry_points={'console_scripts': ['pySSN = pyssn.pySSN_exec:main',
-					'pySSN_generate_col = pyssn.phyat_lists.generate_phyat_list:generate-col']},
+					'pySSN_generate_col = pyssn.phyat_lists.generate_phyat_list:generate_col']},
      )
 
 
