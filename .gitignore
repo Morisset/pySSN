@@ -11,8 +11,7 @@ dist/
 .directory
 **/.DS_Store
 **docs/*.dat
+data/d1
+data/d2
+data/d3
 *.res
-lines*_dr
-r*.d
-*Results.txt
-HeI_Porter13.dat

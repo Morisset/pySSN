@@ -524,6 +524,7 @@ cc      INTEGER lc1,lc2    ! check string tables
       DOUBLE PRECISION vh   !pr test H
       DOUBLE PRECISION vzero
       CHARACTER*17 titre
+      CHARACTER*9 lab_Directory
       CHARACTER numion*4,numion4*4,nomion*7 !format: ' 705', '0705', 'N_V    '
       CHARACTER*3 inmitabc,inmatabc,ni_refc,ns_refc
       CHARACTER Irelminc*5,lambda_refc*6,iraiesc*4,wlminc*8,wlmaxc*8
@@ -578,6 +579,7 @@ c orbital 's' in pos 21:
       data nom/'p','d','f','g','h','i','k','l','m','n','o','q','r'
      $   ,'t','u','v','w','x','y','z','s'/
 c
+      data lab_Directory/'data/lab/'/
 c split NeIII 4d-5f 3D-3F 'by hand'
       data wlNeIII5f/4229.305d0,4226.011d0,4224.029d0/
       data coNeIII5f/0.4667d0,0.3333d0,0.2000d0/  !LS
@@ -645,7 +647,7 @@ cc      print *,niv_input,'  ',lambda_output,'   (sizes:',lc1,lc2,')'
 c
       print *,niv_input,'  ',lambda_output
 c
-      OPEN(unit=in_niv,file=niv_input,status='old')
+      OPEN(unit=in_niv,file=lab_Directory//niv_input,status='old')
 c
       read(in_niv,15) titre
  15   format(A17)
@@ -2314,6 +2316,7 @@ c
       CHARACTER Irelminc*5,lambda_refc*6,iraiesc*4,wlminc*8,wlmaxc*8
       CHARACTER bidon*1
       CHARACTER commentraie(99,30)*28,comment(99)*28,comw*28,comwb*28
+      CHARACTER*9 lab_Directory
 c
       INTEGER in_niv,out_niv,iwr_phyat
       COMMON/MOC1/in_niv,out_niv,iwr_phyat
@@ -2323,12 +2326,14 @@ c
       COMMON/MOCX1/lambda_refc
       COMMON/MOCX2/int_ref,lambda_ref,ifre1_ref
 c
+      data lab_Directory/'data/lab/'/
+c
       print *,niv_input,'  ',lambda_output
 c
       t4=Te/1.d4
       iraies=0 !counter of X-SSN emission lines
 c
-        OPEN(unit=in_niv,file=niv_input,status='old')
+        OPEN(unit=in_niv,file=lab_Directory//niv_input,status='old')
 c
       comwb='                            ' ! 28 blanks
 c
@@ -2544,6 +2549,7 @@ c      DOUBLE PRECISION emi(10000),wli(10000),ES(10000),EI(10000)
       CHARACTER numion*4,numion4*4,nomion*7
       CHARACTER*1 nom(21),nom2
       CHARACTER tabsto*9
+      CHARACTER*9 lab_Directory
       DOUBLE PRECISION Ne,Te
       DOUBLE PRECISION cmult,comult(99,99)
       DOUBLE PRECISION E(99,99),EN(99,99),cor(99,99),corN(99,99)
@@ -2603,12 +2609,14 @@ c
       COMMON/MOCV1/vzero
       COMMON/MOCC1/hc,hc8,hcsk,Ryd_inf
 
-      CHARACTER typemis*19,Tec4*4,Tec5*5
+      CHARACTER typemis*19,Tec4*4,Tec5*5,Directory*8
       INTEGER Tei
 
 c Bauman et al 2007 /w topoff, no intercomb, n=50, Ne=1/cm3
 c   Temperature 5000 (1000) 25000 added in front of typemis to define table to be used
       DATA typemis/'_1_0_50_Results.txt'/
+      DATA Directory/'data/d2/'/
+      DATA lab_Directory/'data/lab/'/
       DATA ntot_m/44/     !number of mult in Porter13
       DATA n_ref_m/10/    !mult 4471 in Porter13
       DATA ni_ref/2/ns_ref/4/li_ref/1/ !4471 : for synth impr
@@ -2641,7 +2649,7 @@ c
      $   int_ref_mod_H/(int_ref*dmax1(Ionab,Ionab_min))
       enddo
 c
-        OPEN(unit=in_niv,file=niv_input,status='old')
+        OPEN(unit=in_niv,file=lab_Directory//niv_input,status='old')
 c
 c beginning HeI.lab read and write only once:
 c
@@ -2823,7 +2831,7 @@ c  The first Te (it=1) is 5000; steps 1000; last 25000 (it=21)
        it=21
       Endif
 c
-        OPEN(unit=15,status='old',file='HeI_Porter13.dat')
+        OPEN(unit=15,status='old',file='data/d4/HeI_Porter13.dat')
 c
           do i=1,9 !header = 9 lines, incl 2 blanks (made explicit)
            read(15,1) bidon
@@ -2916,12 +2924,12 @@ c
               IF(it.le.5) then
       write(Tec4,'(I4)') (it+4)*1000 ! conversion to character
 c Bauman07
-        OPEN(unit=16,status='old',file=Tec4//typemis)
+        OPEN(unit=16,status='old',file=Directory//Tec4//typemis)
 c
               ELSE
       write(Tec5,'(I5)') (it+4)*1000 ! conversion to character
 c
-        OPEN(unit=16,status='old',file=Tec5//typemis)
+        OPEN(unit=16,status='old',file=Directory//Tec5//typemis)
 c
               ENDIF
 c
@@ -3539,6 +3547,7 @@ c
       CHARACTER numion*4,numion4*4,nomion*7
       CHARACTER*1 orbs(100),orbi(100),SPDF(4),OE(2),nom2,bidon
       CHARACTER Irelminc*5,lambda_refc*6,iraiesc*4,wlminc*8,wlmaxc*8
+      CHARACTER*9 lab_Directory
       INTEGER doub(3,11,4,2),nc,doubs,doubi,doudou
       INTEGER i,nmax,mp,n,Pp,Lp,JJ,ntrans,i_ref,iraies
       INTEGER mps(100),ns(100),Ls(100),Ps(100)
@@ -3570,6 +3579,7 @@ c
       COMMON/MOCX2/int_ref,lambda_ref,ifre1_ref
       COMMON/MOCV1/vzero
 c
+      data lab_Directory/'data/lab/'/
       data SPDF/'S','P','D','F'/
       data OE/'e','o'/
 c
@@ -3588,7 +3598,7 @@ c
 c
       iraies=0 !line counter
 c
-           OPEN(unit=in_niv,file=niv_input,status='old')
+           OPEN(unit=in_niv,file=lab_Directory//niv_input,status='old')
 c
       read(in_niv,15) titre
  15   format(A17)
@@ -3971,6 +3981,7 @@ c
       DOUBLE PRECISION Irelmin(21)
       COMMON/MOCR3/Irelmin
       CHARACTER*17 titre
+      CHARACTER*9 lab_Directory
       CHARACTER Irelminc*5,lambda_refc*6,iraiesc*4,wlminc*8,wlmaxc*8
       CHARACTER numion*4,numion4*4,nomion*7
       DOUBLE PRECISION Ne,Te
@@ -4001,13 +4012,14 @@ c
       COMMON/MOCX1/lambda_refc
       COMMON/MOCX2/int_ref,lambda_ref,ifre1_ref
 c
-       data imaxl/6187/
-       data out_niv/11/
-       data zero/'0'/
+      data imaxl/6187/
+      data out_niv/11/
+      data zero/'0'/
+      data lab_Directory/'data/lab/'/
 c
       print *,niv_input,'  ',lambda_output
 c
-        OPEN(unit=in_niv,file=niv_input,status='old')
+        OPEN(unit=in_niv,file=lab_Directory//niv_input,status='old')
 c
       read(in_niv,15) titre
  15   format(A17)
@@ -4030,7 +4042,7 @@ c  The first Te (it=1) is 10.**2.0; steps .1dex; closest in log:
        it=27
       Endif
 c
-        OPEN(unit=15,status='old',file='CII_diel.dat')
+        OPEN(unit=15,status='old',file=lab_Directory//'CII_diel.dat')
 c
           do i=1,16 !initial text = 16 lines, incl 3 blanks (made explicit)
            read(15,*) text
@@ -4266,6 +4278,7 @@ c  (dim 12 correspond to kmax)
       CHARACTER numion*4,numion4*4,nomion*7
 	Character bidon*1
 	Character*7 wltheo(12,9)
+      CHARACTER*9 lab_Directory
       CHARACTER Irelminc*5,lambda_refc*6,iraiesc*4,wlminc*8,wlmaxc*8
 c
       INTEGER in_niv,out_niv,iwr_phyat
@@ -4277,6 +4290,8 @@ c
       COMMON/MOCX1/lambda_refc
       COMMON/MOCX2/int_ref,lambda_ref,ifre1_ref
 c
+      data lab_Directory/'data/lab/'/
+
 c  ECIII(cm-1) from Moore or NIST : 
         Data ECIII/386241.d0/   ! +/-2 Moore
 c  Nber of upper levels:
@@ -4298,7 +4313,7 @@ c
 c
       iraies=0 !Line counter
 c
-        OPEN(unit=in_niv,file=niv_input,status='old')
+        OPEN(unit=in_niv,file=lab_Directory//niv_input,status='old')
 c
       read(in_niv,15) titre
  15   format(A17)
@@ -4598,6 +4613,7 @@ cc      DOUBLE PRECISION b0,b1,b2,b3,b4,b5,b6,alfhig
       CHARACTER Tr*23,Trans*32,n_lambda*1,luC*1  !2011: Tr*22,Trans*33
       CHARACTER Tranf*26,mult*4
       CHARACTER titre*80,titr1*80,titr2*80,titr3*80,titr4*80,titra0*80
+      CHARACTER*9 lab_Directory
       DIMENSION Tr(218),Trans(218),n_lambda(218),luC(218)
       DIMENSION Tranf(55),mult(55)
       DIMENSION titre(4),titr1(4),titr2(4),titr3(4),titr4(4)
@@ -4620,6 +4636,7 @@ c
       COMMON/MOCH2/az,am,numin,numax
       COMMON/MOCS2/inep1,iz,zc,tabsto
 c
+      data lab_Directory/'data/lab/'/
 c Tables Fang et al:
       Data TeTab/125.d0,500.d0,1000.d0,5000.d0,10000.d0,
      $  15000.d0,20000.d0/
@@ -4647,7 +4664,7 @@ c ***2013: 55 raies t --> t4=Te/1.d4 (Case A or B=stdd)
 c
       print *,niv_input,'  ',lambda_output
 c
-	   OPEN(unit=in_niv,file=niv_input,status='old')
+	   OPEN(unit=in_niv,file=lab_Directory//niv_input,status='old')
 c
       read(in_niv,15) titreb
  15   format(A17)
@@ -5187,6 +5204,8 @@ c***Storey begin 1
       character*3 ktem(9),kdens(16)
       character*4 endk
       character*5 lines
+      character*8 Directory
+      CHARACTER*9 lab_Directory
       character*16 name
       character*80 text
 cc      real*8 dens(50),emms(50,50,20),flux(20),f(50),
@@ -5250,6 +5269,8 @@ c
       data logdens/2.0,2.2,2.4,2.6,2.8,3.0,3.2,3.4,3.6,3.8,4.0,
      :             4.2,4.4,4.6,4.8,5.0/
       data lines/'lines'/, ul/'_'/, dr/'dr'/
+      data lab_Directory/'data/lab/'/
+      data Directory/'data/d3/'/
 c***Storey end 2
 c
        data ntem/9/,ndens/16/,imaxl/8793/,out_niv/11/
@@ -5269,7 +5290,7 @@ cc      ktem(8)='4.0'
 cc      ktem(9)='4.2'
 cc      kdens(6)='3.0'
 c
-        OPEN(unit=in_niv,file=niv_input,status='old')
+        OPEN(unit=in_niv,file=lab_Directory//niv_input,status='old')
 c
       read(in_niv,15) titre
  15   format(A17)
@@ -5313,7 +5334,7 @@ c (All tables of levels and lambdas identical : read one only)
           dls(item,idens)=logdens(idens)
          write(6,*) 'open and read file ',name
 c
-        OPEN(unit=15,status='old',file=name)
+        OPEN(unit=15,status='old',file=Directory//name)
 c
           do i=1,13 !initial text = 14 lines, but 1 blank line skipped
            read(15,*) text
@@ -5556,6 +5577,7 @@ c 5g-6h :
       INTEGER inep1,iz
       CHARACTER zc*1,tabsto*9
       INTEGER m,k1,k2
+      CHARACTER*9 lab_Directory
       COMMON/MOCS1/alfeff(50,50),b_SH(50,0:50) !alfeff(n,lp) lp=l+1 pr 5g-6h
       COMMON/MOCS2/inep1,iz,zc,tabsto !a ver
 c
@@ -5584,6 +5606,7 @@ c  (dim 12 refers to kmax)
 	Double Precision branch(12,9),wvlgth(12,9)
         Integer nlmax(12),lref(12)
 c
+        data lab_Directory/'data/lab/'/
 c  EOIV(cm-1) from Feuchtgruber et al (1997, ApJ) : 
         Data EOIV/386.245/
 c  A21(s-1) see Mendoza (1983) : 
@@ -5680,7 +5703,7 @@ c
         dldem2=dlog10(Ne)-2.d0
         tred=Te/1.D4
 c
-        OPEN(unit=in_niv,file=niv_input,status='old')
+        OPEN(unit=in_niv,file=lab_Directory//niv_input,status='old')
 c
       read(in_niv,15) titre
  15   format(A17)
@@ -6030,6 +6053,7 @@ c
       CHARACTER*9 tabsto
       CHARACTER*72 titre1,titre2
       CHARACTER*4 T2T(12)
+      CHARACTER*8 Directory
 c
       COMMON/MOCS1/alfeff(50,50),b_SH(50,0:50) !alfeff(n,lp) lp=l+1
       COMMON/MOCS2/inep1,iz,zc,tabsto
@@ -6051,6 +6075,7 @@ c 2/15 Remplace data ci-dessus :
       T2T(11)='0500'
       T2T(12)='1000'
 c
+      Directory='data/d1/'
       r='r'
       b='b'
       d='.d'
@@ -6107,7 +6132,7 @@ c
       print *, 'reading ',tabsto
 c
 c Here file without '' as already alphanumeric
-      OPEN(unit=istor,file=tabsto,status='old')
+      OPEN(unit=istor,file=Directory//tabsto,status='old')
 c
       if(ine.gt.1) then
        do i=1,ine-1
@@ -6763,7 +6788,7 @@ c
 
       write(6,*) 'reading dataset e1bx.d'
 c
-      OPEN(unit=15,file='e1bx.d',status='old')
+      OPEN(unit=15,file='data/d1/e1bx.d',status='old')
 c
 c
       read(15,*) ntempx,ndensx
@@ -6805,7 +6830,7 @@ c
 
       write(6,*) 'reading dataset e2bx.d'
 c
-      OPEN(unit=15,file='e2bx.d',status='old')
+      OPEN(unit=15,file='data/d1/e2bx.d',status='old')
 c
 c
       read(15,*) ntempx,ndensx
