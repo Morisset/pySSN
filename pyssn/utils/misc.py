@@ -51,8 +51,8 @@ def my_execfile(pyfile, global_vars=None, local_vars=None):
             code = compile(f.read(), pyfile, 'exec')
             exec(code, global_vars, local_vars)    
 
-def execution_path(filename):
-    return os.path.join(os.path.dirname(sys._getframe(1).f_code.co_filename), filename)
+def execution_path(filename, extra=''):
+    return os.path.join(os.path.dirname(sys._getframe(1).f_code.co_filename), extra, filename)
 
 def change_size(tab, fact):
     if fact == 1:

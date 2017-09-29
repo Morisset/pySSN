@@ -10,8 +10,8 @@ Par exemple 1789409_ionfrac.dat
 
 4) generer le fichier ions_rec.dat pour XSSN, depuis IPYTHON:
 
-from pyssn.phyat_lists.manage_phyat_list import make_ionrec_file
-make_ionrec_file(abund_file='asplund_2009.dat', ion_frac_file='1789409_ionfrac.dat')
+import pyssn
+pyssn.make_ionrec_file(abund_file='asplund_2009.dat', ion_frac_file='1789409_ionfrac.dat')
 
 5) Verifier que outputcond.dat est adapté au probleme (seuils de detection des raies en fonction du domaine observé).
 

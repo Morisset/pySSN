@@ -10,6 +10,13 @@ from pyssn.utils.misc import split_atom, read_data, execution_path
 pn.atomicData.addAllChianti()
 pn.config.vactoair_high_wl = 20000.
 
+def get_full_name(filename, extra=''):
+    filename_full = os.path.abspath(filename)
+    if not os.path.isfile(filename_full):
+        filename_full = execution_path(filename, extra=extra)
+    if not os.path.isfile(filename_full):
+        filename_full = None
+    return filename_full
 
 def unique(array, orderby='first'):
     if len(array) == 0:
@@ -661,18 +668,22 @@ def get_atoms_by_conf(extra_file=None, atoms=None):
                 res.append(atom)
     return res
         
-def make_ionrec_file(phy_cond_file = 'phy_cond.dat', abund_file=None, ion_frac_file=None,
+def make_ionrec_file(phy_cond_file = 'phy_cond.dat', abund_file='asplund_2009.dat', ion_frac_file='1789409_ionfrac.dat',
                    out_file='ions_rec.dat', ion=None, 
                    iwr_phyat=1, vzero=13., 
                    liste_phyat_rec_name='liste_phyat_rec.dat', 
                    outputcond_name='outputcond.dat', IP_cut = 300.):
+    
+    ion_frac_file_full = get_full_name(ion_frac_file, extra='ionfracs')
+    abund_file_full = get_full_name(abund_file)
+    phy_cond_file_full = get_full_name(phy_cond_file)
     
     elems = ('H', 'D', 'He', '3He', 'Li', 'C', 'N', 'O', 'Ne', 'Mg', 'Si', 'S')
     
     Z['3He'] = 2
     IP['3He'] = IP['He']
     IP['D'] = IP['H']
-    phycond = np.genfromtxt(phy_cond_file, dtype=None, names='name, value, RC, temp, dens')
+    phycond = np.genfromtxt(phy_cond_file_full, dtype=None, names='name, value, RC, temp, dens')
     dic_temp_ion = {}
     dic_dens_ion = {}
     tab_ips = []
@@ -690,13 +701,13 @@ def make_ionrec_file(phy_cond_file = 'phy_cond.dat', abund_file=None, ion_frac_f
     tab_temp_dens = np.array(zip(tab_ips, tab_temps, tab_denss), dtype=[('IP', float), ('temp', float), ('dens', float)])
     tab_temp_dens.sort()
 
-    ab_data = np.genfromtxt(execution_path(abund_file), dtype=None, names = 'elem, abund, foo')
+    ab_data = np.genfromtxt(abund_file_full, dtype=None, names = 'elem, abund', usecols=(0,1))
     ab_dic = {}
     for record in ab_data:
         ab_dic[record['elem']] = record['abund']
     ab_dic['3He'] = 1e-3
                 
-    ion_frac_data = np.genfromtxt(execution_path(ion_frac_file), dtype=None, names = 'ion, ion_frac')
+    ion_frac_data = np.genfromtxt(ion_frac_file_full, dtype=None, names = 'ion, ion_frac')
     ion_frac_dic = {}
     for record in ion_frac_data:
         ion_frac_dic[record['ion']] = record['ion_frac']

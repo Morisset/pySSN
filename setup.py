@@ -20,16 +20,18 @@ setup(name='pySSN',
       url='https://github.com/Morisset/pySSN',
       py_modules=[],
       packages=['pyssn','pyssn.core','pyssn.utils','pyssn.qt',
-		'pyssn.phyat_lists', 'pyssn.fortran'],
+                'pyssn.phyat_lists', 'pyssn.fortran'],
       package_data={'pyssn':['data/*'],
                     'pyssn.fortran':['XSSN_Phyat.f', 'outputcond.dat',
                                      'liste_phyat_others.dat',
                                      'liste_phyat_rec.dat',
                                      'ions_rec.dat',
                                      'res/*',
-                                     'data_lab/*']},
+                                     'data_lab/*'],
+                    'pyssn.phyat_lists':['asplund_2009.dat', 'phy_cond.dat']
+                    },
       entry_points={'console_scripts': ['pySSN = pyssn.pySSN_exec:main',
-					'pySSN_generate_col = pyssn.phyat_lists.generate_phyat_list:generate_col']},
+                            'pySSN_generate_col = pyssn.phyat_lists.generate_phyat_list:generate_col']},
      )
 
 
