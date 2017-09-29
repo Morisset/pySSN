@@ -524,7 +524,7 @@ cc      INTEGER lc1,lc2    ! check string tables
       DOUBLE PRECISION vh   !pr test H
       DOUBLE PRECISION vzero
       CHARACTER*17 titre
-      CHARACTER*9 lab_Directory
+      CHARACTER lab_Directory*9, res_Directory*4
       CHARACTER numion*4,numion4*4,nomion*7 !format: ' 705', '0705', 'N_V    '
       CHARACTER*3 inmitabc,inmatabc,ni_refc,ns_refc
       CHARACTER Irelminc*5,lambda_refc*6,iraiesc*4,wlminc*8,wlmaxc*8
@@ -579,7 +579,8 @@ c orbital 's' in pos 21:
       data nom/'p','d','f','g','h','i','k','l','m','n','o','q','r'
      $   ,'t','u','v','w','x','y','z','s'/
 c
-      data lab_Directory/'data/lab/'/
+      data lab_Directory/'data_lab/'/
+      data res_Directory/'res/'/
 c split NeIII 4d-5f 3D-3F 'by hand'
       data wlNeIII5f/4229.305d0,4226.011d0,4224.029d0/
       data coNeIII5f/0.4667d0,0.3333d0,0.2000d0/  !LS
@@ -923,7 +924,7 @@ c   air refraction wl > 2000A AND wl < 20000A:
        enddo
 cccc    Endif
 c
-      OPEN(unit=out_niv,file=lambda_output,status='old')
+      OPEN(unit=out_niv,file=res_Directory//lambda_output,status='old')
 c
       write(out_niv,15) titre
       write(out_niv,40) ryd,charge,chi_ion,chi_Hli,Mat,iz
@@ -2091,6 +2092,7 @@ c
       CHARACTER lambda_output*(*),PHYAT*(*)
 c
       character*130 ligne,ligne_ref_modele
+      character res_Directory*4
       integer n,n_ini,n_suiv,ind_new
       integer io
       integer imult,inil,ntot,iraies
@@ -2102,10 +2104,11 @@ c
       in_phy=14 ! initial PHYAT of X-SSN before replacement (14 arb)
       old_phy=15 ! backup PHYAT before replacement (15 arb)
       out_phy=16 ! intermediate PHYAT after replacement (16 arb), erase initial PHYAT
-c
+      res_Directory = 'res/'
+c     
  101  format(A130)
 c
-      OPEN(out_niv,file=lambda_output,status='old')
+      OPEN(out_niv,file=res_Directory//lambda_output,status='old')
 cc ex :     OPEN(out_niv,file='OIV_di.res',status='old')
 c
       ntot=0
@@ -2316,7 +2319,7 @@ c
       CHARACTER Irelminc*5,lambda_refc*6,iraiesc*4,wlminc*8,wlmaxc*8
       CHARACTER bidon*1
       CHARACTER commentraie(99,30)*28,comment(99)*28,comw*28,comwb*28
-      CHARACTER*9 lab_Directory
+      CHARACTER lab_Directory*9, res_Directory*4
 c
       INTEGER in_niv,out_niv,iwr_phyat
       COMMON/MOC1/in_niv,out_niv,iwr_phyat
@@ -2326,7 +2329,8 @@ c
       COMMON/MOCX1/lambda_refc
       COMMON/MOCX2/int_ref,lambda_ref,ifre1_ref
 c
-      data lab_Directory/'data/lab/'/
+      data lab_Directory/'data_lab/'/
+      data res_Directory/'res/'/
 c
       print *,niv_input,'  ',lambda_output
 c
@@ -2374,8 +2378,8 @@ c
          Irelmin(iw)=Irelmin_H(iw)*
      $   int_ref_mod_H/(int_ref*dmax1(Ionab,Ionab_min))
       enddo
-c     
-	   OPEN(unit=out_niv,file=lambda_output,status='old')
+c
+      OPEN(unit=out_niv,file=res_Directory//lambda_output,status='old')
 c
       write(out_niv,15) titre
       write(out_niv,116)
@@ -2549,7 +2553,7 @@ c      DOUBLE PRECISION emi(10000),wli(10000),ES(10000),EI(10000)
       CHARACTER numion*4,numion4*4,nomion*7
       CHARACTER*1 nom(21),nom2
       CHARACTER tabsto*9
-      CHARACTER*9 lab_Directory
+      CHARACTER lab_Directory*9, res_Directory*4
       DOUBLE PRECISION Ne,Te
       DOUBLE PRECISION cmult,comult(99,99)
       DOUBLE PRECISION E(99,99),EN(99,99),cor(99,99),corN(99,99)
@@ -2616,7 +2620,8 @@ c Bauman et al 2007 /w topoff, no intercomb, n=50, Ne=1/cm3
 c   Temperature 5000 (1000) 25000 added in front of typemis to define table to be used
       DATA typemis/'_1_0_50_Results.txt'/
       DATA Directory/'data/d2/'/
-      DATA lab_Directory/'data/lab/'/
+      DATA lab_Directory/'data_lab/'/
+      data res_Directory/'res/'/
       DATA ntot_m/44/     !number of mult in Porter13
       DATA n_ref_m/10/    !mult 4471 in Porter13
       DATA ni_ref/2/ns_ref/4/li_ref/1/ !4471 : for synth impr
@@ -2649,7 +2654,7 @@ c
      $   int_ref_mod_H/(int_ref*dmax1(Ionab,Ionab_min))
       enddo
 c
-        OPEN(unit=in_niv,file=lab_Directory//niv_input,status='old')
+      OPEN(unit=in_niv,file=lab_Directory//niv_input,status='old')
 c
 c beginning HeI.lab read and write only once:
 c
@@ -2696,7 +2701,7 @@ c Lim. tables X-SSN et limites pour regroupements des l
       read(in_niv,22) lmax_del1,lmax_del2 !general puis X-SSN
 c * Suite lecture in_niv +bas ***
 c
-      OPEN(unit=out_niv,file=lambda_output,status='old')
+      OPEN(unit=out_niv,file=res_Directory//lambda_output,status='old')
 c
 c beginning WRITE out_niv = HeI.res
        if(WL_B07.eq.0) then
@@ -3547,7 +3552,7 @@ c
       CHARACTER numion*4,numion4*4,nomion*7
       CHARACTER*1 orbs(100),orbi(100),SPDF(4),OE(2),nom2,bidon
       CHARACTER Irelminc*5,lambda_refc*6,iraiesc*4,wlminc*8,wlmaxc*8
-      CHARACTER*9 lab_Directory
+      CHARACTER lab_Directory*9, res_Directory*4
       INTEGER doub(3,11,4,2),nc,doubs,doubi,doudou
       INTEGER i,nmax,mp,n,Pp,Lp,JJ,ntrans,i_ref,iraies
       INTEGER mps(100),ns(100),Ls(100),Ps(100)
@@ -3579,7 +3584,8 @@ c
       COMMON/MOCX2/int_ref,lambda_ref,ifre1_ref
       COMMON/MOCV1/vzero
 c
-      data lab_Directory/'data/lab/'/
+      data lab_Directory/'data_lab/'/
+      data res_Directory/'res/'/
       data SPDF/'S','P','D','F'/
       data OE/'e','o'/
 c
@@ -3598,7 +3604,7 @@ c
 c
       iraies=0 !line counter
 c
-           OPEN(unit=in_niv,file=lab_Directory//niv_input,status='old')
+      OPEN(unit=in_niv,file=lab_Directory//niv_input,status='old')
 c
       read(in_niv,15) titre
  15   format(A17)
@@ -3697,7 +3703,7 @@ c
      $   int_ref_mod_H/(int_ref*dmax1(Ionab,Ionab_min))
       enddo
 c
-          OPEN(unit=out_niv,file=lambda_output,status='old')
+      OPEN(unit=out_niv,file=res_Directory//lambda_output,status='old')
 c
       write(out_niv,15) titre
       write(out_niv,116)
@@ -3981,7 +3987,7 @@ c
       DOUBLE PRECISION Irelmin(21)
       COMMON/MOCR3/Irelmin
       CHARACTER*17 titre
-      CHARACTER*9 lab_Directory
+      CHARACTER lab_Directory*9, res_Directory*4
       CHARACTER Irelminc*5,lambda_refc*6,iraiesc*4,wlminc*8,wlmaxc*8
       CHARACTER numion*4,numion4*4,nomion*7
       DOUBLE PRECISION Ne,Te
@@ -4015,11 +4021,12 @@ c
       data imaxl/6187/
       data out_niv/11/
       data zero/'0'/
-      data lab_Directory/'data/lab/'/
+      data lab_Directory/'data_lab/'/
+      data res_Directory/'res/'/
 c
       print *,niv_input,'  ',lambda_output
 c
-        OPEN(unit=in_niv,file=lab_Directory//niv_input,status='old')
+      OPEN(unit=in_niv,file=lab_Directory//niv_input,status='old')
 c
       read(in_niv,15) titre
  15   format(A17)
@@ -4042,7 +4049,7 @@ c  The first Te (it=1) is 10.**2.0; steps .1dex; closest in log:
        it=27
       Endif
 c
-        OPEN(unit=15,status='old',file=lab_Directory//'CII_diel.dat')
+      OPEN(unit=15,status='old',file=lab_Directory//'CII_diel.dat')
 c
           do i=1,16 !initial text = 16 lines, incl 3 blanks (made explicit)
            read(15,*) text
@@ -4065,7 +4072,7 @@ c
      $   int_ref_mod_H/(int_ref*dmax1(Ionab,Ionab_min))
       enddo
 c
-         OPEN(unit=out_niv,file=lambda_output,status='old')
+      OPEN(unit=out_niv,file=res_Directory//lambda_output,status='old')
 c
       write(out_niv,15) titre
       write(out_niv,116)
@@ -4103,7 +4110,7 @@ c   pour liste_phyat.dat :
      $  ' 3d - 4) pure diel')
 c
 c For suppression lines also in CII_DSK.res:
-            OPEN(unit=21,file='CII_DSK.res',status='old')
+      OPEN(unit=21,file=res_Directory//'CII_DSK.res',status='old')
 c   comptage des lignes:
       ntot=0
       Do
@@ -4278,7 +4285,7 @@ c  (dim 12 correspond to kmax)
       CHARACTER numion*4,numion4*4,nomion*7
 	Character bidon*1
 	Character*7 wltheo(12,9)
-      CHARACTER*9 lab_Directory
+      CHARACTER lab_Directory*9, res_Directory*4
       CHARACTER Irelminc*5,lambda_refc*6,iraiesc*4,wlminc*8,wlmaxc*8
 c
       INTEGER in_niv,out_niv,iwr_phyat
@@ -4290,7 +4297,8 @@ c
       COMMON/MOCX1/lambda_refc
       COMMON/MOCX2/int_ref,lambda_ref,ifre1_ref
 c
-      data lab_Directory/'data/lab/'/
+      data lab_Directory/'data_lab/'/
+      data res_Directory/'res/'/
 
 c  ECIII(cm-1) from Moore or NIST : 
         Data ECIII/386241.d0/   ! +/-2 Moore
@@ -4313,7 +4321,7 @@ c
 c
       iraies=0 !Line counter
 c
-        OPEN(unit=in_niv,file=lab_Directory//niv_input,status='old')
+      OPEN(unit=in_niv,file=lab_Directory//niv_input,status='old')
 c
       read(in_niv,15) titre
  15   format(A17)
@@ -4403,7 +4411,7 @@ c
      $   int_ref_mod_H/(int_ref*dmax1(Ionab,Ionab_min))
       enddo
 c
-          OPEN(unit=out_niv,file=lambda_output,status='old')
+      OPEN(unit=out_niv,file=res_Directory//lambda_output,status='old')
 c
       write(out_niv,15) titre
       write(out_niv,116)
@@ -4613,7 +4621,7 @@ cc      DOUBLE PRECISION b0,b1,b2,b3,b4,b5,b6,alfhig
       CHARACTER Tr*23,Trans*32,n_lambda*1,luC*1  !2011: Tr*22,Trans*33
       CHARACTER Tranf*26,mult*4
       CHARACTER titre*80,titr1*80,titr2*80,titr3*80,titr4*80,titra0*80
-      CHARACTER*9 lab_Directory
+      CHARACTER lab_Directory*9, res_Directory*4
       DIMENSION Tr(218),Trans(218),n_lambda(218),luC(218)
       DIMENSION Tranf(55),mult(55)
       DIMENSION titre(4),titr1(4),titr2(4),titr3(4),titr4(4)
@@ -4636,7 +4644,8 @@ c
       COMMON/MOCH2/az,am,numin,numax
       COMMON/MOCS2/inep1,iz,zc,tabsto
 c
-      data lab_Directory/'data/lab/'/
+      data lab_Directory/'data_lab/'/
+      data res_Directory/'res/'/
 c Tables Fang et al:
       Data TeTab/125.d0,500.d0,1000.d0,5000.d0,10000.d0,
      $  15000.d0,20000.d0/
@@ -4664,7 +4673,7 @@ c ***2013: 55 raies t --> t4=Te/1.d4 (Case A or B=stdd)
 c
       print *,niv_input,'  ',lambda_output
 c
-	   OPEN(unit=in_niv,file=lab_Directory//niv_input,status='old')
+      OPEN(unit=in_niv,file=lab_Directory//niv_input,status='old')
 c
       read(in_niv,15) titreb
  15   format(A17)
@@ -4800,7 +4809,7 @@ c****************reading NEW TABLES (2013 fit) end **********
 c
 	   CLOSE(in_niv)
 c
-	   OPEN(unit=out_niv,file=lambda_output,status='old')
+      OPEN(unit=out_niv,file=res_Directory//lambda_output,status='old')
 c
       write(out_niv,15) titreb
       write(out_niv,116)
@@ -5205,7 +5214,7 @@ c***Storey begin 1
       character*4 endk
       character*5 lines
       character*8 Directory
-      CHARACTER*9 lab_Directory
+      CHARACTER lab_Directory*9, res_Directory*4
       character*16 name
       character*80 text
 cc      real*8 dens(50),emms(50,50,20),flux(20),f(50),
@@ -5269,7 +5278,8 @@ c
       data logdens/2.0,2.2,2.4,2.6,2.8,3.0,3.2,3.4,3.6,3.8,4.0,
      :             4.2,4.4,4.6,4.8,5.0/
       data lines/'lines'/, ul/'_'/, dr/'dr'/
-      data lab_Directory/'data/lab/'/
+      data lab_Directory/'data_lab/'/
+      data res_Directory/'res/'/
       data Directory/'data/d3/'/
 c***Storey end 2
 c
@@ -5290,7 +5300,7 @@ cc      ktem(8)='4.0'
 cc      ktem(9)='4.2'
 cc      kdens(6)='3.0'
 c
-        OPEN(unit=in_niv,file=lab_Directory//niv_input,status='old')
+      OPEN(unit=in_niv,file=lab_Directory//niv_input,status='old')
 c
       read(in_niv,15) titre
  15   format(A17)
@@ -5386,7 +5396,7 @@ c Only the first 4 metastable levels are always lower levels
 c  for DO loop i=:
        is(nsmax+1)=0
 c
-         OPEN(unit=out_niv,file=lambda_output,status='old')
+       OPEN(unit=out_niv,file=res_Directory//lambda_output,status='old')
 c
 c  Sum multiplet V1 '4649' = reference emissivity
 c  ***TBD: interpolate for emissivity of ref multiplet?***
@@ -5577,7 +5587,7 @@ c 5g-6h :
       INTEGER inep1,iz
       CHARACTER zc*1,tabsto*9
       INTEGER m,k1,k2
-      CHARACTER*9 lab_Directory
+      CHARACTER lab_Directory*9, res_Directory*4
       COMMON/MOCS1/alfeff(50,50),b_SH(50,0:50) !alfeff(n,lp) lp=l+1 pr 5g-6h
       COMMON/MOCS2/inep1,iz,zc,tabsto !a ver
 c
@@ -5606,7 +5616,8 @@ c  (dim 12 refers to kmax)
 	Double Precision branch(12,9),wvlgth(12,9)
         Integer nlmax(12),lref(12)
 c
-        data lab_Directory/'data/lab/'/
+        data lab_Directory/'data_lab/'/
+        data res_Directory/'res/'/
 c  EOIV(cm-1) from Feuchtgruber et al (1997, ApJ) : 
         Data EOIV/386.245/
 c  A21(s-1) see Mendoza (1983) : 
@@ -5703,7 +5714,7 @@ c
         dldem2=dlog10(Ne)-2.d0
         tred=Te/1.D4
 c
-        OPEN(unit=in_niv,file=lab_Directory//niv_input,status='old')
+      OPEN(unit=in_niv,file=lab_Directory//niv_input,status='old')
 c
       read(in_niv,15) titre
  15   format(A17)
@@ -5876,7 +5887,7 @@ c
      $   int_ref_mod_H/(int_ref*dmax1(Ionab,Ionab_min))
       enddo
 c
-	   OPEN(unit=out_niv,file=lambda_output,status='old')
+      OPEN(unit=out_niv,file=res_Directory//lambda_output,status='old')
 c
       write(out_niv,15) titre
       write(out_niv,116)
