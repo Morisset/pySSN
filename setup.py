@@ -28,7 +28,8 @@ setup(name='pySSN',
                                      'ions_rec.dat',
                                      'res/*',
                                      'data_lab/*'],
-                    'pyssn.phyat_lists':['asplund_2009.dat', 'phy_cond.dat']
+                    'pyssn.phyat_lists':['asplund_2009.dat', 'phy_cond.dat',
+                                         'ionfracs/*']
                     },
       entry_points={'console_scripts': ['pySSN = pyssn.pySSN_exec:main',
                             'pySSN_generate_col = pyssn.phyat_lists.generate_phyat_list:generate_col']},
