@@ -14,8 +14,13 @@ import pyssn
 pyssn.make_ionrec_file(abund_file='asplund_2009.dat', ion_frac_file='1789409_ionfrac.dat')
 
 5) Verifier que outputcond.dat est adapté au probleme (seuils de detection des raies en fonction du domaine observé).
+5b) Compiler le programme fortran:
 
-6) Faire tourner le programme fortran XSSN_Phyat.exe obtenu avec gfortran XSSN_Phyat.f -o XSSN_Phyat.exe.
+import pyssn
+pyssn.compile_XSSN()
+
+
+6) Faire tourner le programme fortran XSSN_Phyat.exe obtenu avec 
 On obtient un ficher liste_phyat_rec.dat
 
 7) faire tourner depuis IPYTHON:
