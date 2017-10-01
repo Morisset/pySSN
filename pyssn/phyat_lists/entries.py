@@ -41,5 +41,5 @@ def print_ionfrac():
     if args.B not in ['R', 'M60']:
         raise Exception('B must by R (Radiation bounded) or M60 (60% matter Bounded)')
     filename = '{}_{}_{}_ionfrac.dat'.format(args.Teff, args.logU, args.B)
-    file_in = execution_path(filename, extra='ionfrac/')
+    file_in = execution_path(filename, extra='ionfracs/')
     copyfile(file_in, filename)
