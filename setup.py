@@ -32,7 +32,6 @@ setup(name='pySSN',
                                          'ionfracs/*']
                     },
       entry_points={'console_scripts': ['pySSN = pyssn.pySSN_exec:main',
-                            'pySSN_generate_col = pyssn.phyat_lists.generate_phyat_list:generate_col'
                             'pySSN_link2data = pyssn.fortran.link_data:link2data',
                             'pySSN_compile = pyssn.fortran.compileit:compile_XSSN']},
      )
