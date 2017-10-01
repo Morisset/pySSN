@@ -798,25 +798,6 @@ def print_outputcond(file_out='outputcond.dat'):
     file_in = execution_path('outputcond.dat', extra='../fortran/')
     copyfile(file_in, file_out)
 
-        
-def get_N_ionfracs(MB='R', logU=-2., Teff=50.):
-    filename = execution_path('ionfracs/all_ionfracs.dat')
-    d = np.genfromtxt(filename, dtype=None, names=True)
-    if MB not in np.unique(d['MB']):
-        print('MB must be one of {}'.format(np.unique(d['MB'])))
-        return None
-    if int(logU) not in np.unique(d['logU']):
-        print('logU must be one of {}'.format(np.unique(d['logU'])))
-        return None
-    if int(Teff) not in np.unique(d['Teff']):
-        print('Teff must be one of {}'.format(np.unique(d['Teff'])))
-        return None
-    mask = (d['MB'] == MB) & (d['logU'] == int(logU)) & (d['Teff'] == int(Teff))
-    if mask.sum() == 0:
-        print('This combination of MB, logU and Teff is not in the database') 
-        return None
-    return d[mask]['N'][0]
-
 
 
 

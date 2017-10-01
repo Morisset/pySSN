@@ -33,7 +33,8 @@ setup(name='pySSN',
                     },
       entry_points={'console_scripts': ['pySSN = pyssn.pySSN_exec:main',
                             'pySSN_link2data = pyssn.fortran.link_data:link2data',
-                            'pySSN_compile = pyssn.fortran.compileit:compile_XSSN']},
+                            'pySSN_compile = pyssn.fortran.compileit:compile_XSSN',
+                            'pySSN_write_phycond = pyssn.phyat_lists.manage_phyat_list:print_phy_cond']},
      )
 
 
