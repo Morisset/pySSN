@@ -34,9 +34,9 @@ def print_ionfrac():
     
     args = parser.parse_args()
 
-    if args.Teff not in [25, 50, 75, 100, 150, 300]:
+    if args.Teff not in ['25', '50', '75', '100', '150', '300']:
         raise Exception("Teff must be in [25, 50, 75, 100, 150, 300]")
-    if args.logU not in [-1, -2, -3]:
+    if args.logU not in ['-1', '-2', '-3']:
         raise Exception("Log U must be in [-1, -2, -3]")
     if args.B not in ['R', 'M60']:
         raise Exception('B must by R (Radiation bounded) or M60 (60% matter Bounded)')
