@@ -1,3 +1,9 @@
+1. Install the distribution by: `pip install -U git+https://github.com/Morisset/pySSN.git`
+1. Download the data file (107Mo) from http://132.248.1.102/~morisset/data.tgz
+1. Uncompress it somewhere, e.g. /user/myname/pySSN_data/
+1. Link this directory with the main program: pySSN_link2data /user/myname/pySSN_data/data
+1. Compile the fortran program: pySSN_compile --compiler=gfortran
+
 Pour faire une synthese:
 
 1. donner les conditions physiques de la nébuleuse dans le fichier phy_cond.dat du style:
@@ -14,12 +20,6 @@ Pour faire une synthese:
     `pyssn.make_ionrec_file(abund_file='asplund_2009.dat', ion_frac_file='1789409_ionfrac.dat')`
 
 1. Verifier que outputcond.dat est adapté au probleme (seuils de detection des raies en fonction du domaine observé).
-
-1. Compiler le programme fortran:
-
-    `import pyssn`
-    `pyssn.compile_XSSN()`
-
 
 1. Faire tourner le programme fortran XSSN_Phyat.exe obtenu avec 
     On obtient un ficher liste_phyat_rec.dat
