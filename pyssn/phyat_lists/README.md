@@ -1,8 +1,8 @@
 1. Install the distribution by: `pip install -U git+https://github.com/Morisset/pySSN.git`
 1. Download the data file (107Mo) from http://132.248.1.102/~morisset/data.tgz
 1. Uncompress it somewhere, e.g. /user/myname/pySSN_data/
-1. Link this directory with the main program: pySSN_link2data /user/myname/pySSN_data/data
-1. Compile the fortran program: pySSN_compile --compiler=gfortran
+1. Link this directory with the main program: `pySSN_link2data /user/myname/pySSN_data/data`
+1. Compile the fortran program: `pySSN_compile --compiler=gfortran`
 
 Pour faire une synthese:
 
