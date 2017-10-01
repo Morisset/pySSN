@@ -781,25 +781,6 @@ def get_models_3MdB():
                     print('cut: {}, logU: {}, Teff: {}, NO MODEL'.format(cut, logU, Teff))
     co.close()
     
-    
-def print_phy_cond():
-    with open('phy_cond.dat', 'w') as f:
-        f.write("""IP 1000000   CR 1e4    1e2
-IP 2000000 CR 1e4 1e2        
-        """)    
-
-def print_asplund(file_out='asplund_2009.dat'):
-    from shutil import copyfile
-    file_in = execution_path('asplund_2009.dat')
-    copyfile(file_in, file_out)
-
-def print_outputcond(file_out='outputcond.dat'):
-    from shutil import copyfile
-    file_in = execution_path('outputcond.dat', extra='../fortran/')
-    copyfile(file_in, file_out)
-
-
-
 
 """
 To make a new liste_phyat, from an ipython session:
