@@ -17,7 +17,11 @@ def compile_XSSN(fcompiler= 'gfortran', fname='XSSN_Phyat.f', oname='XSSN_Phyat.
         proc = subprocess.call(to_run, shell=True)
     except:
         raise NameError('Fortran compilation error')
-    
+
+def make_link2data(datadir):
+    link_name = os.path.dirname(os.path.abspath(__file__))
+    link_name = '/'.join(link_name.split('/')[:-1]) + '/fortran/'
+    os.symlink(datadir, link_name)
 
 def run_XSSN(fphycond='phy_cond.dat', fionfrac='1789409_ionfrac.dat', fabund='asplund_2009.dat'):
     pass

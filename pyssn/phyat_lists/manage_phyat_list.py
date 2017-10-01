@@ -669,11 +669,14 @@ def get_atoms_by_conf(extra_file=None, atoms=None):
     return res
         
 def make_ionrec_file(phy_cond_file = 'phy_cond.dat', abund_file='asplund_2009.dat', ion_frac_file='1789409_ionfrac.dat',
-                   out_file='ions_rec.dat', ion=None, 
-                   iwr_phyat=1, vzero=13., 
-                   liste_phyat_rec_name='liste_phyat_rec.dat', 
-                   outputcond_name='outputcond.dat', IP_cut = 300.):
+                     Teff=None, MB=None, logU=None,
+                     out_file='ions_rec.dat', ion=None, 
+                     iwr_phyat=1, vzero=13., 
+                     liste_phyat_rec_name='liste_phyat_rec.dat', 
+                     outputcond_name='outputcond.dat', IP_cut = 300.):
     
+    if Teff is not None and logU is not None and MB is not None:
+        ion_frac_file = '{}_ionfrac.dat'.format(get_N_ionfracs(MB, logU, Teff))
     ion_frac_file_full = get_full_name(ion_frac_file, extra='ionfracs')
     abund_file_full = get_full_name(abund_file)
     phy_cond_file_full = get_full_name(phy_cond_file)
@@ -779,7 +782,43 @@ def get_models_3MdB():
     co.close()
     
     
-    
+def print_phy_cond():
+    with open('phy_cond.dat') as f:
+        f.write("""IP 1000000   CR 1e4    1e2
+IP 2000000 CR 1e4 1e2        
+        """)    
+
+def print_asplund(file_out='asplund_2009.dat'):
+    from shutil import copyfile
+    file_in = execution_path('asplund_2009.dat')
+    copyfile(file_in, file_out)
+
+def print_outputcond(file_out='outputcond.dat'):
+    from shutil import copyfile
+    file_in = execution_path('outputcond.dat', extra='../fortran/')
+    copyfile(file_in, file_out)
+
+        
+def get_N_ionfracs(MB='R', logU=-2., Teff=50.):
+    filename = execution_path('ionfracs/all_ionfracs.dat')
+    d = np.genfromtxt(filename, dtype=None, names=True)
+    if MB not in np.unique(d['MB']):
+        print('MB must be one of {}'.format(np.unique(d['MB'])))
+        return None
+    if int(logU) not in np.unique(d['logU']):
+        print('logU must be one of {}'.format(np.unique(d['logU'])))
+        return None
+    if int(Teff) not in np.unique(d['Teff']):
+        print('Teff must be one of {}'.format(np.unique(d['Teff'])))
+        return None
+    mask = (d['MB'] == MB) & (d['logU'] == int(logU)) & (d['Teff'] == int(Teff))
+    if mask.sum() == 0:
+        print('This combination of MB, logU and Teff is not in the database') 
+        return None
+    return d[mask]['N'][0]
+
+
+
 
 """
 To make a new liste_phyat, from an ipython session:
