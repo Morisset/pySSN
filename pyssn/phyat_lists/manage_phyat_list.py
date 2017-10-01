@@ -783,7 +783,7 @@ def get_models_3MdB():
     
     
 def print_phy_cond():
-    with open('phy_cond.dat') as f:
+    with open('phy_cond.dat', 'w') as f:
         f.write("""IP 1000000   CR 1e4    1e2
 IP 2000000 CR 1e4 1e2        
         """)    
