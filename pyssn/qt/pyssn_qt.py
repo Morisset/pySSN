@@ -1432,7 +1432,7 @@ class AppForm(QtGui.QMainWindow):
         
         if self.residual_GroupBox.isChecked():
             self.axes3.set_xlabel(r'Wavelength ($\AA$)')
-        elif self.show_line_ticks_action.isChecked() and self.sp.get_conf('plot_ax2'):
+        elif self.show_line_ticks_action.isChecked() and self.sp.get_conf('plot_ax2') and self.axes2 is not None:
             self.axes2.set_xlabel(r'Wavelength ($\AA$)')
         else:
             self.axes.set_xlabel(r'Wavelength ($\AA$)')
