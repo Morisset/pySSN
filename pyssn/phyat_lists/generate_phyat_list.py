@@ -670,11 +670,10 @@ def make_all_lists():
     
     args = parser.parse_args()
 
-    make_ionrec_file(abund_file=args.abund_file, ion_frac_file=args.ion_frac_file)
-    """
-    run_XSSN()
+    make_ionrec_file(abund_file=args.abund_file, ion_frac_file=args.ion_frac_file, out_file=execution_path('ions_rec.dat', extra='../fortran/'))
+    run_XSSN(outputcond_file = args.outputcond_file)
     config_pyneb()
-    make_phyat_list(filename=filename, atoms=atoms, cut=1e-4, E_cut=20,
+    make_phyat_list(filename=execution_path('liste_phyat_coll.dat'), atoms=None, cut=1e-4, E_cut=20,
           verbose=False, notry=False, NLevels=50, 
           ref_lines_dic=ref_lines_dic,
           NLevels_dic=NLevels_dic,
@@ -683,13 +682,14 @@ def make_all_lists():
           Del_ion = Del_ion,
           phy_cond_file = args.phy_cond_file,
           extra_file=extra_file)
-    merge_files(('../fortran/liste_phyat_rec.dat', 'liste_phyat_coll.dat', 'liste_phyat_others.dat'), args.phyat_file)
+    merge_files((execution_path('liste_phyat_rec.dat', extra='../fortran/'), execution_path('liste_phyat_coll.dat'), 
+                 execution_path('liste_phyat_others.dat')), args.phyat_file)
     phyat2model(args.phyat_file, args.model_file, norm_hbeta=args.norm_hbeta, ion_frac_file=args.ion_frac_file, 
                 abund_file=args.abund_file, ion_frac_min=args.ion_frac_min)
-    """
+    
     
     
 """
---abund_file=asplund_2009.dat --ion_frac_file=50_-2_R_ionfrac.dat --phy_cond_file=phy_cond.dat --outputcond_file=outputcond.dat` 
+ --abund_file=asplund_2009.dat --ion_frac_file=50_-2_R_ionfrac.dat --phy_cond_file=phy_cond.dat --outputcond_file=outputcond.dat` 
 `--phyat_file=liste_phyat_test1.dat --model_file=liste_model_test1.dat --norm_hbeta=10000 --ion_frac_min=0.0001`
 """
