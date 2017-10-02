@@ -232,7 +232,6 @@ def print_phyat_list(atom, tem, den, cut=1e-3, cut_inter=1e-5, ij_ref = None, fi
                                          ion_name, 1.0, emis_ref, 
                                          0, 0, 0, 0, 0, 999, com_ref)
             print_ref = True 
-            print('emis_ref', emis_ref)
             for i in up_lev:
                 print_it = False
                 if i > this_NLevels:
