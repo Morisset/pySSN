@@ -555,12 +555,14 @@ def phyat2model(phyat_file, model_file, ion_frac_file, norm_hbeta=1e4, abund_fil
                     spec -= 1                
                 elem = Z_inv[Z]
                 elem2 = line['id'].split('_')[0]
+                coeff_abund = 1.0
                 if elem2 == 'D':
                     elem = 'D'
+                elif elem2 == '3He':
+                    coeff_abund = 1e-3
                 ion = elem + str(spec)
                 if Z < 90:
-                    abund = 10**(ab_data[ab_data['elem'] == elem]['abund'][0]-12)
-                    print(elem, abund)
+                    abund = 10**(ab_data[ab_data['elem'] == elem]['abund'][0]-12) * coeff_abund
                     ion_frac = 1.0
                     if ion_frac_dic is not None:
                         if ion in ion_frac_dic:
