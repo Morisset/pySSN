@@ -2,6 +2,8 @@
 
 # Usage: python generate_phyat_list.py
 
+import os
+import sys
 import subprocess
 import argparse
 from .manage_phyat_list import make_phyat_list, make_ionrec_file, merge_files, phyat2model
@@ -10,8 +12,8 @@ from ..fortran.runit import run_XSSN
 import pyneb as pn
 
 def config_pyneb():
-    pn.atomicData.addDataFilePath('../pyneb_data/')
-
+    pn.atomicData.addDataFilePath(os.path.join(os.path.dirname(sys._getframe(1).f_code.co_filename), '../pyneb_data/'))
+                                  
     # ***********************
     #
     # 3s1 mg2: -->s6 ok
