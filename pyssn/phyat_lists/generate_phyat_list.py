@@ -669,7 +669,9 @@ def make_all_lists():
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose")
     
     args = parser.parse_args()
+    make_all_lists_args(args)
     
+def make_all_lists_args(args):
     make_ionrec_file(abund_file=args.abund_file, ion_frac_file=args.ion_frac_file, out_file=execution_path('ions_rec.dat', extra='../fortran/'))
     print('ionrec file done')
     run_XSSN(outputcond_file = args.outputcond_file)
@@ -703,8 +705,9 @@ def make_list_model():
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose")
     
     args = parser.parse_args()
+    make_list_model_args(args)
     
-        
+def make_list_model_args(args):        
     phyat2model(args.phyat_file, args.model_file, norm_hbeta=float(args.norm_hbeta), ion_frac_file=args.ion_frac_file, 
                 abund_file=args.abund_file, ion_frac_min=float(args.ion_frac_min), verbose=args.verbose)
     print('Model done')

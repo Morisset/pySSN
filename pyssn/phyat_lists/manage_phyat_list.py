@@ -551,12 +551,16 @@ def phyat2model(phyat_file, model_file, ion_frac_file, norm_hbeta=1e4, abund_fil
                 Z = int(str(num)[1:3])
                 spec = int(str(num)[3:5])
                 type_ = int(str(num)[5:6])
-                if type_ == 3:
+                if type_ == 3: # Collision lines
                     spec -= 1                
                 elem = Z_inv[Z]
+                elem2 = line['id'].split('_')[0]
+                if elem2 == 'D':
+                    elem = 'D'
                 ion = elem + str(spec)
                 if Z < 90:
                     abund = 10**(ab_data[ab_data['elem'] == elem]['abund'][0]-12)
+                    print(elem, abund)
                     ion_frac = 1.0
                     if ion_frac_dic is not None:
                         if ion in ion_frac_dic:
@@ -565,7 +569,7 @@ def phyat2model(phyat_file, model_file, ion_frac_file, norm_hbeta=1e4, abund_fil
                             # TODO we need to look for the available ion with similar structure
                             ionFe = 'Fe' + str(spec)
                             ion_frac = ion_frac_dic[ionFe]                    
-                else:
+                else: # No element lines. Absorption. Set to 1.0 by canceling abund / norm
                     abund = norm
                     ion_frac = 1.0
                 if ion_frac < ion_frac_min:
