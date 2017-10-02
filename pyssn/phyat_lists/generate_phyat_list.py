@@ -666,7 +666,7 @@ def make_all_lists():
     parser.add_argument("-P", "--phy_cond_file", help="Physical conditions file")
     parser.add_argument("-C", "--outputcond_file", help="Output conditions file")
     parser.add_argument("-O", "--phyat_file", help="Output phyat file")
-    parser.add_argument("-V", "--verbose", action="store_true", help="Verbose")
+    parser.add_argument("-v", "--verbose", action="store_true", help="Verbose")
     
     args = parser.parse_args()
     
@@ -700,7 +700,7 @@ def make_list_model():
     parser.add_argument("-M", "--model_file", help="Output model file")
     parser.add_argument("-N", "--norm_hbeta", help="Hbeta value", default=10000)
     parser.add_argument("-F", "--ion_frac_min", help="Ion Frac min", default=0.0001)
-    parser.add_argument("-V", "--verbose", action="store_true", help="Verbose")
+    parser.add_argument("-v", "--verbose", action="store_true", help="Verbose")
     
     args = parser.parse_args()
     
