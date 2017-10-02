@@ -668,7 +668,7 @@ def get_atoms_by_conf(extra_file=None, atoms=None):
                 res.append(atom)
     return res
         
-def make_ionrec_file(phy_cond_file = 'phy_cond.dat', abund_file='asplund_2009.dat', ion_frac_file='1789409_ionfrac.dat',
+def make_ionrec_file(phy_cond_file = 'phy_cond.dat', abund_file='asplund_2009.dat', ion_frac_file='50_-2_R_ionfrac.dat',
                      Teff=None, MB=None, logU=None,
                      out_file='ions_rec.dat', ion=None, 
                      iwr_phyat=1, vzero=13., 
@@ -676,7 +676,7 @@ def make_ionrec_file(phy_cond_file = 'phy_cond.dat', abund_file='asplund_2009.da
                      outputcond_name='outputcond.dat', IP_cut = 300.):
     
     if Teff is not None and logU is not None and MB is not None:
-        ion_frac_file = '{}_ionfrac.dat'.format(get_N_ionfracs(MB, logU, Teff))
+        ion_frac_file = '{}_{}_{}_ionfrac.dat'.format(Teff, logU, MB)
     ion_frac_file_full = get_full_name(ion_frac_file, extra='ionfracs')
     abund_file_full = get_full_name(abund_file)
     phy_cond_file_full = get_full_name(phy_cond_file)

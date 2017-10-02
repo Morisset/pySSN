@@ -37,7 +37,8 @@ setup(name='pySSN',
                             'pySSN_write_phycond = pyssn.phyat_lists.entries:print_phy_cond',
                             'pySSN_write_ionfrac = pyssn.phyat_lists.entries:print_ionfrac',
                             'pySSN_write_asplund = pyssn.phyat_lists.entries:print_asplund',
-                            'pySSN_write_outputcond = pyssn.phyat_lists.entries:print_outputcond']},
+                            'pySSN_write_outputcond = pyssn.phyat_lists.entries:print_outputcond',
+                            'pySSN_makelists = pyssn.phyat_lists.generate_phyat_list:make_all_lists']},
      )
 
 

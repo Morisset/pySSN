@@ -2,7 +2,11 @@
 
 # Usage: python generate_phyat_list.py
 
-from pyssn import make_phyat_list
+import subprocess
+import argparse
+from .manage_phyat_list import make_phyat_list, make_ionrec_file, merge_files, phyat2model
+from .entries import execution_path
+from ..fortran.runit import run_XSSN
 import pyneb as pn
 
 def config_pyneb():
@@ -651,26 +655,41 @@ Del_ion = []
 # Transitions set to 0.0
 Aij_zero_dic = {}
 
-def generate_col(filename=filename, atoms=atoms, cut=1e-4, E_cut=20,
-	      verbose=False, notry=False, NLevels=50, 
-	      ref_lines_dic=ref_lines_dic,
-	      NLevels_dic=NLevels_dic,
-	      up_lev_rule_dic=up_lev_rule_dic,
-	      Aij_zero_dic=Aij_zero_dic,
-	      Del_ion = Del_ion,
-	      phy_cond_file = phy_cond_file,
-	      extra_file=extra_file):
-    config_pyneb()
-    make_phyat_list(filename, atoms=atoms, cut=cut, E_cut=E_cut,
-	      verbose=verbose, notry=notry, NLevels=NLevels, 
-	      ref_lines_dic=ref_lines_dic,
-	      NLevels_dic=NLevels_dic,
-	      up_lev_rule_dic=up_lev_rule_dic,
-	      Aij_zero_dic=Aij_zero_dic,
-	      Del_ion = Del_ion,
-	      phy_cond_file = phy_cond_file,
-	      extra_file=extra_file)
-    
 
-if __name__ == '__main__':
-    generate_col()
+def make_all_lists():
+    
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-A", "--abund_file", help="Abundances file")
+    parser.add_argument("-I", "--ion_frac_file", help="Ionic fractions file")
+    parser.add_argument("-P", "--phy_cond_file", help="Physical conditions file")
+    parser.add_argument("-C", "--outputcond_file", help="Output conditions file")
+    parser.add_argument("-O", "--phyat_file", help="Output phyat file")
+    parser.add_argument("-M", "--model_file", help="Output model file")
+    parser.add_argument("-N", "--norm_hbeta", help="Hbeta value", default=10000)
+    parser.add_argument("-F", "--ion_frac_min", help="Ion Frac min", default=0.0001)
+    
+    args = parser.parse_args()
+
+    make_ionrec_file(abund_file=args.abund_file, ion_frac_file=args.ion_frac_file)
+    """
+    run_XSSN()
+    config_pyneb()
+    make_phyat_list(filename=filename, atoms=atoms, cut=1e-4, E_cut=20,
+          verbose=False, notry=False, NLevels=50, 
+          ref_lines_dic=ref_lines_dic,
+          NLevels_dic=NLevels_dic,
+          up_lev_rule_dic=up_lev_rule_dic,
+          Aij_zero_dic=Aij_zero_dic,
+          Del_ion = Del_ion,
+          phy_cond_file = args.phy_cond_file,
+          extra_file=extra_file)
+    merge_files(('../fortran/liste_phyat_rec.dat', 'liste_phyat_coll.dat', 'liste_phyat_others.dat'), args.phyat_file)
+    phyat2model(args.phyat_file, args.model_file, norm_hbeta=args.norm_hbeta, ion_frac_file=args.ion_frac_file, 
+                abund_file=args.abund_file, ion_frac_min=args.ion_frac_min)
+    """
+    
+    
+"""
+--abund_file=asplund_2009.dat --ion_frac_file=50_-2_R_ionfrac.dat --phy_cond_file=phy_cond.dat --outputcond_file=outputcond.dat` 
+`--phyat_file=liste_phyat_test1.dat --model_file=liste_model_test1.dat --norm_hbeta=10000 --ion_frac_min=0.0001`
+"""

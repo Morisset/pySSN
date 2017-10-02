@@ -1,65 +1,62 @@
+INSTALLATION (DO IT ONLY ONCE)
+======
+
+
 1. Install the distribution by: `pip install -U git+https://github.com/Morisset/pySSN.git`
 1. Download the data file (107Mo) from http://132.248.1.102/~morisset/data.tgz
 1. Uncompress it somewhere, e.g. /user/myname/pySSN_data/
 1. Link this directory with the main program: `pySSN_link2data /user/myname/pySSN_data/data`
 1. Compile the fortran program: `pySSN_compile --compiler=gfortran`
 
-Pour faire une synthese:
+DEFINING SOME CONDITIONS (IN EACH WORKING DIRECTORY)
+======
+From a working directory:
 
-1. donner les conditions physiques de la nébuleuse dans le fichier phy_cond.dat du style:
-    `IP 1000000   CR 1e4    1e2`
+1. Define the physical conditions (Te, Ne) by IP ranges in the `phy_cond.dat`. You can obtain an example by `pySSN_write_phycond`
+1. Define the ionic fraction. Examples can be obtained by `pySSN_write_ionfrac --Teff=50 --logU=-2 --B=R`, where Teff is in 25, 50, 75, 100, 150, 300, logU in -1, -2, -3 and B (Bounded) in R or M60 (matter-bounded 60%). This creates for example a file named `50_-2_R_ionfrac.dat`.
+1. Define the elemental abundances. You can have an example with `pySSN_write_asplund`. It creates a file named `asplund_2009.dat`.
+1. Define the output conditions. An example is obtained with `pySSN_write_outputcond ` which generates a file named `outputcond.dat`.
 
-1. determiner quel template va etre utilisé pour les fractions ioniques, voir README_ionfrac.dat.
-    Par exemple 1789409_ionfrac.dat
+GENERATE THE `liste_phyat` AND `liste_model` FILES
+====
 
-1. determiner quelles abondances vont etre utilisées, par exemple: asplund_2009.dat
+`pySSN_makelists --abund_file=asplund_2009.dat --ion_frac_file=50_-2_R_ionfrac.dat --phy_cond_file=phy_cond.dat --outputcond_file=outputcond.dat` 
+`--phyat_file=liste_phyat_test1.dat --model_file=liste_model_test1.dat --norm_hbeta=10000 --ion_frac_min=0.0001`
 
-1. generer le fichier ions_rec.dat pour XSSN, depuis IPYTHON:
 
-    `import pyssn`
-    `pyssn.make_ionrec_file(abund_file='asplund_2009.dat', ion_frac_file='1789409_ionfrac.dat')`
+RUN SYNTHESIS
+=====
 
-1. Verifier que outputcond.dat est adapté au probleme (seuils de detection des raies en fonction du domaine observé).
 
-1. Faire tourner le programme fortran XSSN_Phyat.exe obtenu avec 
-    On obtient un ficher liste_phyat_rec.dat
+Define for example test1_init.dat:
 
-1. faire tourner depuis IPYTHON:
-
-    `%run generate_phyat_list.py`
-
-    On obtient un fichier liste_phyat_coll.dat
-
-1. ajouter tous les fichiers liste_phyat pour en former un seul, depuis IPYTHON:
-
-    `from pyssn.phyat_lists.manage_phyat_list import merge_files`
-    `merge_files(('../fortran/liste_phyat_rec.dat', 'liste_phyat_coll.dat', 'liste_phyat_others.dat'), 'liste_phyat_test1.dat')`
-
-    On obtient un fichier liste_phyat_test1.dat
-
-1. Generer un liste_model:
-
-    `from pyssn.phyat_lists.manage_phyat_list import phyat2model`
-    `phyat2model('liste_phyat_test1.dat', 'liste_model1.dat', norm_hbeta=1e4, ion_frac_file='1789409_ionfrac.dat', abund_file='asplund_2009.dat', ion_frac_min=1e-4)`
-
-1. READY for the synthesis!!!
-
-1. Par exemple, mettre dans test1_init.dat:
 		#-------------------------------------------------------------------
+
 		#   Initialisation
+
 		#-------------------------------------------------------------------
+
 		log_level = 3
+
 		spectr_obs = None
+
 		limit_sp = (4000, 7000)
+
 		lambda_pix = 0.1 
+
 		fic_modele = 'liste_model1.dat' #
+
 		fic_cosmetik = ''
+
 		do_cosmetik = False
+
 		phyat_file = 'liste_phyat_test1.dat'
+	
 		plot_ax2 = False
+		
 		#----------------------------END -----------------------------------
 
-1. Depuis LINUX: 
+From LINUX: 
 	pySSN -f test1_init.py
 
 
