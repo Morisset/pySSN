@@ -10,7 +10,7 @@ import sys, os
 
 def run_XSSN(outputcond_file):
     copyfile(outputcond_file, execution_path('outputcond.dat'))
-    to_run = 'cd {} ; XSSN_Phyat.exe'.format(os.path.dirname(sys._getframe(1).f_code.co_filename))
+    to_run = 'cd {} ; XSSN_Phyat.exe'.format(os.path.join(os.path.dirname(sys._getframe(1).f_code.co_filename), '../fortran/'))
     print('!!!! to run: {}'.format(to_run))
     stdout = open('XSSN.out', 'w')   
     subprocess.Popen(to_run, shell=True, stdout=stdout)
