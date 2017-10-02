@@ -23,7 +23,7 @@ def print_asplund(file_out='asplund_2009.dat'):
 
 def print_outputcond(file_out='outputcond.dat'):
     
-    file_in = execution_path('outputcond.dat', extra='../fortran/')
+    file_in = execution_path('outputcond_ex.dat', extra='../fortran/')
     copyfile(file_in, file_out)
 
 def print_ionfrac():

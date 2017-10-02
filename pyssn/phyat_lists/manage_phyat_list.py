@@ -523,7 +523,7 @@ def make_phyat_list(filename, cut=1e-4, E_cut=20, cut_inter=1e-5,
     log_file.write('\n')
     log_file.close()
 
-def phyat2model(phyat_file, model_file, ion_frac_file, norm_hbeta=1e4, abund_file='asplund_2009.dat', ion_frac_min=1e-4):
+def phyat2model(phyat_file, model_file, ion_frac_file, norm_hbeta=1e4, abund_file='asplund_2009.dat', ion_frac_min=1e-4, verbose=False):
     """  
     generate a model_file file from a phyat_file, setting all the master lines to I=i_rel/norm
     norm by default corresponds to Hbeta = 1e4
@@ -541,6 +541,7 @@ def phyat2model(phyat_file, model_file, ion_frac_file, norm_hbeta=1e4, abund_fil
     Hbeta_num = 90101000000000
     Ibeta = list_phyat[list_phyat['num'] == Hbeta_num]['i_rel'][0]
     norm = Ibeta / norm_hbeta * ion_frac_dic['H1']
+    print('Hbeta norm', norm)
     
     with open(model_file, 'w') as f:
         for line in list_phyat:
@@ -569,7 +570,8 @@ def phyat2model(phyat_file, model_file, ion_frac_file, norm_hbeta=1e4, abund_fil
                     ion_frac = 1.0
                 if ion_frac < ion_frac_min:
                     ion_frac = ion_frac_min
-                print(line['num'], Z, Z_inv[Z], spec, abund, ion_frac)
+                if verbose:
+                    print(line['num'], Z, Z_inv[Z], spec, abund, ion_frac)
                 intens = line['i_rel'] / norm * abund * ion_frac
                 line['comment'] = line['comment'].strip()
                 f.write('{0:14d} {1[id]:9s}      1.000 0.000{2:10.3e}  1.000  0000000000000   1   1.00 {1[comment]:<100s}\n'.format(new_num, line, intens))

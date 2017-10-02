@@ -673,6 +673,7 @@ def make_all_lists():
     print('ionrec file done')
     run_XSSN(outputcond_file = args.outputcond_file)
     print('XSSN run')
+    
     config_pyneb()
     print('PyNeb configured')
     make_phyat_list(filename=execution_path('liste_phyat_coll.dat'), atoms=None, cut=1e-4, E_cut=20,
