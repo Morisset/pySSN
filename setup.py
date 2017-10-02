@@ -35,7 +35,8 @@ setup(name='pySSN',
                             'pySSN_link2data = pyssn.fortran.link_data:link2data',
                             'pySSN_compile = pyssn.fortran.compileit:compile_XSSN',
                             'pySSN_write_files = pyssn.phyat_lists.entries:print_files',
-                            'pySSN_makelists = pyssn.phyat_lists.generate_phyat_list:make_all_lists']},
+                            'pySSN_phyat = pyssn.phyat_lists.generate_phyat_list:make_all_lists',
+                            'pySSN_model = pyssn.phyat_lists.generate_phyat_list:make_list_model']},
      )
 
 

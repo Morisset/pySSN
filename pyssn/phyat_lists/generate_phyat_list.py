@@ -666,9 +666,6 @@ def make_all_lists():
     parser.add_argument("-P", "--phy_cond_file", help="Physical conditions file")
     parser.add_argument("-C", "--outputcond_file", help="Output conditions file")
     parser.add_argument("-O", "--phyat_file", help="Output phyat file")
-    parser.add_argument("-M", "--model_file", help="Output model file")
-    parser.add_argument("-N", "--norm_hbeta", help="Hbeta value", default=10000)
-    parser.add_argument("-F", "--ion_frac_min", help="Ion Frac min", default=0.0001)
     
     args = parser.parse_args()
     
@@ -692,6 +689,19 @@ def make_all_lists():
     merge_files((execution_path('liste_phyat_rec.dat', extra='../fortran/'), execution_path('liste_phyat_coll.dat'), 
                  execution_path('liste_phyat_others.dat')), args.phyat_file)
     print('Files merged')
+    
+def make_list_model():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-A", "--abund_file", help="Abundances file")
+    parser.add_argument("-I", "--ion_frac_file", help="Ionic fractions file")
+    parser.add_argument("-O", "--phyat_file", help="Output phyat file")
+    parser.add_argument("-M", "--model_file", help="Output model file")
+    parser.add_argument("-N", "--norm_hbeta", help="Hbeta value", default=10000)
+    parser.add_argument("-F", "--ion_frac_min", help="Ion Frac min", default=0.0001)
+    
+    args = parser.parse_args()
+    
+        
     phyat2model(args.phyat_file, args.model_file, norm_hbeta=float(args.norm_hbeta), ion_frac_file=args.ion_frac_file, 
                 abund_file=args.abund_file, ion_frac_min=float(args.ion_frac_min))
     print('Model done')
