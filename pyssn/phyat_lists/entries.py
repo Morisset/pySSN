@@ -31,8 +31,10 @@ def print_ionfrac():
     parser.add_argument("-T", "--Teff", help="Effective temperature")
     parser.add_argument("-logU", "--logU", help="Ionization parameter")
     parser.add_argument("-B", "--B", help="Matter/Radiation Bounded [R or M60]", default=True)
-    
     args = parser.parse_args()
+    print_ionfrac(args)
+
+def print_ionfrac_args(args):
 
     if args.Teff not in ['25', '50', '75', '100', '150', '300']:
         raise Exception("Teff must be in [25, 50, 75, 100, 150, 300]")
@@ -43,3 +45,24 @@ def print_ionfrac():
     filename = '{}_{}_{}_ionfrac.dat'.format(args.Teff, args.logU, args.B)
     file_in = execution_path(filename, extra='ionfracs/')
     copyfile(file_in, filename)
+    
+def print_files():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-P", "--print_phy_cond", action="store_true", help="Write on disk the phy_cond.dat file")
+    parser.add_argument("-I", "--print_ionfrac", action="store_true", help="Write on disk the ionfrac file")
+    parser.add_argument("-A", "--print_asplund", action="store_true", help="Write on disk the asplund_2009.dat file")
+    parser.add_argument("-O", "--print_outputcond", action="store_true", help="Write on disk the outputcond.dat file")
+    
+    parser.add_argument("-T", "--Teff", help="Effective temperature")
+    parser.add_argument("-logU", "--logU", help="Ionization parameter")
+    parser.add_argument("-B", "--B", help="Matter/Radiation Bounded [R or M60]", default=True)
+    
+    args = parser.parse_args()
+    if args.print_phy_cond:
+        print_phy_cond()
+    if args.print_ionfrac:
+        print_ionfrac_args(args)
+    if args.print_asplund:
+        print_asplund()
+    if args.print_outputcond:
+        print_outputcond()
