@@ -671,14 +671,14 @@ def make_all_lists():
     parser.add_argument("-F", "--ion_frac_min", help="Ion Frac min", default=0.0001)
     
     args = parser.parse_args()
-    """
+    
     make_ionrec_file(abund_file=args.abund_file, ion_frac_file=args.ion_frac_file, out_file=execution_path('ions_rec.dat', extra='../fortran/'))
     print('ionrec file done')
     run_XSSN(outputcond_file = args.outputcond_file)
     print('XSSN run')
     config_pyneb()
     print('PyNeb configured')
-    
+    print(execution_path('liste_phyat_coll.dat'))
     make_phyat_list(filename=execution_path('liste_phyat_coll.dat'), atoms=None, cut=1e-4, E_cut=20,
           verbose=False, notry=False, NLevels=50, 
           ref_lines_dic=ref_lines_dic,
@@ -689,7 +689,7 @@ def make_all_lists():
           phy_cond_file = args.phy_cond_file,
           extra_file=extra_file)
     print('phyat col done')
-    """
+    
     merge_files((execution_path('liste_phyat_rec.dat', extra='../fortran/'), execution_path('liste_phyat_coll.dat'), 
                  execution_path('liste_phyat_others.dat', extra='../fortran/')), args.phyat_file)
     print('Files merged')
