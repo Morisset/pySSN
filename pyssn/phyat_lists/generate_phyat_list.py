@@ -692,8 +692,8 @@ def make_all_lists():
     merge_files((execution_path('liste_phyat_rec.dat', extra='../fortran/'), execution_path('liste_phyat_coll.dat'), 
                  execution_path('liste_phyat_others.dat')), args.phyat_file)
     print('Files merged')
-    phyat2model(args.phyat_file, args.model_file, norm_hbeta=args.norm_hbeta, ion_frac_file=args.ion_frac_file, 
-                abund_file=args.abund_file, ion_frac_min=args.ion_frac_min)
+    phyat2model(args.phyat_file, args.model_file, norm_hbeta=float(args.norm_hbeta), ion_frac_file=args.ion_frac_file, 
+                abund_file=args.abund_file, ion_frac_min=float(args.ion_frac_min))
     print('Model done')
     
     
