@@ -529,9 +529,9 @@ def phyat2model(phyat_file, model_file, ion_frac_file, norm_hbeta=1e4, abund_fil
     norm by default corresponds to Hbeta = 1e4
     """
         
-    ab_data = np.genfromtxt(execution_path(abund_file), dtype=None, names = 'elem, abund, foo')
+    ab_data = np.genfromtxt(abund_file, dtype=None, names = 'elem, abund, foo')
                 
-    ion_frac_data = np.genfromtxt(execution_path(ion_frac_file), dtype=None, names = 'ion, ion_frac')
+    ion_frac_data = np.genfromtxt(ion_frac_file, dtype=None, names = 'ion, ion_frac')
     ion_frac_dic = {}
     for record in ion_frac_data:
         ion_frac_dic[record['ion']] = record['ion_frac']
