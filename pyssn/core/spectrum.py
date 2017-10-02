@@ -1509,8 +1509,8 @@ class spectrum(object):
                     else:
                         if not self.get_conf('show_selected_ions_only'):
                             ax.axvline( wl, ymin=y1, ymax=y2, color = lcolor, linestyle = 'solid' )
-                        else:
-                            ion = line['id'].strip()
+                else:
+                    ion = line['id'].strip()
                     if ion in ions:
                         color = ion_color_dic[ion]
                         linestyle = ion_ls_dic[ion]
