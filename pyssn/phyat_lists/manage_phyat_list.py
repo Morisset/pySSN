@@ -541,7 +541,7 @@ def phyat2model(phyat_file, model_file, ion_frac_file, norm_hbeta=1e4, abund_fil
     Hbeta_num = 90101000000000
     Ibeta = list_phyat[list_phyat['num'] == Hbeta_num]['i_rel'][0]
     norm = Ibeta / norm_hbeta * ion_frac_dic['H1']
-    print('Hbeta norm', norm)
+    
     
     with open(model_file, 'w') as f:
         for line in list_phyat:

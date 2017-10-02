@@ -14,7 +14,7 @@ From a working directory:
 
 1. Define the physical conditions (Te, Ne) by IP ranges in the `phy_cond.dat`. You can obtain an example by `pySSN_write_files -P`
 1. Define the ionic fraction. Examples can be obtained by `pySSN_write_files -I --Teff=50 --logU=-2 --B=R`, where Teff is in 25, 50, 75, 100, 150, 300, logU in -1, -2, -3 and B (Bounded) in R or M60 (matter-bounded 60%). This creates for example a file named `50_-2_R_ionfrac.dat`.
-1. Define the elemental abundances. You can have an example with `pySSN_write_files -A`. It creates a file named `asplund_2009.dat`.
+1. Define the elemental abundances. You can have an example with `pySSN_write_files -A`. It creates a file named `abunds.dat` from Asplund 2009 data.
 1. Define the output conditions. An example is obtained with `pySSN_write_files -O ` which generates a file named `outputcond.dat`.
 1. All these commands can be done simultaneously: `pySSN_write_files -P -I -A -O --Teff=50 --logU=-2 --B=R`
 

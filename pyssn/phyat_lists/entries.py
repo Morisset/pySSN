@@ -17,7 +17,7 @@ def print_phy_cond():
 IP 2000000 CR 1e4 1e2        
 """)    
 
-def print_asplund(file_out='asplund_2009.dat'):
+def print_asplund(file_out='abunds.dat'):
     file_in = execution_path('asplund_2009.dat')
     copyfile(file_in, file_out)
 
