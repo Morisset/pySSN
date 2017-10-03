@@ -41,7 +41,8 @@ Define for example test1_init.dat:
 	do_cosmetik = False
 	phyat_file = 'liste_phyat_test1.dat'		
 
-From LINUX: 
-	pySSN -f test1_init.py
+From LINUX: 	
+
+`pySSN -f test1_init.py`
 
 
