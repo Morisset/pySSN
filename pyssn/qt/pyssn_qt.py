@@ -134,11 +134,11 @@ class AppForm(QtGui.QMainWindow):
 
     def closeEvent(self, evnt):
         if self.cont_pars_dialog is not None:
-          self.cont_pars_dialog.close()
+            self.cont_pars_dialog.close()
         if self.nearbyLines_dialog is not None:
-          self.nearbyLines_dialog.close()
+            self.nearbyLines_dialog.close()
         if self.line_info_dialog is not None:
-          self.line_info_dialog.close()
+            self.line_info_dialog.close()
         
     def image_extension_list(self):
         filetypes = self.canvas.get_supported_filetypes()
@@ -152,20 +152,20 @@ class AppForm(QtGui.QMainWindow):
         imagetype_list.sort()
         s = ''
         for imagetype in imagetype_list:
-          extension_list = filetypes[ imagetype ]
-          s = s + str(imagetype)
-          s1 = ' (*.' + str(extension_list[0])
-          for extension in extension_list[1:]:
-            s1 = s1 + ' *.' + str(extension)
-          s1 = s1 + ')'
-          s = s + s1 + s1 + ';;'
+            extension_list = filetypes[ imagetype ]
+            s = s + str(imagetype)
+            s1 = ' (*.' + str(extension_list[0])
+            for extension in extension_list[1:]:
+                s1 = s1 + ' *.' + str(extension)
+            s1 = s1 + ')'
+            s = s + s1 + s1 + ';;'
         return s
 
     def set_save_plot_action_tip(self):
         plotFile = self.sp.get_conf('plot_filename')
         path, filename = os.path.split(plotFile)
         if path == os.getcwd():
-          plotFile = filename
+            plotFile = filename
         s = "Save plot to file '" + plotFile + "' (initially set with 'plot_filename = <filename>'; " \
             "use option 'Save plot as' to change the file name and image format)" 
         self.save_plot_action.setStatusTip(s)
@@ -182,22 +182,22 @@ class AppForm(QtGui.QMainWindow):
         extension = os.path.splitext(path)[1][1:].lower()
         if path:
             if extension in self.image_extension_list():
-              self.sp.set_conf('plot_filename', path)
-              self.canvas.print_figure(path, dpi=self.dpi)
-              self.statusBar().showMessage('Saved to %s' % path, 2000)
-              self.set_save_plot_action_tip()
+                self.sp.set_conf('plot_filename', path)
+                self.canvas.print_figure(path, dpi=self.dpi)
+                self.statusBar().showMessage('Saved to %s' % path, 2000)
+                self.set_save_plot_action_tip()
             else:
-              title = 'Error saving plot'
-              msg = 'Format "{0}" not supported.'.format(extension)
-              msg = msg + '\nSupported formats: '
-              extension_list = self.image_extension_list()
-              n = len(extension_list)-1
-              s = ''
-              for i in range(0,n):
+                title = 'Error saving plot'
+                msg = 'Format "{0}" not supported.'.format(extension)
+                msg = msg + '\nSupported formats: '
+                extension_list = self.image_extension_list()
+                n = len(extension_list)-1
+                s = ''
+            for i in range(0,n):
                 s = s + extension_list[i] + ', '
-              s = s + extension_list[n] + '.'
-              msg = msg + s
-              QtGui.QMessageBox.critical(self, title, msg, QtGui.QMessageBox.Ok )
+            s = s + extension_list[n] + '.'
+            msg = msg + s
+            QtGui.QMessageBox.critical(self, title, msg, QtGui.QMessageBox.Ok )
     
     def on_about(self):
         msg = """ pySSN (Spectral Synthesis for Nebulae):        
@@ -213,8 +213,8 @@ class AppForm(QtGui.QMainWindow):
             do_print = not self.sp.get_conf('show_dialogs', True)
             self.nearbyLines = self.sp.nearby_lines(event, do_print)
             if not do_print:
-              if self.nearbyLines is not None:
-                self.show_nearbyLines_dialog()
+                if self.nearbyLines is not None:
+                    self.show_nearbyLines_dialog()
 
     def create_main_frame(self):
         
@@ -885,78 +885,78 @@ class AppForm(QtGui.QMainWindow):
             action.setCheckable(True)
         return action
       
-    def ConvStrToValidTypes(self, str):
-  
-      def isFloat(str):
-        try:
-          float(str)
-          return True
-        except ValueError:
-          return False
-      
-      def isBool(str):
-        try:
-          bool(str)
-          return True
-        except ValueError:
-          return False
+    def ConvStrToValidTypes(self, str_):
+        
+        def isFloat(str_):
+            try:
+                float(str_)
+                return True
+            except ValueError:
+                return False
 
-      str = str.strip(' ')
-      str = str.replace('Error in ','')
-      if str == '':
-        result = None
-      elif str.isdigit():
-        result = int(str)
-      elif isFloat(str):
-        result = float(str)
-      elif str.capitalize() == 'True':
-        result = True
-      elif str.capitalize() == 'False':
-        result = False
-      elif str.find(',') >= 0:
-        try:
-          str = str.replace('[','')
-          str = str.replace(']','')
-          result = [float(i) for i in str.split(',')]
-        except:
-          result = None
-      else:      
-        result = None
-      return result
-    
+        def isBool(str_):
+            try:
+                bool(str_)
+                return True
+            except ValueError:
+                return False
+        
+        str_ = str_.strip(' ')
+        str_ = str_.replace('Error in ','')
+        if str_ == '':
+            result = None
+        elif str_.isdigit():
+            result = int(str_)
+        elif isFloat(str_):
+            result = float(str_)
+        elif str_.capitalize() == 'True':
+            result = True
+        elif str_.capitalize() == 'False':
+            result = False
+        elif str_.find(',') >= 0:
+            try:
+                str_ = str_.replace('[','')
+                str_ = str_.replace(']','')
+                result = [float(i) for i in str_.split(',')]
+            except:
+                result = None
+        else:      
+            result = None
+        return result
+        
     def save_cont_pars(self):
         file_choices = "Python files (*.py) (*.py);;Text files (*.txt *.dat) (*.txt *.dat);;All Files (*) (*)"
         filename = self.sp.config_file.split('/')[-1]
         path = unicode(QtGui.QFileDialog.getSaveFileName(self, 'Save to file', filename, file_choices))
         if path:
             if os.path.isfile(path):
-              f = open(path, 'r')
-              lines = f.readlines()[::-1]
-              f.close()
+                f = open(path, 'r')
+                lines = f.readlines()[::-1]
+                f.close()
             else:
-              lines = []
+                lines = []
             for i in range(0, self.table.rowCount()):
-              field = str(self.table.item(i,0).text())
-              value = str(self.table.item(i,1).text())
-              help = self.table.item(i,2).text().toUtf8()
-              j = 0
-              found = False
-              while ( j < len(lines) ) and ( not found ):
-                line = str(lines[j])
-                if line.find(field) == 0:
-                  k = line.find('#')
-                  if k > 0:
-                    comment = ' ' + line[k:]
-                  else:
-                    comment = '\n'
-                  line = field + ' = ' + value + comment
-                  lines[j] = line
-                  found = True
-                  break
+                field = str(self.table.item(i,0).text())
+                value = str(self.table.item(i,1).text())
+                help_ = self.table.item(i,2).text().toUtf8()
+                j = 0
+                found = False
+                while ( j < len(lines) ) and ( not found ):
+                    line = str(lines[j])
+                    if line.find(field) == 0:
+                        k = line.find('#')
+                        if k > 0:
+                            comment = ' ' + line[k:]
+                        else:
+                            comment = '\n'
+                        line = field + ' = ' + value + comment
+                        lines[j] = line
+                        found = True
+                        break
                 j += 1
-              if not found:
-                lines.insert(0, '\n# ' + help + '\n')
-                lines.insert(0, field + ' = ' + value + '\n')
+                if not found:
+                    lines.insert(0, '\n# ' + help_ + '\n')
+                    lines.insert(0, field + ' = ' + value + '\n')
                 
             lines = lines[::-1]
             f = open(path, 'w')
@@ -965,335 +965,345 @@ class AppForm(QtGui.QMainWindow):
 
     # mvfc: I should have created classes for the dialogs to capture events like dragging, closing, resizing
     def close_line_info_dialog(self):
-      self.line_info_dialog_width = self.line_info_dialog.width()
-      self.line_info_dialog_height = self.line_info_dialog.height()
-      self.line_info_dialog_x = self.line_info_dialog.pos().x()
-      self.line_info_dialog_y = self.line_info_dialog.pos().y()
-      self.line_info_dialog.close()
+        self.line_info_dialog_width = self.line_info_dialog.width()
+        self.line_info_dialog_height = self.line_info_dialog.height()
+        self.line_info_dialog_x = self.line_info_dialog.pos().x()
+        self.line_info_dialog_y = self.line_info_dialog.pos().y()
+        self.line_info_dialog.close()
   
     def show_line_info_dialog(self):
          
-       def on_doubleClick():
-           item = self.line_info_table.currentItem()
-           row = item.row()
-           col = item.column()
-           if col in [0,6]:
-             self.line_info_box.setText(item.text())
-             fill_line_info_table()
+        def on_doubleClick():
+            item = self.line_info_table.currentItem()
+            col = item.column()
+            if col in [0,6]:
+                self.line_info_box.setText(item.text())
+                fill_line_info_table()
 
-       def isRefLineNum(line_num_str):
-           if line_num_str[-8:] == '00000000':
-             return True
-           else:
-             return False
+        def isRefLineNum(line_num_str):
+            if line_num_str[-8:] == '00000000':
+                return True
+            else:
+                return False
 
-       def isRefLine(line):
-           line_num = self.sp.fieldStrFromLine(line,'num')
-           if line_num[-8:] == '00000000':
-             return True
-           else:
-             return False
+        def isRefLine(line):
+            line_num = self.sp.fieldStrFromLine(line,'num')
+            if line_num[-8:] == '00000000':
+                return True
+            else:
+                return False
 
-       def isSubRefLine(line):
-           wavelength = float(self.sp.fieldStrFromLine(line,'lambda'))
-           if not isRefLine(line) and (wavelength < 2.0):
-             return True
-           else:
-             return False
+        def isSubRefLine(line):
+            wavelength = float(self.sp.fieldStrFromLine(line,'lambda'))
+            if not isRefLine(line) and (wavelength < 2.0):
+                return True
+            else:
+                return False
 
-       def isLine(line):
-           if not (isRefLine(line) or isSubRefLine(line)):
-             return True
-           else:
-             return False
+        def isLine(line):
+            if not (isRefLine(line) or isSubRefLine(line)):
+                return True
+            else:
+                return False
 
-       def fill_data(i, line, cat=''):
-         if line == None:
-           return
-         editableCols = []
-         if self.sp.get_conf('allow_editing_lines', False):
-           if cat == 'sat':
-             # mvfc: which are editable fields?
-             editableCols = ['l_shift', 'i_cor']
-           elif cat == 'ref':
-             editableCols = ['i_rel']
-         for j in range(0,len(fieldItems)):
-           s = self.sp.fieldStrFromLine(line, fieldItems[j])
-           s = s.strip()
-           item = QtGui.QTableWidgetItem(s)
-           if fieldItems[j] in editableCols:
-             item.setBackgroundColor(self.editableCells_bg_color)
-           else:
-             item.setFlags(item.flags() ^ QtCore.Qt.ItemIsEditable)
-             item.setBackgroundColor(self.readOnlyCells_bg_color)
-           self.line_info_table.setItem(i,j,item)
+        def fill_data(i, line, cat=''):
+            if line == None:
+                return
+            editableCols = []
+            if self.sp.get_conf('allow_editing_lines', False):
+                if cat == 'sat':
+                    # mvfc: which are editable fields?
+                    editableCols = ['l_shift', 'i_cor']
+                elif cat == 'ref':
+                    editableCols = ['i_rel']
+            for j in range(0,len(fieldItems)):
+                s = self.sp.fieldStrFromLine(line, fieldItems[j])
+                s = s.strip()
+                item = QtGui.QTableWidgetItem(s)
+                if fieldItems[j] in editableCols:
+                    item.setBackgroundColor(self.editableCells_bg_color)
+                else:
+                    item.setFlags(item.flags() ^ QtCore.Qt.ItemIsEditable)
+                    item.setBackgroundColor(self.readOnlyCells_bg_color)
+                self.line_info_table.setItem(i,j,item)
+        
+        def fill_text(i, text):
+            item = QtGui.QTableWidgetItem(text)
+            item.setFlags(item.flags() ^ QtCore.Qt.ItemIsEditable)
+            item.setBackgroundColor(self.readOnlyCells_bg_color)
+            item.setTextAlignment(QtCore.Qt.AlignBottom)
+            item.setTextColor(QtCore.Qt.blue)
+            self.line_info_table.setItem(i,0,item)
+            self.line_info_table.setSpan(i,0,2,len(fieldItems))
 
-       def fill_text(i, text):
-           item = QtGui.QTableWidgetItem(text)
-           item.setFlags(item.flags() ^ QtCore.Qt.ItemIsEditable)
-           item.setBackgroundColor(self.readOnlyCells_bg_color)
-           item.setTextAlignment(QtCore.Qt.AlignBottom)
-           item.setTextColor(QtCore.Qt.blue)
-           self.line_info_table.setItem(i,0,item)
-           self.line_info_table.setSpan(i,0,2,len(fieldItems))
-
-       def fill_line_info_table():  
-           line_num = self.line_info_box.text()
-           subrefline = None
-           if isRefLineNum(line_num):
-             line = None
-             subrefline = None
-             refline = self.sp.read_line(self.sp.fic_model, int(line_num))
-             refline_num = line_num
-           else:
-             line = self.sp.read_line(self.sp.fic_cosmetik, int(line_num))
-             if line == None:
-               line = self.sp.read_line(self.sp.phyat_file, int(line_num))
-             if line == None:
-               subrefline = None
-               refline = None
-             else:
-               if isSubRefLine(line):
-                 subrefline = line
-                 subrefline_num = line_num
-                 line = None
-                 line_num = None
-                 refline_num = self.sp.fieldStrFromLine(subrefline, 'ref')
-                 refline = self.sp.read_line(self.sp.fic_model, int(refline_num))
-               else:
-                 refline_num = self.sp.fieldStrFromLine(line, 'ref')
-                 if isRefLineNum(refline_num):
-                   refline = self.sp.read_line(self.sp.fic_model, int(refline_num))
-                   subrefline = None
-                 else:
-                   subrefline_num = refline_num
-                   subrefline = self.sp.read_line(self.sp.fic_cosmetik, int(subrefline_num))
-                   if subrefline == None:
-                     subrefline = self.sp.read_line(self.sp.phyat_file, int(subrefline_num))
-                   refline_num = self.sp.fieldStrFromLine(subrefline, 'ref')
-                   refline = self.sp.read_line(self.sp.fic_model, int(refline_num))
-           if subrefline is not None:
-             subsatellites = self.sp.read_satellites(self.sp.phyat_file, int(subrefline_num))
-             n_subsat = len(subsatellites)
-             for i in range(0,n_subsat):
-               sat_line = subsatellites[i]
-               sat_line_num = int(self.sp.fieldStrFromLine(sat_line,'num'))
-               cosmetic_line = self.sp.read_line(self.sp.fic_cosmetik, sat_line_num)
-               if cosmetic_line is not None:
-                 subsatellites[i] = cosmetic_line
-           else:
-             n_subsat = 0
-           if refline is not None:
-             satellites = self.sp.read_satellites(self.sp.phyat_file, int(refline_num))
-             n_sat = len(satellites)
-             for i in range(0,n_sat):
-               sat_line = satellites[i]
-               sat_line_num = int(self.sp.fieldStrFromLine(sat_line,'num'))
-               cosmetic_line = self.sp.read_line(self.sp.fic_cosmetik, sat_line_num)
-               if cosmetic_line is not None:
-                 satellites[i] = cosmetic_line
-           else:
-             n_sat = 0
-           if line is None and refline is None:
-             title = 'Error in line data display'
-             msg = 'Line code number not found.'
-             QtGui.QMessageBox.critical(self, title, msg, QtGui.QMessageBox.Ok )
-             return
-           self.line_info_table.setRowCount(n_sat+n_subsat+20)
-           self.line_info_table.clearSpans()
-           k = 0
-           if line is not None:
-             fill_text(k,'Line:')
-             k += 2
-             fill_data(k, line, 'sat')
-             k += 1
-           if subrefline is not None:
-             fill_text(k,'Subreference line:')
-             k += 2
-             fill_data(k, subrefline)
-             k += 1
-             fill_text(k, str(n_subsat) + ' satellites:')
-             k += 2
-             for i in range(0,n_subsat):
-               fill_data(k+i, subsatellites[i])
-             k += n_subsat
-           fill_text(k,'Reference line:')
-           k += 2
-           fill_data(k, refline, 'ref')
-           k += 1
-           fill_text(k, str(n_sat) + ' satellites:')
-           k += 2
-           for i in range(0,n_sat):
-             fill_data(k+i, satellites[i])
-           k += n_sat
-           self.line_info_table.setRowCount(k)
-           self.line_info_table.resizeColumnsToContents()
-           self.line_info_table.resizeRowsToContents()
-           return
+        def fill_line_info_table():  
+            line_num = self.line_info_box.text()
+            log_.debug('Line num: {}'.format(line_num), calling=self.calling)
+            subrefline = None
+            if isRefLineNum(line_num):
+                line = None
+                subrefline = None
+                refline = self.sp.read_line(self.sp.fic_model, int(line_num))
+                refline_num = line_num
+            else:
+                if self.sp.do_cosmetik:
+                    line = self.sp.read_line(self.sp.fic_cosmetik, int(line_num))
+                else:
+                    line = None
+                if line == None:
+                    line = self.sp.read_line(self.sp.phyat_file, int(line_num))
+                if line == None:
+                    subrefline = None
+                    refline = None
+                else:
+                    if isSubRefLine(line):
+                        subrefline = line
+                        subrefline_num = line_num
+                        line = None
+                        line_num = None
+                        refline_num = self.sp.fieldStrFromLine(subrefline, 'ref')
+                        refline = self.sp.read_line(self.sp.fic_model, int(refline_num))
+                    else:
+                        refline_num = self.sp.fieldStrFromLine(line, 'ref')
+                        if isRefLineNum(refline_num):
+                            refline = self.sp.read_line(self.sp.fic_model, int(refline_num))
+                            subrefline = None
+                        else:
+                            subrefline_num = refline_num
+                            if self.sp.do_cosmetik:
+                                subrefline = self.sp.read_line(self.sp.fic_cosmetik, int(subrefline_num))
+                            else:
+                                subrefline = None
+                            if subrefline == None:
+                                subrefline = self.sp.read_line(self.sp.phyat_file, int(subrefline_num))
+                            refline_num = self.sp.fieldStrFromLine(subrefline, 'ref')
+                            refline = self.sp.read_line(self.sp.fic_model, int(refline_num))
+            if subrefline is not None:
+                subsatellites = self.sp.read_satellites(self.sp.phyat_file, int(subrefline_num))
+                n_subsat = len(subsatellites)
+                for i in range(0,n_subsat):
+                    sat_line = subsatellites[i]
+                    sat_line_num = int(self.sp.fieldStrFromLine(sat_line,'num'))
+                    if self.sp.do_cosmetik:
+                        cosmetic_line = self.sp.read_line(self.sp.fic_cosmetik, sat_line_num)
+                    else:
+                        cosmetic_line = None
+                    if cosmetic_line is not None:
+                        subsatellites[i] = cosmetic_line
+            else:
+                n_subsat = 0
+            if refline is not None:
+                satellites = self.sp.read_satellites(self.sp.phyat_file, int(refline_num))
+                n_sat = len(satellites)
+                for i in range(0,n_sat):
+                    sat_line = satellites[i]
+                    sat_line_num = int(self.sp.fieldStrFromLine(sat_line,'num'))
+                    if self.sp.do_cosmetik:
+                        cosmetic_line = self.sp.read_line(self.sp.fic_cosmetik, sat_line_num)
+                    else:
+                        cosmetic_line = None
+                    if cosmetic_line is not None:
+                        satellites[i] = cosmetic_line
+            else:
+                n_sat = 0
+            if line is None and refline is None:
+                title = 'Error in line data display'
+                msg = 'Line code number not found.'
+                QtGui.QMessageBox.critical(self, title, msg, QtGui.QMessageBox.Ok )
+                return
+            self.line_info_table.setRowCount(n_sat+n_subsat+20)
+            self.line_info_table.clearSpans()
+            k = 0
+            if line is not None:
+                fill_text(k,'Line:')
+                k += 2
+                fill_data(k, line, 'sat')
+                k += 1  
+            if subrefline is not None:
+                fill_text(k,'Subreference line:')
+                k += 2
+                fill_data(k, subrefline)
+                k += 1
+                fill_text(k, str(n_subsat) + ' satellites:')
+                k += 2
+                for i in range(0,n_subsat):
+                    fill_data(k+i, subsatellites[i])
+                k += n_subsat   
+            fill_text(k,'Reference line:')
+            k += 2
+            fill_data(k, refline, 'ref')
+            k += 1
+            fill_text(k, str(n_sat) + ' satellites:')
+            k += 2
+            for i in range(0,n_sat):
+                fill_data(k+i, satellites[i])
+            k += n_sat
+            self.line_info_table.setRowCount(k)
+            self.line_info_table.resizeColumnsToContents()
+            self.line_info_table.resizeRowsToContents()
+            return
  
-       def rightFormat(s,col):
-         try:
-           r = float(s)
-           s = self.sp.field_format[fieldItems[col]].format(r)
-           if len(s) == self.sp.field_width[fieldItems[col]] and not np.isinf(r):
-             output = s
-           else:
-             output = None
-         except:
-           output = None
-         return output        
+        def rightFormat(s,col):
+            try:
+                r = float(s)
+                s = self.sp.field_format[fieldItems[col]].format(r)
+                if len(s) == self.sp.field_width[fieldItems[col]] and not np.isinf(r):
+                    output = s
+                else:
+                    output = None
+            except:
+                output = None
+            return output
+        
+        def on_itemChanged():
+            item = self.line_info_table.currentItem()
+            if not (item.flags() & QtCore.Qt.ItemIsEditable):
+                return
+            self.line_info_table.blockSignals(True)
+            row = item.row()
+            col = item.column()
+            s = item.text()
+            value = rightFormat(s,col)
+            if value != None:
+                self.line_info_table.setItem(row, col, QtGui.QTableWidgetItem(value.strip()))
+                self.line_info_table.item(row, col).setBackgroundColor(self.editableCells_bg_color)
+                save_change(row,col)
+            else:
+                self.line_info_table.item(row, col).setBackgroundColor(QtGui.QColor('red'))
+                title = 'Invalid format for the ' + self.sp.field_tip[fieldItems[col]]
+                s0 = self.sp.field_format[fieldItems[col]]
+                s0 = s0[2:-1]
+                msg = "'" + s + "' can not be converted into the proper field format: " + s0
+                QtGui.QMessageBox.critical(self, title, msg, QtGui.QMessageBox.Ok )
+            self.line_info_table.blockSignals(False)
+            
+        def save_change(row, col):
+            line = ' '*85
+            for j in range(0,len(fieldItems)):
+                s = self.line_info_table.item(row,j).text()
+                width = self.sp.field_width[fieldItems[j]]
+                align = self.sp.field_align[fieldItems[j]]
+                pos = self.sp.field_pos[fieldItems[j]]
+                s = '{:{a}{w}s}'.format(s, a=align, w=width)
+                line = line[:pos] + s + line[pos:]
+            line = line.rstrip()
+            if col in [3,5]:
+                filename = self.sp.fic_cosmetik
+            else:
+                filename = self.sp.fic_model
+            self.sp.replace_line(filename, line)
+            if self.sp.get_conf('update_after_editing_lines', False):
+                self.adjust()
          
-       def on_itemChanged():
-         item = self.line_info_table.currentItem()
-         if not (item.flags() & QtCore.Qt.ItemIsEditable):
-           return
-         self.line_info_table.blockSignals(True)
-         row = item.row()
-         col = item.column()
-         s = item.text()
-         value = rightFormat(s,col)
-         if value != None:
-            self.line_info_table.setItem(row, col, QtGui.QTableWidgetItem(value.strip()))
-            self.line_info_table.item(row, col).setBackgroundColor(self.editableCells_bg_color)
-            save_change(row,col)
-         else:
-            self.line_info_table.item(row, col).setBackgroundColor(QtGui.QColor('red'))
-            title = 'Invalid format for the ' + self.sp.field_tip[fieldItems[col]]
-            s0 = self.sp.field_format[fieldItems[col]]
-            s0 = s0[2:-1]
-            msg = "'" + s + "' can not be converted into the proper field format: " + s0
-            QtGui.QMessageBox.critical(self, title, msg, QtGui.QMessageBox.Ok )
-         self.line_info_table.blockSignals(False)
-       
-       def save_change(row, col):
-         line = ' '*85
-         for j in range(0,len(fieldItems)):
-           s = self.line_info_table.item(row,j).text()
-           width = self.sp.field_width[fieldItems[j]]
-           align = self.sp.field_align[fieldItems[j]]
-           pos = self.sp.field_pos[fieldItems[j]]
-           s = '{:{a}{w}s}'.format(s, a=align, w=width)
-           line = line[:pos] + s + line[pos:]
-         line = line.rstrip()
-         if col in [3,5]:
-           filename = self.sp.fic_cosmetik
-         else:
-           filename = self.sp.fic_model
-         self.sp.replace_line(filename, line)
-         if self.sp.get_conf('update_after_editing_lines', False):
-           self.adjust()
-         
-       self.line_info_dialog = QtGui.QDialog()
-       self.line_info_dialog.resize(self.line_info_dialog_width,self.line_info_dialog_height)
-       self.line_info_dialog.move(self.line_info_dialog_x,self.line_info_dialog_y)
-       self.line_info_table = QtGui.QTableWidget()   
-       self.line_info_table.setColumnCount(10)
-       fieldItems = self.sp.fields
-       fieldNames = [ self.sp.field_abbr[item] for item in fieldItems ]
-       self.line_info_table.setHorizontalHeaderLabels(fieldNames)
-       for j in range(0,len(fieldItems)):
-         self.line_info_table.horizontalHeaderItem(j).setToolTip(self.sp.field_tip[fieldItems[j]])
-       self.line_info_table.horizontalHeaderItem(9).setTextAlignment(QtCore.Qt.AlignLeft);
-       self.line_info_table.horizontalHeaderItem(9).setText('  comment')
-       fill_line_info_table()
-       self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Close)
-       #self.buttonBox.rejected.connect(self.line_info_dialog.close)
-       self.buttonBox.rejected.connect(self.close_line_info_dialog)
-       self.line_info_table.doubleClicked.connect(on_doubleClick)
-       self.line_info_table.itemChanged.connect(on_itemChanged)
-       vbox = QtGui.QVBoxLayout()
-       vbox.addWidget(self.line_info_table)
-       vbox.addWidget(self.buttonBox)
-       self.line_info_dialog.setLayout(vbox)
-       self.line_info_dialog.setWindowTitle('Line data')
-       self.line_info_dialog.setWindowModality(QtCore.Qt.NonModal)
-       self.line_info_dialog.show()
+        self.line_info_dialog = QtGui.QDialog()
+        self.line_info_dialog.resize(self.line_info_dialog_width,self.line_info_dialog_height)
+        self.line_info_dialog.move(self.line_info_dialog_x,self.line_info_dialog_y)
+        self.line_info_table = QtGui.QTableWidget()   
+        self.line_info_table.setColumnCount(10)
+        fieldItems = self.sp.fields
+        fieldNames = [ self.sp.field_abbr[item] for item in fieldItems ]
+        self.line_info_table.setHorizontalHeaderLabels(fieldNames)
+        for j in range(0,len(fieldItems)):
+            self.line_info_table.horizontalHeaderItem(j).setToolTip(self.sp.field_tip[fieldItems[j]])
+        self.line_info_table.horizontalHeaderItem(9).setTextAlignment(QtCore.Qt.AlignLeft);
+        self.line_info_table.horizontalHeaderItem(9).setText('  comment')
+        fill_line_info_table()
+        self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Close)
+        #self.buttonBox.rejected.connect(self.line_info_dialog.close)
+        self.buttonBox.rejected.connect(self.close_line_info_dialog)
+        self.line_info_table.doubleClicked.connect(on_doubleClick)
+        self.line_info_table.itemChanged.connect(on_itemChanged)
+        vbox = QtGui.QVBoxLayout()
+        vbox.addWidget(self.line_info_table)
+        vbox.addWidget(self.buttonBox)
+        self.line_info_dialog.setLayout(vbox)
+        self.line_info_dialog.setWindowTitle('Line data')
+        self.line_info_dialog.setWindowModality(QtCore.Qt.NonModal)
+        self.line_info_dialog.show()
             
     def show_nearbyLines_dialog(self):
+        
+        def on_doubleClick():
+            item = self.nearbyLines_table.currentItem()
+            col = item.column()
+            if col in [0,6]:
+                self.line_info_box.setText(item.text())
+                self.show_line_info_dialog()
+            if col == 1:
+                self.ion_box.setText(item.text())
+                self.draw_ion()
+        
+        def do_selection():
+            selectedItems = self.nearbyLines_table.selectedItems()
+            selected_ions = []
+            selected_lines = []
+            for item in selectedItems:
+                col = item.column()
+                if col == 1:
+                    ion = item.text()
+                    if not ion in selected_ions:
+                        selected_ions.append(ion)
+                if col in [0,6]:
+                    line = item.text()
+                    selected_lines.append(line)
+            if len(selected_ions) > 0:
+                s = ''
+                for ion in selected_ions:
+                    s = s + ion + ', '
+                s = s[:-2]
+                self.ion_box.setText(s)
+                self.draw_ion()
+            if len(selected_lines) > 0:
+                s = selected_lines[0]
+                self.line_info_box.setText(s)
+                self.line_info()
 
-       def on_doubleClick():
-         item = self.nearbyLines_table.currentItem()
-         row = item.row()
-         col = item.column()
-         if col in [0,6]:
-           self.line_info_box.setText(item.text())
-           self.show_line_info_dialog()
-         if col == 1:
-           self.ion_box.setText(item.text())
-           self.draw_ion()
-
-       def do_selection():
-         selectedItems = self.nearbyLines_table.selectedItems()
-         selected_ions = []
-         selected_lines = []
-         for item in selectedItems:
-           row = item.row()
-           col = item.column()
-           if col == 1:
-             ion = item.text()
-             if not ion in selected_ions:
-               selected_ions.append(ion)
-           if col in [0,6]:
-             line = item.text()
-             selected_lines.append(line)
-         if len(selected_ions) > 0:
-           s = ''
-           for ion in selected_ions:
-             s = s + ion + ', '
-           s = s[:-2]
-           self.ion_box.setText(s)
-           self.draw_ion()
-         if len(selected_lines) > 0:
-           s = selected_lines[0]
-           self.line_info_box.setText(s)
-           self.line_info()
-
-       self.nearbyLines_dialog = QtGui.QDialog()
-       self.nearbyLines_dialog.resize(800,300)
-       sG = QtGui.QApplication.desktop().screenGeometry()
-       x = (sG.width()-self.nearbyLines_dialog.width())
-       y = (sG.height()-self.nearbyLines_dialog.height())
-       self.nearbyLines_dialog.move(x,y)
-       statusBar = QtGui.QStatusBar()
-       statusBar.addWidget(QtGui.QLabel('Double-click on a line code number or on a reference line code number (or select and press ok) to edit parameters. '),1)
-       self.nearbyLines_table = QtGui.QTableWidget()   
-       self.nearbyLines_table.setRowCount(len(self.nearbyLines))
-       self.nearbyLines_table.setColumnCount(10)
-       fieldItems = self.sp.fields
-       fieldNames = [ self.sp.field_abbr[item] for item in fieldItems ]
-       self.nearbyLines_table.setHorizontalHeaderLabels(fieldNames)
-       for j in range(0,len(fieldItems)):
-         self.nearbyLines_table.horizontalHeaderItem(j).setToolTip(self.sp.field_tip[fieldItems[j]])
-       self.nearbyLines_table.horizontalHeaderItem(9).setTextAlignment(QtCore.Qt.AlignLeft);
-       self.nearbyLines_table.horizontalHeaderItem(9).setText('  comment')
-       for i in range(0,len(self.nearbyLines)):
-         for j in range(0,len(fieldItems)):
-           s = self.sp.field_format[fieldItems[j]].format(self.nearbyLines[i][j])
-           s = s.strip()
-           item = QtGui.QTableWidgetItem(s)
-           item.setFlags(item.flags() ^ QtCore.Qt.ItemIsEditable)
-           item.setBackgroundColor(self.readOnlyCells_bg_color)
-           self.nearbyLines_table.setItem(i,j,item)
-       self.nearbyLines_table.resizeColumnsToContents()
-       self.nearbyLines_table.resizeRowsToContents()
-       self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Help|QtGui.QDialogButtonBox.Apply|QtGui.QDialogButtonBox.Close)
-       self.buttonBox.rejected.connect(self.nearbyLines_dialog.close)
-       self.buttonBox.clicked.connect(do_selection)
-       self.nearbyLines_table.doubleClicked.connect(on_doubleClick)
-       self.nearbyLines_table.verticalHeader().sectionDoubleClicked.connect(do_selection)
-       vbox = QtGui.QVBoxLayout()
-       vbox.addWidget(self.nearbyLines_table)
-       vbox.addWidget(self.buttonBox)
-       vbox.addWidget(statusBar)
-       self.nearbyLines_dialog.setLayout(vbox)
-       s = 'List of lines between {0:.2f} and {1:.2f} angstroms'.format(self.sp.cursor_w1, self.sp.cursor_w2)
-       self.nearbyLines_dialog.setWindowTitle(s)
-       self.nearbyLines_dialog.setWindowModality(QtCore.Qt.NonModal)
-       self.nearbyLines_dialog.show()
+        self.nearbyLines_dialog = QtGui.QDialog()
+        self.nearbyLines_dialog.resize(800,300)
+        sG = QtGui.QApplication.desktop().screenGeometry()
+        x = (sG.width()-self.nearbyLines_dialog.width())
+        y = (sG.height()-self.nearbyLines_dialog.height())
+        self.nearbyLines_dialog.move(x,y)
+        statusBar = QtGui.QStatusBar()
+        statusBar.addWidget(QtGui.QLabel('Double-click on a line code number or on a reference line code number (or select and press ok) to edit parameters. '),1)
+        self.nearbyLines_table = QtGui.QTableWidget()   
+        self.nearbyLines_table.setRowCount(len(self.nearbyLines))
+        self.nearbyLines_table.setColumnCount(10)
+        fieldItems = self.sp.fields
+        fieldNames = [ self.sp.field_abbr[item] for item in fieldItems ]
+        self.nearbyLines_table.setHorizontalHeaderLabels(fieldNames)
+        for j in range(0,len(fieldItems)):
+            self.nearbyLines_table.horizontalHeaderItem(j).setToolTip(self.sp.field_tip[fieldItems[j]])
+        self.nearbyLines_table.horizontalHeaderItem(9).setTextAlignment(QtCore.Qt.AlignLeft);
+        self.nearbyLines_table.horizontalHeaderItem(9).setText('  comment')
+        for i in range(0,len(self.nearbyLines)):
+            for j in range(0,len(fieldItems)):
+                s = self.sp.field_format[fieldItems[j]].format(self.nearbyLines[i][j])
+                s = s.strip()
+                item = QtGui.QTableWidgetItem(s)
+                item.setFlags(item.flags() ^ QtCore.Qt.ItemIsEditable)
+                item.setBackgroundColor(self.readOnlyCells_bg_color)
+                self.nearbyLines_table.setItem(i,j,item)
+        self.nearbyLines_table.resizeColumnsToContents()
+        self.nearbyLines_table.resizeRowsToContents()
+        self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Help|QtGui.QDialogButtonBox.Apply|QtGui.QDialogButtonBox.Close)
+        self.buttonBox.rejected.connect(self.nearbyLines_dialog.close)
+        self.buttonBox.clicked.connect(do_selection)
+        self.nearbyLines_table.doubleClicked.connect(on_doubleClick)
+        self.nearbyLines_table.verticalHeader().sectionDoubleClicked.connect(do_selection)
+        vbox = QtGui.QVBoxLayout()
+        vbox.addWidget(self.nearbyLines_table)
+        vbox.addWidget(self.buttonBox)
+        vbox.addWidget(statusBar)
+        self.nearbyLines_dialog.setLayout(vbox)
+        s = 'List of lines between {0:.2f} and {1:.2f} angstroms'.format(self.sp.cursor_w1, self.sp.cursor_w2)
+        self.nearbyLines_dialog.setWindowTitle(s)
+        self.nearbyLines_dialog.setWindowModality(QtCore.Qt.NonModal)
+        self.nearbyLines_dialog.show()
             
     def cont_dialog(self):
-
-       Pars = [ ( 'cont_unred'     , 'Set to True if reddening is to be applied to the continuum' ),
+        
+        Pars = [ ( 'cont_unred'     , 'Set to True if reddening is to be applied to the continuum' ),
                 ( 'cont_edens'     , u'Electron density, in cm\u207B\u00B3' ), 
                 ( 'cont_hi_t'      , 'Temperature for the H I continuum, in K' ),       
                 ( 'cont_hi_i'      , u'Intensity of the H I continuum (in theory, intensity of H\u03B2)' ),       
@@ -1310,80 +1320,80 @@ class AppForm(QtGui.QMainWindow):
                 ( 'cont_pix'       , 'List of pixels of the interpolated continuum' ),       
                 ( 'cont_intens'    , 'List of intensities of the interpolated continuum' ) ]
 
-       def set_conf_from_table(row):
+        def set_conf_from_table(row):
             s = str(self.table.item(row,1).text())
             value = self.ConvStrToValidTypes(s)
             if value != None:
-              self.sp.set_conf(Pars[row][0], value)
-              self.table.setItem(row, 1, QtGui.QTableWidgetItem(str(value)))
+                self.sp.set_conf(Pars[row][0], value)
+                self.table.setItem(row, 1, QtGui.QTableWidgetItem(str(value)))
             else:
-              self.table.setItem(row, 1, QtGui.QTableWidgetItem('Error in ' + s))
-
-       def on_itemChanged():
-         self.table.blockSignals(True)
-         item = self.table.currentItem()
-         row = item.row()
-         s = str(item.text())
-         value = self.ConvStrToValidTypes(s)
-         if value != None:
-            self.sp.set_conf(Pars[row][0], value)
-            self.table.setItem(row, 1, QtGui.QTableWidgetItem(str(value)))
-            self.table.item(row, 1).setBackgroundColor(self.editableCells_bg_color)
-            self.cont_par_changed = True
-         else:
-            self.table.setItem(row, 1, QtGui.QTableWidgetItem('Error in ' + s))
-            self.table.item(row, 1).setBackgroundColor(QtGui.QColor('red'))
-         self.table.blockSignals(False)
+                self.table.setItem(row, 1, QtGui.QTableWidgetItem('Error in ' + s))
+        
+        def on_itemChanged():
+            self.table.blockSignals(True)
+            item = self.table.currentItem()
+            row = item.row()
+            s = str(item.text())
+            value = self.ConvStrToValidTypes(s)
+            if value != None:
+                self.sp.set_conf(Pars[row][0], value)
+                self.table.setItem(row, 1, QtGui.QTableWidgetItem(str(value)))
+                self.table.item(row, 1).setBackgroundColor(self.editableCells_bg_color)
+                self.cont_par_changed = True
+            else:
+                self.table.setItem(row, 1, QtGui.QTableWidgetItem('Error in ' + s))
+                self.table.item(row, 1).setBackgroundColor(QtGui.QColor('red'))
+            self.table.blockSignals(False)
  
-       self.cont_pars_dialog = QtGui.QDialog()
-       self.cont_pars_dialog.resize(800,460)
-       self.table = QtGui.QTableWidget()   
-#       self.table.keyPressEvent = test
-#       self.table.itemChanged(self.changeIcon)
-       self.table.setRowCount(len(Pars))
-       self.table.setColumnCount(3)
-       self.table.setHorizontalHeaderLabels([ 'parameter', 'value', 'help' ])
-       for j in range(0,len(Pars)):
-         item = QtGui.QTableWidgetItem(Pars[j][0])
-         item.setFlags(item.flags() ^ QtCore.Qt.ItemIsEditable)
-         item.setBackgroundColor(self.readOnlyCells_bg_color)
-         self.table.setItem(j,0,item)
-         item = QtGui.QTableWidgetItem(str(self.sp.get_conf(Pars[j][0])))
-         item.setBackgroundColor(self.editableCells_bg_color)
-         self.table.setItem(j,1,item)
-         item = QtGui.QTableWidgetItem(Pars[j][1])
-         item.setFlags(item.flags() ^ QtCore.Qt.ItemIsEditable)
-         item.setBackgroundColor(self.readOnlyCells_bg_color)
-         self.table.setItem(j,2,item)
-       self.table.resizeColumnsToContents()
-       self.table.resizeRowsToContents()
-       if self.table.columnWidth(1) > 300:
-         self.table.setColumnWidth(1,300) 
-       self.table.itemChanged.connect(on_itemChanged)
-       self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Save|QtGui.QDialogButtonBox.Close)
-       self.buttonBox.rejected.connect(self.cont_pars_dialog.close)
-       self.buttonBox.accepted.connect(self.save_cont_pars)
-       vbox = QtGui.QVBoxLayout()
-       vbox.addWidget(self.table)
-       vbox.addWidget(self.buttonBox)
-       self.cont_pars_dialog.setLayout(vbox)
-       self.cont_pars_dialog.setWindowTitle('Continuum parameters')
-#       self.cont_pars_dialog.setWindowModality(QtCore.Qt.ApplicationModal)
-       self.cont_pars_dialog.setWindowModality(QtCore.Qt.NonModal)
-#       self.cont_pars_dialog.exec_()
-       self.cont_pars_dialog.show()
+        self.cont_pars_dialog = QtGui.QDialog()
+        self.cont_pars_dialog.resize(800,460)
+        self.table = QtGui.QTableWidget()   
+        #       self.table.keyPressEvent = test
+        #       self.table.itemChanged(self.changeIcon)
+        self.table.setRowCount(len(Pars))
+        self.table.setColumnCount(3)
+        self.table.setHorizontalHeaderLabels([ 'parameter', 'value', 'help' ])
+        for j in range(0,len(Pars)):
+            item = QtGui.QTableWidgetItem(Pars[j][0])
+            item.setFlags(item.flags() ^ QtCore.Qt.ItemIsEditable)
+            item.setBackgroundColor(self.readOnlyCells_bg_color)
+            self.table.setItem(j,0,item)
+            item = QtGui.QTableWidgetItem(str(self.sp.get_conf(Pars[j][0])))
+            item.setBackgroundColor(self.editableCells_bg_color)
+            self.table.setItem(j,1,item)
+            item = QtGui.QTableWidgetItem(Pars[j][1])
+            item.setFlags(item.flags() ^ QtCore.Qt.ItemIsEditable)
+            item.setBackgroundColor(self.readOnlyCells_bg_color)
+            self.table.setItem(j,2,item)
+        self.table.resizeColumnsToContents()
+        self.table.resizeRowsToContents()
+        if self.table.columnWidth(1) > 300:
+            self.table.setColumnWidth(1,300) 
+        self.table.itemChanged.connect(on_itemChanged)
+        self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Save|QtGui.QDialogButtonBox.Close)
+        self.buttonBox.rejected.connect(self.cont_pars_dialog.close)
+        self.buttonBox.accepted.connect(self.save_cont_pars)
+        vbox = QtGui.QVBoxLayout()
+        vbox.addWidget(self.table)
+        vbox.addWidget(self.buttonBox)
+        self.cont_pars_dialog.setLayout(vbox)
+        self.cont_pars_dialog.setWindowTitle('Continuum parameters')
+        #       self.cont_pars_dialog.setWindowModality(QtCore.Qt.ApplicationModal)
+        self.cont_pars_dialog.setWindowModality(QtCore.Qt.NonModal)
+        #       self.cont_pars_dialog.exec_()
+        self.cont_pars_dialog.show()
 
     def get_line_tick_lim(self, line_tick_pos):
         if line_tick_pos == 1:
-          y1 = 0.43
-          y2 = 0.57
+            y1 = 0.43
+            y2 = 0.57
         else:
-          if line_tick_pos == 2:
-            y1 = 0.05
-            y2 = 0.19
-          else:
-            y1 = 0.81
-            y2 = 0.95
+            if line_tick_pos == 2:
+                y1 = 0.05
+                y2 = 0.19
+            else:
+                y1 = 0.81
+                y2 = 0.95
         return y1, y2
                           
     def on_draw(self):
@@ -1416,7 +1426,7 @@ class AppForm(QtGui.QMainWindow):
             self.sp.plot_line_ticks(self.axes, y1, y2)
 
         if self.sp.get_conf('cont_plot', False):
-          self.sp.plot_conts(self.axes)
+            self.sp.plot_conts(self.axes)
         
         if self.residual_GroupBox.isChecked():
             self.axes3.cla()
@@ -1445,100 +1455,100 @@ class AppForm(QtGui.QMainWindow):
         
     def show_lines_clicked(self):
         if self.lineIDs_GroupBox.isChecked():
-          self.show_line_ticks_action.setChecked(True)
-          self.plot_lines_action.setChecked(True)
-          self.sp.set_conf('plot_lines_of_selected_ions', True)
-          self.set_ion()
+            self.show_line_ticks_action.setChecked(True)
+            self.plot_lines_action.setChecked(True)
+            self.sp.set_conf('plot_lines_of_selected_ions', True)
+            self.set_ion()
         else:  
-          self.show_line_ticks_action.setChecked(False)
-          self.plot_lines_action.setChecked(False)
-          self.sp.set_conf('plot_lines_of_selected_ions', False)
+            self.show_line_ticks_action.setChecked(False)
+            self.plot_lines_action.setChecked(False)
+            self.sp.set_conf('plot_lines_of_selected_ions', False)
         self.make_axes()
         
     def line_tick_color_clicked(self):
         color = QtGui.QColorDialog.getColor()
         self.sp.set_conf('line_tick_color', str(color.name()))
         if self.show_line_ticks_action.isChecked():
-          self.make_axes()
+            self.make_axes()
 
     def show_line_ticks_action_clicked(self):
         self.set_ion()
         if self.plot_lines_action.isChecked():
-          self.sp.set_conf('plot_lines_of_selected_ions', True)
+            self.sp.set_conf('plot_lines_of_selected_ions', True)
         else:
-          self.sp.set_conf('plot_lines_of_selected_ions', False)
+            self.sp.set_conf('plot_lines_of_selected_ions', False)
         if self.show_line_ticks_action.isChecked() or self.plot_lines_action.isChecked():
-          self.lineIDs_GroupBox.setChecked(True)
+            self.lineIDs_GroupBox.setChecked(True)
         else:  
-          self.lineIDs_GroupBox.setChecked(False)
+            self.lineIDs_GroupBox.setChecked(False)
         self.make_axes()
 
     def plot_cont_action_clicked(self):
         if self.plot_cont_action.isChecked():
-          self.sp.set_conf('cont_plot', True)
+            self.sp.set_conf('cont_plot', True)
         else:
-          self.sp.set_conf('cont_plot', False)
+            self.sp.set_conf('cont_plot', False)
         self.on_draw()
         
     def ion_cb_changed(self):
         if self.ion_cb.isChecked():
-          self.sp.set_conf('show_selected_ions_only', True) 
-          self.selected_ions_action.setChecked(True)
+            self.sp.set_conf('show_selected_ions_only', True) 
+            self.selected_ions_action.setChecked(True)
         else:  
-          self.sp.set_conf('show_selected_ions_only', False) 
-          self.selected_ions_action.setChecked(False)
+            self.sp.set_conf('show_selected_ions_only', False) 
+            self.selected_ions_action.setChecked(False)
         self.make_axes()
         
     def cut_cb_changed(self):
         if self.cut_cb.isChecked():
-          self.sp.set_conf('show_selected_intensities_only', True) 
-          self.selected_intensities_action.setChecked(True)
+            self.sp.set_conf('show_selected_intensities_only', True) 
+            self.selected_intensities_action.setChecked(True)
         else:  
-          self.sp.set_conf('show_selected_intensities_only', False) 
-          self.selected_intensities_action.setChecked(False)
+            self.sp.set_conf('show_selected_intensities_only', False) 
+            self.selected_intensities_action.setChecked(False)
         self.make_axes()
           
     def selected_lines_clicked(self):
         if self.selected_ions_action.isChecked():
-          self.sp.set_conf('show_selected_ions_only', True) 
-          self.ion_cb.setChecked(True)
+            self.sp.set_conf('show_selected_ions_only', True) 
+            self.ion_cb.setChecked(True)
         else:  
-          self.sp.set_conf('show_selected_ions_only', False) 
-          self.ion_cb.setChecked(False)
+            self.sp.set_conf('show_selected_ions_only', False) 
+            self.ion_cb.setChecked(False)
         if self.selected_intensities_action.isChecked():
-          self.sp.set_conf('show_selected_intensities_only', True) 
-          self.cut_cb.setChecked(True)
+            self.sp.set_conf('show_selected_intensities_only', True) 
+            self.cut_cb.setChecked(True)
         else:  
-          self.sp.set_conf('show_selected_intensities_only', False) 
-          self.cut_cb.setChecked(False)
+            self.sp.set_conf('show_selected_intensities_only', False) 
+            self.cut_cb.setChecked(False)
         self.make_axes()
 
     def differentiate_lines_clicked(self):
         if self.differentiate_lines_action.isChecked():
-          self.sp.set_conf('differentiate_lines', True) 
+            self.sp.set_conf('differentiate_lines', True) 
         else:  
-          self.sp.set_conf('differentiate_lines', False) 
+            self.sp.set_conf('differentiate_lines', False) 
         self.make_axes()
 
     def editing_lines_clicked(self):
         if self.editing_lines_action.isChecked():
-          self.sp.set_conf('allow_editing_lines', True) 
+            self.sp.set_conf('allow_editing_lines', True) 
         else:  
-          self.sp.set_conf('allow_editing_lines', False) 
+            self.sp.set_conf('allow_editing_lines', False) 
 
     def update_lines_clicked(self):
         if self.update_lines_action.isChecked():
-          self.sp.set_conf('update_after_editing_lines', True) 
+            self.sp.set_conf('update_after_editing_lines', True) 
         else:  
-          self.sp.set_conf('update_after_editing_lines', False) 
+            self.sp.set_conf('update_after_editing_lines', False) 
 
     def cycle_forwards_ions(self):
         j = self.sp.get_conf('index_of_current_ion')
         selected_ions = self.sp.get_conf('selected_ions')   
         if j in range(-1, len(selected_ions)-1):
-          j += 1
+            j += 1
         else:
-          j = -1
+            j = -1
         self.sp.set_conf('index_of_current_ion', j)
         self.make_axes()
 
@@ -1546,9 +1556,9 @@ class AppForm(QtGui.QMainWindow):
         j = self.sp.get_conf('index_of_current_ion')
         selected_ions = self.sp.get_conf('selected_ions')   
         if j in range(0, len(selected_ions)):
-          j -= 1
+            j -= 1
         else:
-          j = len(selected_ions)-1
+            j = len(selected_ions)-1
         self.sp.set_conf('index_of_current_ion', j)
         self.make_axes()
           
@@ -1704,10 +1714,10 @@ class AppForm(QtGui.QMainWindow):
         
     def start_spectrum(self):
         init_file = self.init_file_name.split('/')[-1]
-        dir = self.init_file_name.split(init_file)[0]
-        if dir == '':
-            dir = './'
-        self.directory = dir
+        dir_ = self.init_file_name.split(init_file)[0]
+        if dir_ == '':
+            dir_ = './'
+        self.directory = dir_
         self.sp = spectrum(config_file=self.init_file_name)
         if self.sp.phyat_file == 'NO_phyat.dat':
             self.status_text.setText('pySSN, v {}. init file: {}, No synthesis'.format(__version__, 
@@ -1751,9 +1761,9 @@ class AppForm(QtGui.QMainWindow):
             selected_ions = self.sp.get_conf('selected_ions')
             s = ''
             for ion in selected_ions:
-              s = s + ion + ', '
+                s = s + ion + ', '
             if not s == '':
-              s = s[:-2]
+                s = s[:-2]
             self.ion_box.setText(s)
             self.set_ion()
         except:
@@ -1780,7 +1790,7 @@ class AppForm(QtGui.QMainWindow):
         old_sp_norm = self.sp.get_conf('sp_norm')
         new_sp_norm = np.float(self.sp_norm_box.text())
         if old_sp_norm == new_sp_norm:
-          return
+            return
         log_.message('Changing sp_norm. Old: {}, New: {}'.format(old_sp_norm, new_sp_norm), calling=self.calling)
         self.statusBar().showMessage('Changing intensity scale of the observed spectrum ...') 
         QtGui.QApplication.processEvents() 
@@ -1793,7 +1803,7 @@ class AppForm(QtGui.QMainWindow):
         old_obj_velo = self.sp.get_conf('obj_velo')
         new_obj_velo = np.float(self.obj_velo_box.text())
         if old_obj_velo == new_obj_velo:
-          return
+            return
         log_.message('Changing obj_velo. Old: {}, New: {}'.format(old_obj_velo, new_obj_velo), calling=self.calling)
         self.statusBar().showMessage('Executing doppler correction of the observed spectrum ...') 
         QtGui.QApplication.processEvents() 
@@ -1809,7 +1819,7 @@ class AppForm(QtGui.QMainWindow):
         old_ebv = self.sp.get_conf('e_bv')
         new_ebv = np.float(self.ebv_box.text())
         if old_ebv == new_ebv and not self.cont_par_changed:
-          return
+            return
         log_.message('Changing E B-V. Old: {}, New: {}'.format(old_ebv, new_ebv), calling=self.calling)
         self.statusBar().showMessage('Changing color excess E(B-V) ...', 4000) 
         self.statusBar().showMessage('Executing reddening correction of the synthetic spectrum ...') 
@@ -1852,14 +1862,14 @@ class AppForm(QtGui.QMainWindow):
         if self.post_proc_file is None or self.ask_postprocfile_action.isChecked():
             file_choices = "Python files (*.py) (*.py);;All files (*) (*)"
             if self.post_proc_file is None:
-              path = ''
+                path = ''
             else:
-              path = self.post_proc_file
+                path = self.post_proc_file
             path = unicode(QtGui.QFileDialog.getOpenFileName(self, 'Open file', path, file_choices))
             if path:
-              self.post_proc_file = path
+                self.post_proc_file = path
             else:
-              return
+                return
         try:
             user_module = {}
             execfile(self.post_proc_file, user_module)
@@ -1892,9 +1902,9 @@ class AppForm(QtGui.QMainWindow):
         s = s.strip()
         s = s.replace(' ', '_')
         if s.isdigit():
-          self.sp.line_info(int(s), sort='i_rel')
-          s = self.sp.get_ion_from_code(s)
-          s = s.strip()
+            self.sp.line_info(int(s), sort='i_rel')
+            s = self.sp.get_ion_from_code(s)
+            s = s.strip()
         return s
 
     def set_ion(self):
@@ -1904,24 +1914,24 @@ class AppForm(QtGui.QMainWindow):
         s = self.ion_box.text()
         k = s.indexOf(',')
         while k > 0:
-          s0 = self.get_ion_str(str(s[:k]))
-          sList.append(s0)
-          s = s[k+1:]
-          k = s.indexOf(',')
+            s0 = self.get_ion_str(str(s[:k]))
+            sList.append(s0)
+            s = s[k+1:]
+            k = s.indexOf(',')
         s0 = self.get_ion_str(str(s))
         sList.append(s0)
         s = ''
         for s0 in sList:
-          s = s + s0 + ', '
+            s = s + s0 + ', '
         s = s[:-2]
         for item in sList:
-          if '_' not in item:
-            ion_list = self.sp.get_ions_from_element(item)
-            if len(ion_list) > 0:
-              k = sList.index(item)
-              for ion in ion_list[::-1]:
-                sList.insert(k, ion)
-            sList.remove(item)
+            if '_' not in item:
+                ion_list = self.sp.get_ions_from_element(item)
+                if len(ion_list) > 0:
+                    k = sList.index(item)
+                    for ion in ion_list[::-1]:
+                        sList.insert(k, ion)
+                sList.remove(item)
         self.sp.set_conf('selected_ions', sList)
         self.ion_box.setText(s)
         
@@ -1936,9 +1946,9 @@ class AppForm(QtGui.QMainWindow):
         new_ref = np.int(self.line_info_box.text())
         self.line_info_ref = new_ref
         if self.sp.get_conf('show_dialogs', True):
-          self.show_line_info_dialog()
+            self.show_line_info_dialog()
         else:
-          self.sp.line_info(new_ref, sort='i_rel')
+            self.sp.line_info(new_ref, sort='i_rel')
         
     def magenta_line(self):
         if self.sp is None:
@@ -2009,7 +2019,7 @@ class AppForm(QtGui.QMainWindow):
     
     def set_limit_sp_and_run(self):
         old_limit_sp = self.sp.get_conf('limit_sp')
-        new_limit_sp = limit_sp = (np.float(self.sp_min_box.text()), np.float(self.sp_max_box.text()))
+        new_limit_sp = (np.float(self.sp_min_box.text()), np.float(self.sp_max_box.text()))
         if old_limit_sp == new_limit_sp:
             return
         self.sp.set_conf('limit_sp', new_limit_sp)
@@ -2052,21 +2062,21 @@ class AppForm(QtGui.QMainWindow):
         field_list = self.sp.get_conf('line_field_print')
         for i in range(0,len(self.line_field_menu.actions())):
             if self.line_print_dic.keys()[i] in field_list:
-              self.line_field_menu.actions()[i].setChecked(True)
+                self.line_field_menu.actions()[i].setChecked(True)
             else:
-              self.line_field_menu.actions()[i].setChecked(False)
+                self.line_field_menu.actions()[i].setChecked(False)
               
     def set_show_header(self):
         if self.show_header_action.isChecked():
-          self.sp.set_conf('line_saved_header', True)
+            self.sp.set_conf('line_saved_header', True)
         else:
-          self.sp.set_conf('line_saved_header', False)
+            self.sp.set_conf('line_saved_header', False)
       
     def set_line_fields_to_print(self):
         s = []
         for i in range(0,len(self.line_field_menu.actions())):
             if self.line_field_menu.actions()[i].isChecked():
-              s.append( self.line_print_dic.keys()[i])
+                s.append( self.line_print_dic.keys()[i])
         self.sp.set_conf('line_field_print', s)
         
     def save_lines(self):
