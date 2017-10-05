@@ -36,10 +36,10 @@ Define for example test1_init.dat:
 	spectr_obs = None
 	limit_sp = (4000, 7000)
 	lambda_pix = 0.1 
-	fic_modele = 'liste_model1.dat' #
+	fic_modele = 'liste_model_test1.dat' #
 	fic_cosmetik = ''
 	do_cosmetik = False
-	phyat_file = 'liste_phyat_test1.dat'		
+	phyat_file = 'liste_phyat_test1.dat'
 
 From LINUX: 	
 
