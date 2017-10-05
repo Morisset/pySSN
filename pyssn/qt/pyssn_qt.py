@@ -193,11 +193,11 @@ class AppForm(QtGui.QMainWindow):
                 extension_list = self.image_extension_list()
                 n = len(extension_list)-1
                 s = ''
-            for i in range(0,n):
-                s = s + extension_list[i] + ', '
-            s = s + extension_list[n] + '.'
-            msg = msg + s
-            QtGui.QMessageBox.critical(self, title, msg, QtGui.QMessageBox.Ok )
+                for i in range(0,n):
+                    s = s + extension_list[i] + ', '
+                s = s + extension_list[n] + '.'
+                msg = msg + s
+                QtGui.QMessageBox.critical(self, title, msg, QtGui.QMessageBox.Ok )
     
     def on_about(self):
         msg = """ pySSN (Spectral Synthesis for Nebulae):        
@@ -953,7 +953,7 @@ class AppForm(QtGui.QMainWindow):
                         lines[j] = line
                         found = True
                         break
-                j += 1
+                    j += 1
                 if not found:
                     lines.insert(0, '\n# ' + help_ + '\n')
                     lines.insert(0, field + ' = ' + value + '\n')
