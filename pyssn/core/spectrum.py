@@ -1145,7 +1145,7 @@ class spectrum(object):
             for eachline in f:
                 if int(self.fieldStrFromLine(eachline,'num')) == line_num:
                     line = eachline
-                break
+                    break
         return line
 
     def replace_line(self, filename, line):
