@@ -119,7 +119,7 @@ cont_edens = 1e3
 # Wavelength of the reference line for the reddening.
 lambda_ref_rougi = 4861.3
 red_corr_law = 'S79 H83 CCM89'
-
+e_bv = 0.0
 # definition of the structure for the limits of the plots
 x_plot_lims = None
 y1_plot_lims = None
