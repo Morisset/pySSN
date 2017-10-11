@@ -753,10 +753,7 @@ class spectrum(object):
             ax.plot(self.w, self.conts[key], linestyle=style, label = labels[key], color = colors[key])
         ax.plot(self.w, self.cont, label = 'total cont', linestyle='--', linewidth = 2)
         ax.legend()
-        
-        self.ax_cont.legend()
-        self.ax_cont.set_yscale('log')
-            
+                    
         
     def append_lists(self, phyat_arr, model_arr, cosmetik_arr):
         

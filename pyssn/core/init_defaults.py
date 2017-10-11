@@ -216,8 +216,5 @@ line_saved_format = 'tex' # tex or csv
 line_saved_filename = 'lines.dat'
 
 plot_filename = 'plot.pdf'
-'lines.dat'
-
-plot_filename = 'plot.pdf'
 
 show_dialogs = True
