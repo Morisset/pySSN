@@ -1,5 +1,5 @@
 c  gfortran XSSN_Phyat.f
-c  gfortran -fcheck=all XSSN_Phyat.f
+c     gfortran -fcheck=all XSSN_Phyat.f
 c  ./a.out
 c
 c-------------------------------------------------------
@@ -40,7 +40,7 @@ c
       CHARACTER OUTPUTCOND*30, PHYAT*30
       INTEGER lmax_del1,lmax_del2,lmax_del3
       INTEGER istor,istow,ibr,iprint
-      INTEGER ifre1_ref  !VERIF USAGE ?
+      INTEGER ifre1_ref
       INTEGER in_niv,out_niv,iwr_phyat,in_ions
       COMMON/MOC1/in_niv,out_niv,iwr_phyat
       COMMON/MOC2/iprint
@@ -532,7 +532,7 @@ cc      INTEGER lc1,lc2    ! check string tables
       CHARACTER tabsto*9
       CHARACTER zero*1,nc1*1,nc2*2
       CHARACTER ns_alph*2,ni_alph*2,lp1_alph*2,ns_alph3*3
-      INTEGER ifre1,ifre2,ifre2b,ifre1_ref !caracts supplem No X-SSN de la raie
+      INTEGER ifre1,ifre2,ifre2b,ifre1_ref !supplementary caracteristics of X-SSN line label
 c  add leakage NIV 4f-5g1 'by hand' :
       DOUBLE PRECISION BrNIV5g1,wlNIV5g1fu
 c  add split NeIII 4d-5f 3D-3F 'by hand' :
@@ -2351,7 +2351,7 @@ c Stdd di_electronics : imult = 2
       read(in_niv,60) numion,numion4,nomion
  60   format(9x,a4,11x,a4,10x,a7)
       read(in_niv,1) bidon   !notations
-c Usage comments: 1=mult only (comment), 2=each emission line (commentraie)
+c Usage comments: 1=multiplet only (comment), 2=each emission line (commentraie)
         Read(in_niv,22) icomment
         Read(in_niv,22) kmax  !nber of diel multiplets
  22   format(20i4)
@@ -2671,6 +2671,9 @@ c potential H-like cm-1 :
 c
       read(in_niv,21) mult,nmult,imult,cmult,ifre1,ifre2
  21   format(6x,i4,6x,i4,6x,i4,6x,d7.0,6x,i4,6x,i4)
+C  (Otherwise undefined for HeI:)
+      ifre1_ref=ifre1
+C
         read(in_niv,1) bidon
 c Table branching ratios Br : (UNUSEFUL here)
       read(in_niv,66) numin,numax
@@ -2682,7 +2685,7 @@ c
 c Transition ref emissivity X-SSN :
       read(in_niv,22) ni_ref,li_ref,ns_ref,hydrostrict !hydrostrict=0
  22   format(20i4)
-c Int de ref : somme des l de li_ref a ni_ref-1. Check :
+c Int of ref : sum over l from li_ref to ni_ref-1. Check :
        if(li_ref.lt.0.or.li_ref.gt.ni_ref-1) then
         print *,'**** li_ref=',li_ref,' out of range. STOP'
         STOP
@@ -3308,7 +3311,7 @@ c ***** Reference line only once:
      $  Int3pi(4,2,3,2))/(Int3(4,2,3,2)+Int3pi(4,2,3,2))
       Write(out_niv,906) wl3(4,2,3,2),wl3pi(4,2,3,2),lambda_ref,int_ref
  906  Format(/,' X-SSN: lambda reference =',1p,e12.6,' + ',e12.6,
-     $ ' = ',e12.6,' emissivity =',e10.4,' erg.cm3.s-1')
+     $     ' = ',e12.6,' emissivity =',e10.4,' erg.cm3.s-1')
 c
 c  START WRITING FOR SYNTHESIS: 
 c   START ref line or sub-ref
