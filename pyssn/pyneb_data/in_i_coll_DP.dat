@@ -5,5 +5,5 @@
 *** SPECTRUM 1
 *** N_LEVELS 2
 *** T_UNIT      'K/10000'
-*** NOTE1	'Omega'
-*** SOURCE1	'DP: taken identical to Xe VI from SB98' 
+*** SOURCE1     'Schoning & Butler 1998, AA Suppl. 128, 581'
+*** SOURCE2	'DP: Omega taken identical to Xe VI from SB98' 

@@ -1,14 +1,14 @@
-Energy Stat_Weight Aij  ***fm CaII
-     cm-1     none 1/s      1/s      1/s      1/s      1/s      1/s
+Energy Stat_Weight Aij
+     cm-1    none 1/s       1/s       1/s       1/s       1/s       1/s
       0.000    2  0.000E+0  0.000E+0  0.000E+0  0.000E+0  0.000E+0  0.000E+0
-  14555.900    4  2.288E-0  0.000E+0  0.000E+0  0.000E+0  0.000E+0  0.000E+0
-  14836.240    6  2.535E-0  arb1.000E-5  0.000E+0  0.000E+0  0.000E+0  0.000E+0
+  14555.900    4  2.272E-0  0.000E+0  0.000E+0  0.000E+0  0.000E+0  0.000E+0
+  14836.240    6  2.535E-0  2.000E-4  0.000E+0  0.000E+0  0.000E+0  0.000E+0
   23715.190    2  1.279E+8  7.460E+6  0.000E+0  0.000E+0  0.000E+0  0.000E+0
-  24516.650    4  1.410E+8  *9.947E+5  *8.846E+6  0.000E+0  0.000E+0  0.000E+0
-  47736.530    2  0.000E+0  0.000E+0  0.000E+0  *8.456E+7  *1.687E+8  0.000E+0
+  24516.650    4  1.410E+8  9.950E+5  8.850E+6  0.000E+0  0.000E+0  0.000E+0
+  47736.530    2  0.000E+0  0.000E+0  0.000E+0  5.800E+7  1.150E+8  0.000E+0
 *** Sr II       'Energy and transition probability data'
 *** SOURCE1	'Sansonetti, J. E. 2012, J. Phys. Chem. Ref. Data 41, 013102'
-*** NOTE1 	'Energy levels, E: 3p6.5s 2S, 4d 2D, 5p 2P*, 6s 2S' 
+*** NOTE1 	'Energy levels, E: 4p6.5s 2S, 4d 2D, 5p 2P*, 6s 2S' 
 *** SOURCE2	'VOIR?'
 *** SOURCE3	's-d: Safronova, U. I. et al. 2017, Phys. Rev. A 95, 042507'
 *** SOURCE4	'*FAIRE s-p, d-p: Safronova, U. I. et al. 2011, Can. J. Phys. 89, 465'

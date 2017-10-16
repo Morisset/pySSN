@@ -646,16 +646,16 @@ extra_file = None
 filename = 'liste_phyat_coll.dat'
 phy_cond_file = 'phy_cond.dat'
 
-ref_lines_dic = {}
+ref_lines_dic = None #{}
 
-NLevels_dic = {}
+NLevels_dic = None #{}
 
-up_lev_rule_dic = {}
+up_lev_rule_dic = None #{}
 
-Del_ion = []
+Del_ion = None #[]
 
 # Transitions set to 0.0
-Aij_zero_dic = {}
+Aij_zero_dic = None #{}
 
 
 def make_all_lists():
@@ -712,9 +712,3 @@ def make_list_model_args(args):
                 abund_file=args.abund_file, ion_frac_min=float(args.ion_frac_min), verbose=args.verbose)
     print('Model done')
     
-    
-    
-"""
- --abund_file=asplund_2009.dat --ion_frac_file=50_-2_R_ionfrac.dat --phy_cond_file=phy_cond.dat --outputcond_file=outputcond.dat` 
-`--phyat_file=liste_phyat_test1.dat --model_file=liste_model_test1.dat --norm_hbeta=10000 --ion_frac_min=0.0001`
-"""

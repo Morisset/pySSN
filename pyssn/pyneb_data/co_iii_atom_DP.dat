@@ -15,8 +15,9 @@ Energy Stat_Weight Aij
      23060.9500    6  3.00e-4  8.2e-01  8.9e-02  3.9e-02  5.4e-02  2.5e-02  0.00e+0  4.30e-5  0.00e+0  3.1e-02  2.00e-7  0.00e+0  0.00e+0  0.00e+0  0.00e+0
      23435.9300   10  4.3e-03  2.2e-03  5.0e-06  0.00e+0  0.00e+0  0.00e+0  0.00e+0  1.3e-01  3.9e-02  0.00e+0  0.00e+0  5.29e-3  0.00e+0  0.00e+0  0.00e+0 
      24238.8100    4  0.00e+0  0.00e+0  7.4e-01  3.9e-01  4.0e-03  1.4e-02  1.7e-02  0.00e+0  0.00e+0  2.3e-01  4.4e-02  0.00e+0  2.33e-2  0.00e+0  0.00e+0
-*** Co III      'Energy and transition probability data'                                                       *** N_LEVELS 15
-*** SOURCE1	'Smillie, D. G. et al. 2016, ApJ Suppl. 23, 12' 
-*** NOTE1 	'Energy levels 4F, 4P, 2G, 2P, 2H, 2D2; 2H and 2D2 are mixed: energies strictly ordered' 
-*** SOURCE2	'Kurucz, R.L. 2010, http://kurucz.harvard.edu/atoms/2301/ on 7/9/2016; Hansen et al 1984? see Ni IV' 
+*** Co III      'Energy and transition probability data'
+*** N_LEVELS 15
+*** SOURCE1	'Smillie, D. G. et al. 2016, ApJ Suppl. 23, 12'
+*** NOTE1 	'Energy levels 4F, 4P, 2G, 2P, 2H, 2D2; 2H and 2D2 are mixed: energies strictly ordered'
+*** SOURCE2	'Kurucz, R.L. 2010, http://kurucz.harvard.edu/atoms/2301/ on 7/9/2016; Hansen et al 1984? see Ni IV'
 *** NOTE2	'Transition Probabilities, Aij'

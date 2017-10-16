@@ -15,7 +15,7 @@ Energy Stat_Weight Aij
      30966.0000    6  4.0e-03  3.50e+0  3.6e-01  1.7e-01  1.8e-01  1.7e-01  0.00e+0  9.00e-5  0.00e+0  4.4e-02  2.40e-7  0.00e+0  0.00e+0  0.00e+0  0.00e+0
      31823.4000   10  4.0e-02  2.00e-2  4.8e-05  0.00e+0  0.00e+0  0.00e+0  0.00e+0  7.0e-01  2.0e-01  0.00e+0  0.00e+0  4.80e-2  0.00e+0  0.00e+0  0.00e+0 
      33292.4000    4  0.00e+0  0.00e+0  3.4e+00  1.8e-00  2.0e-02  3.4e-02  2.5e-02  0.00e+0  0.00e+0  6.0e-01  9.0e-02  0.00e+0  2.10e-1  0.00e+0  0.00e+0
-*** Cu V        'Energy and transition probability data'                                                                  
+*** Cu V        'Energy and transition probability data'
 *** N_LEVELS 15
 *** SOURCE1	'van Kleef, Th. A. M. et al. 1976, Physica B+C 84, 401' 
 *** NOTE1 	'Energy levels 4F, 4P, 2G, 2P, 2H, 2D2; 2H and 2D2 are mixed: energies strictly ordered' 

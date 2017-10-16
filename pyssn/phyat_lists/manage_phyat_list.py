@@ -366,7 +366,8 @@ def make_phyat_list(filename, cut=1e-4, E_cut=20, cut_inter=1e-5,
                        'Na3':45,
                        'Si6':45,
                        'Ar10':45,
-                       'Ar9':45
+                       'Ar9':45,
+                       'Si6':25
                        }
     if NLevels_dic is None:
         NLevels_dic = NLevels_dic_def
@@ -765,7 +766,6 @@ def get_models_3MdB():
     import pandas as pd
     import pymysql
     from pyneb.utils.physics import IP, sym2name, Z
-    import numpy as np
     from ..utils.physics import make_ion_frac
     
     sym2name['S'] = 'sulphur'

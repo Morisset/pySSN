@@ -10,5 +10,4 @@ cm-1 none 1/s 1/s 1/s 1/s 1/s 1/s 1/s
 *** SOURCE1	'Sansonetti, J. E. 2006, J. Phys. Chem. Ref. Data 35, 301' 
 *** NOTE1 	'Energy levels, E: 4s2.4p4 3P 1D 1S' 
 *** SOURCE2	'E. Biémont & J. E. Hansen 1986, Phys. Scr. 34, 116' 
-*** NOTE2	'Transition Probabilities, Aij' 
-*** GSCONFIG p4
+*** NOTE2	'Transition Probabilities, Aij'

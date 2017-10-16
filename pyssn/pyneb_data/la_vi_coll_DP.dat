@@ -16,4 +16,5 @@
 *** T_UNIT      'K/10000'
 *** SOURCE1     'Schoning & Butler 1998, AA Suppl. 128, 581'
 *** SOURCE2	'DP: Omega taken identical to Xe III from SB98' 
-*** NOTE2	'level 2 is 3P0' 
+*** NOTE2	'level 2 is 3P0'
+*** GSCONFIG p4

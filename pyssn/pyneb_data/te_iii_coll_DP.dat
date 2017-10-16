@@ -9,7 +9,7 @@
        3       4   3.800   4.262   4.600   4.974   5.200   5.446   5.714   5.854   5.958   5.800   5.570
        3       5   1.370   1.361   1.351   1.341   1.332   1.324   1.310   1.304   1.310   1.270   1.180
        4       5   2.200   2.144   2.030   1.936   1.939   1.941   2.025   2.132   2.527   2.600   2.650
-*** Te III effective collision strengths data
+*** Te III      'Effective collision strengths data
 *** ATOM tellurium
 *** SPECTRUM 3
 *** N_LEVELS 5

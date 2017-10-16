@@ -10,5 +10,4 @@ cm-1 none 1/s 1/s 1/s 1/s 1/s 1/s 1/s
 *** SOURCE1	'Saloman, E. B. 2007, J. Phys. Chem. Ref. Data 36, 215'
 *** NOTE1 	'Energy levels: 4s2.4p3 4S* 2D* 2P*' 
 *** SOURCE2	'E. Biémont & J. E. Hansen 1986, Phys. Scr. 34, 116' 
-*** NOTE2	'Transition Probabilities, Aij: HXR/3+HFR*2/3' 
-*** GSCONFIG p3
+*** NOTE2	'Transition Probabilities, Aij: HXR/3+HFR*2/3'

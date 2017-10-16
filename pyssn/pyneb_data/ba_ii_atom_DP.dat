@@ -1,18 +1,17 @@
 Energy Stat_Weight Aij
-     cm-1     none 1/s      1/s      1/s      1/s    
-      0.0000    2  0.00E+0  0.00E+0  0.00E+0  0.00E+0  0.00E+0
-   4873.8520    4  1.23E-2  0.00E+0  0.00E+0  0.00E+0  0.00E+0
-   5674.8070    6  3.30E-2  5.54E-3  0.00E+0  0.00E+0  0.00E+0
-  20261.5610    2  9.53E+7  3.10E+7  0.00E+0  0.00E+0  0.00E+0
-  21952.4040    4  1.11E+8  6.00E+6  4.12E+7  0.00E+0  0.00E+0
+     cm-1     none 1/s      1/s      1/s      1/s      1/s      1/s
+      0.0000    2  0.00E+0  0.00E+0  0.00E+0  0.00E+0  0.00E+0  0.00E+0
+   4873.8520    4  1.45E-2  0.00E+0  0.00E+0  0.00E+0  0.00E+0  0.00E+0
+   5674.8070    6  2.74E-2  5.54E-3  0.00E+0  0.00E+0  0.00E+0  0.00E+0
+  20261.5610    2  9.39E+7  3.44E+7  0.00E+0  0.00E+0  0.00E+0  0.00E+0
+  21952.4040    4  1.19E+8  4.49E+6  3.69E+7  0.00E+0  0.00E+0  0.00E+0
+  42355.1750    2  5.40E-1  0.00E+0  0.00E+0  6.63E+7  1.04E+8  0.00E+0
 *** Ba II       'Energy and transition probability data'
 *** SOURCE1	'Karlsson, H. & Litzén, U. 1999, Phys. Scr. 60, 321'
 *** NOTE1 	'Energy levels, E: 5p6.6s 2S, 5d 2D, 6p 2P*, 7s 2S' 
-*** SOURCE2	'Guet, C. & Johnson, W. R. 1991, Phys. Rev. A 44, 1531; Erratum: 2007, A 76, 039905'
-*** SOURCE3	's-d: Safronova, U. I. et al. 2017, Phys. Rev. A 95, 042507'
-*** SOURCE4	'*FAIRE s-p, d-p: Safronova, U. I. et al. 2011, Can. J. Phys. 89, 465'
+*** SOURCE2	's-d: Safronova, U. I. et al. 2017, Phys. Rev. A 95, 042507'
+*** SOURCE3	's-p, d-p: Safronova, U. I. & Safronova, M. S. 2011, Can. J. Phys. 89, 465'
 *** NOTE2	'Transition Probabilities, Aij' 
-*** NOTE3	'Aij forbidden d3/2-d5/2: average 2 theoretical values and 1 experimental value' 
+*** NOTE3	'DP: Aij forbidden d3/2-d5/2: average 2 theoretical values and 1 experimental value' 
 *** NOTE4	'Resonance 6s-6p optical depths' 
-*** NOTE5       'VOIR U.I. Safronova,a M.S. Safronovab 2011 E1, M1, and E2 transition rates, and lifetimes in Ca+, Sr+, Cd+, Ba+, and Hg+1 Canadian Journal of Physics, 2011, 89(4): 465'
 *** GSCONFIG s1

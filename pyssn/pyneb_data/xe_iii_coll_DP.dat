@@ -15,4 +15,5 @@
 *** N_LEVELS 5
 *** T_UNIT      'K/10000'
 *** SOURCE1     'Schoning & Butler 1998, AA Suppl. 128, 581'
-*** NOTE2	'level 2 is 3P0' 
+*** NOTE2	'level 2 is 3P0'
+*** GSCONFIG p4

@@ -1,10 +1,11 @@
 Energy Stat_Weight Aij
       cm-1 none    1/s        1/s
      0.000   4  0.000E+00  0.000E+00
-  34210.000   2 7.200e+02  0.000E+00
+ 34210.000   2  7.200e+02  0.000E+00
 *** Zn XIV      'Energy and transition probability data'
 *** SOURCE1	'Sugar, J. & Musgrove, A. 1995, J. Phys. Chem. Ref. Data 24, 1803'
 *** NOTE1 	'Energy levels 3s2.3p5 2P*'
 *** SOURCE2	'Sugar, J. & Kaufman, V. 1984, J. Opt. Soc. Am. B1, 218'
 *** NOTE2	'Transition Probabilities, Aij' 
-*** GSCONFIG 3p5
+*** GSCONFIG p5
+

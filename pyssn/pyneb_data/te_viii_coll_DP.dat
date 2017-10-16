@@ -4,8 +4,8 @@
 *** ATOM        'tellurium'
 *** SPECTRUM 8
 *** N_LEVELS 2
-*** T_UNIT	'K' 
-*** SOURCE1	'Tayal, S.S. & Zatsarinny, O. 2011, ApJ 743, 206' 
-*** NOTE1 	'Effective Collision Strengths Omega' 
-*** NOTE2 	'DP: Omega taken identical to Fe VIII' 
+*** T_UNIT	'K'
+*** SOURCE1	'Tayal, S.S. & Zatsarinny, O. 2011, ApJ 743, 206'
+*** NOTE1 	'Effective Collision Strengths Omega'
+*** NOTE2 	'DP: Omega taken identical to Fe VIII'
 *** GSCONFIG d9

@@ -34,15 +34,15 @@ def print_ionfrac():
     args = parser.parse_args()
     print_ionfrac(args)
 
-def print_ionfrac_args(args):
+def print_ionfrac_args(Teff, logU, B):
 
-    if args.Teff not in ['25', '50', '75', '100', '150', '300']:
+    if Teff not in ['25', '50', '75', '100', '150', '300']:
         raise Exception("Teff must be in [25, 50, 75, 100, 150, 300]")
-    if args.logU not in ['-1', '-2', '-3']:
+    if logU not in ['-1', '-2', '-3']:
         raise Exception("Log U must be in [-1, -2, -3]")
-    if args.B not in ['R', 'M60']:
+    if B not in ['R', 'M60']:
         raise Exception('B must by R (Radiation bounded) or M60 (60% matter Bounded)')
-    filename = '{}_{}_{}_ionfrac.dat'.format(args.Teff, args.logU, args.B)
+    filename = '{}_{}_{}_ionfrac.dat'.format(Teff, logU, B)
     file_in = execution_path(filename, extra='ionfracs/')
     copyfile(file_in, filename)
     
@@ -61,7 +61,7 @@ def print_files():
     if args.print_phy_cond:
         print_phy_cond()
     if args.print_ionfrac:
-        print_ionfrac_args(args)
+        print_ionfrac_args(args.Teff, args.logU, args.B)
     if args.print_asplund:
         print_asplund()
     if args.print_outputcond:
