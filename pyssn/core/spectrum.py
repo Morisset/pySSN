@@ -544,29 +544,41 @@ class spectrum(object):
             self.w = np.linspace(self.limit_sp[0], self.limit_sp[1], n_pix)
             self.f = np.ones_like(self.w)
         else:
-            obs_file = self.directory + self.conf['spectr_obs']+'.spr.gz'
-            if not os.path.isfile(obs_file):
-                obs_file = self.directory + self.conf['spectr_obs']+'.spr'
-            try:                
-                self.obs = np.loadtxt(obs_file)
-                log_.message('Observations read from {0}'.format(obs_file),
+            if self.conf['spectr_obs'].split('.')[-1] == 'fits':
+                from astropy.io import fits
+                try:
+                    self.f, header = fits.getdata(self.conf['spectr_obs'], header=True)
+                    dispersion_start = header['CRVAL1'] - (header['CRPIX1'] - 1) * header['CDELT1']
+                    self.w = dispersion_start + np.arange(len(self.f)) * header['CDELT1']
+                except:
+                    log_.warn('Observations NOT read from {0}'.format(self.conf['spectr_obs']),
                                     calling = self.calling)
-            except:
-                self.f = None
-                log_.warn('Observations NOT read from {0}'.format(obs_file),
-                                    calling = self.calling)
-                self.n_lambda = 0.
-                return None
-            
-            if bool(self.get_conf('data_incl_w', undefined = False)):
-                self.w = self.obs[:,0]
-                self.f = self.obs[:,1]
+                    self.n_lambda = 0.
+                    return None
             else:
-                self.f = self.obs
-                self.w = None
-            
-            if bool(self.get_conf('reverse_spectra', undefined=False)) :
-                    self.f = self.f[::-1]
+                obs_file = self.directory + self.conf['spectr_obs']+'.spr.gz'
+                if not os.path.isfile(obs_file):
+                    obs_file = self.directory + self.conf['spectr_obs']+'.spr'
+                try:                
+                    self.obs = np.loadtxt(obs_file)
+                    log_.message('Observations read from {0}'.format(obs_file),
+                                        calling = self.calling)
+                except:
+                    self.f = None
+                    log_.warn('Observations NOT read from {0}'.format(obs_file),
+                                        calling = self.calling)
+                    self.n_lambda = 0.
+                    return None
+                
+                if bool(self.get_conf('data_incl_w', undefined = False)):
+                    self.w = self.obs[:,0]
+                    self.f = self.obs[:,1]
+                else:
+                    self.f = self.obs
+                    self.w = None
+                
+                if bool(self.get_conf('reverse_spectra', undefined=False)) :
+                        self.f = self.f[::-1]
         if self.get_conf('wave_unit') == 'mu':
             self.w *= 10000.
         self.n_lambda = len(self.f)
