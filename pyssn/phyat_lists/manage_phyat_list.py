@@ -334,7 +334,11 @@ def make_phyat_list(filename, cut=1e-4, E_cut=20, cut_inter=1e-5,
                          'Ca2': (2, 3 , (4, 5), 6),
                          'Sc2': ((2, 1),),
                          'O4': ((3, 1), (6, 3)),
-                         'Si2': ((3, 1), (6, 1)),
+                         'Si2': ((2, 1),(5, 2), (7, 1)),
+                         'P3': ((2, 1),(5, 2)),
+                         'S4': ((2, 1),(5, 2)),
+                         'Cl5': ((2, 1),(5, 2)),
+                         'Ar6': ((2, 1),(5, 2)),
                          'Co4': ((2, 1),),
                          'Ni5': ((2, 1),),
                          'Cu6': ((2, 1),)
@@ -367,7 +371,17 @@ def make_phyat_list(filename, cut=1e-4, E_cut=20, cut_inter=1e-5,
                        'Si6':45,
                        'Ar10':45,
                        'Ar9':45,
-                       'Si6':25
+                       'Si6':25,
+                       'P9':3,
+                       'Si10':3,
+                       'Cl11':3,
+                       'Al12': 3,
+                       'K13':3,
+                       'Ca14':3,
+                       'Mg2':3,
+                       'Al3':3,
+                       'Si4':3,
+                       'Ca7':15
                        }
     if NLevels_dic is None:
         NLevels_dic = NLevels_dic_def
@@ -382,7 +396,18 @@ def make_phyat_list(filename, cut=1e-4, E_cut=20, cut_inter=1e-5,
                            'Sc2': 'split 9',
                            'Ni2': 'split 3',
                            'Ni3': 'split 3',
-                           'Ni4': 'split 4'
+                           'Ni4': 'split 4',
+                           'Fe3': 'split 5',
+                           'Fe4': 'all',
+                           'Fe5': 'split 5',
+                           'Fe6': 'split 4',
+                           'Fe7': 'split 3',
+                           'P9' : 'all',
+                           'Si10':'all',
+                           'Cl11':'all',
+                           'Al12': 'all',
+                           'K13':'all',
+                           'Ca14':'all'
                            }
     if up_lev_rule_dic is None:
         up_lev_rule_dic = up_lev_rule_dic_def
@@ -391,7 +416,8 @@ def make_phyat_list(filename, cut=1e-4, E_cut=20, cut_inter=1e-5,
             if k not in up_lev_rule_dic:
                 up_lev_rule_dic[k] = up_lev_rule_dic_def[k]
 
-    Aij_zero_dic_def = {'C3': ((2, 1),)}
+    Aij_zero_dic_def = {'C3': ((2, 1),),
+                        'S5': ((4, 3),)}
     if Aij_zero_dic is None:
         Aij_zero_dic = Aij_zero_dic_def 
     else:
@@ -439,7 +465,7 @@ def make_phyat_list(filename, cut=1e-4, E_cut=20, cut_inter=1e-5,
                     return temp, dens
     
     f = open(filename, 'w')
-    f.write("# liste_phyat automatically generated on {} \n".format(time.ctime()))
+    #f.write("# liste_phyat automatically generated on {} \n".format(time.ctime()))
     log_file = open('log.dat', 'w')
     log_file.write("# log_file automatically generated on {} \n".format(time.ctime()))
     help_file = open('help.dat', 'w')
