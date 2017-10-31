@@ -226,7 +226,7 @@ class AppForm(QtGui.QMainWindow):
         #
         self.dpi = 100
         self.fig = plt.figure(figsize=(15,15))
-#        self.fig = plt.figure((figsize=(20.0, 15.0), dpi=self.dpi)
+        # self.fig = plt.figure(figsize=(20.0, 15.0), dpi=self.dpi)
         
         log_.debug('creating figure {}'.format(id(self.fig)), calling=self.calling)
         
@@ -374,7 +374,7 @@ class AppForm(QtGui.QMainWindow):
         self.connect(self.line_info_box, QtCore.SIGNAL('returnPressed()'), self.line_info)
 
         self.mpl_toolbar.addSeparator()
-        self.mpl_toolbar.addWidget(QtGui.QLabel('   line code number '))
+        self.mpl_toolbar.addWidget(QtGui.QLabel('   line number '))
         self.mpl_toolbar.addWidget(self.line_info_box)
 
         self.magenta_box = QtGui.QLineEdit()
@@ -409,7 +409,7 @@ class AppForm(QtGui.QMainWindow):
         s = 'Click to update synthesis with changes in line intensities, profiles, and continuum parameters.'
         self.adjust_button.setToolTip(s)        
         
-        s = 'Enter line code number to get information on\n' \
+        s = 'Enter line number to get information on\n' \
             'the reference line and on its satellites.'
         self.line_info_box.setToolTip(s)        
 
@@ -490,7 +490,6 @@ class AppForm(QtGui.QMainWindow):
             '    resol = <integer>\n\n' \
             'Usage: \n' \
             '    Set to \'1\' if the resolution of the observed spectrum is large enough' 
-            
         self.resol_box.setToolTip(s) 
         
         s = 'Minimum relative intensity of lines to be shown. \n\n' \
@@ -498,7 +497,7 @@ class AppForm(QtGui.QMainWindow):
              '    cut_plot2 = <float>'
         self.cut2_box.setToolTip(s)        
         
-        s = 'Comma-separated list of selected ions, elements, or line code numbers to be shown. \n\n' \
+        s = 'Comma-separated list of selected ions, elements, or line numbers to be shown. \n\n' \
              'Set with: \n' \
              '    selected_ions = [<ion1>,<ion2>,...]\n\n' \
              'Examples: \n' \
@@ -506,26 +505,8 @@ class AppForm(QtGui.QMainWindow):
              '    \'Fe III, Fe IV\' to show the lines of Fe III and Fe IV\n' \
              '    \'Fe\' to show the lines of all Fe ions\n' \
              '    \'Fe, N\' to show the lines of all Fe and N ions\n' \
-             '    <line code number> to show the lines of that same ion'                
+             '    <line number> to show the lines of that same ion'                
         self.ion_box.setToolTip(s)        
-              
-        self.resol_box.setToolTip( s ) 
-
-        self.verbosity_list = ['None', 'Errors', 'Errors and warnings', 'Errors, warnings, and comments', 'Debug messages' ]
-        self.verbosity_button = QtGui.QPushButton('Verbosity')
-        s = 'Verbosity level:\n'
-        for i in range(len(self.verbosity_list)):
-            s = s + '    ' + str(i) + ' - ' + self.verbosity_list[i] + '\n'
-        s = s + '\nSet with:\n' + '    log_level = <integer>'
-        self.verbosity_button.setToolTip( s )        
-        self.verbosity_ag = QtGui.QActionGroup(self, exclusive=True)
-        
-        self.verbosity_menu = QtGui.QMenu()
-        for i in range(len(self.verbosity_list)):
-            a = self.verbosity_ag.addAction(QtGui.QAction(self.verbosity_list[i], self, checkable=True))
-            self.verbosity_menu.addAction(a)
-        self.verbosity_button.setMenu(self.verbosity_menu)
-        self.verbosity_ag.triggered.connect(self.verbosity)
 
         #
         # Layout with box sizers
@@ -718,8 +699,6 @@ class AppForm(QtGui.QMainWindow):
                                             slot=self.adjust, 
                                             tip="Update synthesis with changes in line intensities, profiles, and continuum parameters")
 
-#        self.draw_menu = self.menuBar().addMenu("Draw")
-        
         draw_action = self.create_action("Draw",
                                          shortcut="F8", 
                                          slot=self.on_draw, 
@@ -810,7 +789,7 @@ class AppForm(QtGui.QMainWindow):
             tip='Check to allow editing line parameters in line info dialog')
         
         self.update_lines_action = self.create_action('Update after editing', 
-            shortcut='Alt+D', slot=self.update_lines_clicked, checkable=True, 
+            shortcut='Alt+U', slot=self.update_lines_clicked, checkable=True, 
             tip='Check to update synthesis after editing line parameters in line info dialog')
 
         self.add_actions(self.line_menu, 
@@ -848,7 +827,7 @@ class AppForm(QtGui.QMainWindow):
             self.verbosity_menu.addAction(a)
         self.verbosity_ag.triggered.connect(self.verbosity)
 
-#        self.settings_menu = self.menuBar().addMenu("Settings")
+        #self.settings_menu = self.menuBar().addMenu("Settings")
         
         self.help_menu = self.menuBar().addMenu("&Help")
         
@@ -884,30 +863,23 @@ class AppForm(QtGui.QMainWindow):
         if checkable:
             action.setCheckable(True)
         return action
-      
-    def ConvStrToValidTypes(self, str_):
-        
-        def isFloat(str_):
-            try:
-                float(str_)
-                return True
-            except ValueError:
-                return False
+          
+  
+    def isFloat(self, str_):
+        try:
+            float(str_)
+            return True
+        except ValueError:
+            return False
 
-        def isBool(str_):
-            try:
-                bool(str_)
-                return True
-            except ValueError:
-                return False
-        
+    def ConvStrToValidTypes(self, str_):
         str_ = str_.strip(' ')
         str_ = str_.replace('Error in ','')
         if str_ == '':
             result = None
         elif str_.isdigit():
             result = int(str_)
-        elif isFloat(str_):
+        elif self.isFloat(str_):
             result = float(str_)
         elif str_.capitalize() == 'True':
             result = True
@@ -923,7 +895,7 @@ class AppForm(QtGui.QMainWindow):
         else:      
             result = None
         return result
-        
+
     def save_cont_pars(self):
         file_choices = "Python files (*.py) (*.py);;Text files (*.txt *.dat) (*.txt *.dat);;All Files (*) (*)"
         filename = self.sp.config_file.split('/')[-1]
@@ -971,24 +943,82 @@ class AppForm(QtGui.QMainWindow):
         self.line_info_dialog_y = self.line_info_dialog.pos().y()
         self.line_info_dialog.close()
   
+    def plot_tick_at(self, wavelength, ion=None):
+        if ion == None:
+            self.on_draw()
+        else:
+            self.ion_box.setText(ion)
+            self.draw_ion()
+        y1, y2 = self.get_line_tick_lim((self.sp.get_conf('line_tick_pos')+1)%len(self.line_tick_pos_list))
+        self.fig.axes[0].axvline( wavelength, y1, y2, color = 'green', linestyle = 'solid', linewidth = 3.0 ) 
+        self.fig.canvas.draw()
+
     def show_line_info_dialog(self):
+
+        def save_initial_plot_pars():
+            self.init_ion = self.ion_box.text()
+            self.init_xmin = self.xlim_min_box.text()
+            self.init_xmax = self.xlim_max_box.text()
+      
+        def toggle_statusbar():
+            self.showStatusBar = not self.showStatusBar
+            statusBar.setVisible(self.showStatusBar)
+         
+        def redo_initial_plot():
+            self.ion_box.setText(self.init_ion)
+            self.xlim_min_box.setText(self.init_xmin)
+            self.xlim_max_box.setText(self.init_xmax)
+            self.save_from_lim_boxes()
+            self.draw_ion()
+
+        def do_reset():
+            self.curr_line_num = self.line_info_box.text()
+            get_info(self.curr_line_num)
+            fill_line_info_table()
+            redo_initial_plot()
+
+        def toggle_show_satellites():
+            self.show_satellites = (self.show_satellites + 1)%3
+            fill_line_info_table()
          
         def on_doubleClick():
             item = self.line_info_table.currentItem()
+            row = item.row()
             col = item.column()
-            if col in [0,6]:
-                self.line_info_box.setText(item.text())
+            s = item.text()
+            if not self.isFloat(s):
+                return               
+            if col in [0,6] and int(s) != 0:
+                self.curr_line_num = s
+                get_info(self.curr_line_num)
                 fill_line_info_table()
-
-        def isRefLineNum(line_num_str):
-            if line_num_str[-8:] == '00000000':
-                return True
-            else:
-                return False
+            elif col == self.sp.fields.index('lambda'):
+                wavelength = float(s)
+                ion = self.line_info_table.item(row, 1).text()
+                max_wave = np.float(self.sp_max_box.text())
+                min_wave = np.float(self.sp_min_box.text())
+                if wavelength > min_wave and wavelength < max_wave:
+                    c = self.sp.fields.index('l_shift')
+                    l_shift = float(self.line_info_table.item(row, c).text())
+                    wavelength = wavelength + l_shift
+                    c = self.sp.fields.index('id')
+                    ion = self.line_info_table.item(row, c).text()
+                    #self.ion_box.setText(ion)
+                    r =  (self.x_plot_lims[1] - self.x_plot_lims[0])/2
+                    self.xlim_min_box.setText(self.init_xmin)
+                    self.xlim_max_box.setText(self.init_xmax)
+                    self.x_plot_lims = self.sp.get_conf('x_plot_lims')
+                    self.x_plot_lims = (float(self.init_xmin), float(self.init_xmax))
+                    if (wavelength < self.x_plot_lims[0] + 0.05*r) or (wavelength > self.x_plot_lims[1] - 0.05*r):
+                        self.x_plot_lims = (wavelength-r,wavelength+r)
+                        if not self.fix_axes_cb.isChecked():
+                            self.update_lim_boxes()
+                    self.restore_axes()
+                    self.plot_tick_at(wavelength, ion)
 
         def isRefLine(line):
-            line_num = self.sp.fieldStrFromLine(line,'num')
-            if line_num[-8:] == '00000000':
+            s = self.sp.fieldStrFromLine(line,'ref').strip()
+            if s == '0000000000000':
                 return True
             else:
                 return False
@@ -1000,12 +1030,6 @@ class AppForm(QtGui.QMainWindow):
             else:
                 return False
 
-        def isLine(line):
-            if not (isRefLine(line) or isSubRefLine(line)):
-                return True
-            else:
-                return False
-
         def fill_data(i, line, cat=''):
             if line == None:
                 return
@@ -1013,9 +1037,9 @@ class AppForm(QtGui.QMainWindow):
             if self.sp.get_conf('allow_editing_lines', False):
                 if cat == 'sat':
                     # mvfc: which are editable fields?
-                    editableCols = ['l_shift', 'i_cor']
+                    editableCols = ['l_shift', 'i_cor', 'profile', 'vitesse']
                 elif cat == 'ref':
-                    editableCols = ['i_rel']
+                    editableCols = ['l_shift', 'i_cor', 'i_rel', 'profile', 'vitesse']
             for j in range(0,len(fieldItems)):
                 s = self.sp.fieldStrFromLine(line, fieldItems[j])
                 s = s.strip()
@@ -1026,7 +1050,7 @@ class AppForm(QtGui.QMainWindow):
                     item.setFlags(item.flags() ^ QtCore.Qt.ItemIsEditable)
                     item.setBackgroundColor(self.readOnlyCells_bg_color)
                 self.line_info_table.setItem(i,j,item)
-        
+
         def fill_text(i, text):
             item = QtGui.QTableWidgetItem(text)
             item.setFlags(item.flags() ^ QtCore.Qt.ItemIsEditable)
@@ -1036,81 +1060,109 @@ class AppForm(QtGui.QMainWindow):
             self.line_info_table.setItem(i,0,item)
             self.line_info_table.setSpan(i,0,2,len(fieldItems))
 
-        def fill_line_info_table():  
-            line_num = self.line_info_box.text()
-            log_.debug('Line num: {}'.format(line_num), calling=self.calling)
+        def get_info(line_num):  
+            line = None    
+            refline = None    
             subrefline = None
-            if isRefLineNum(line_num):
-                line = None
-                subrefline = None
+            LineList = []
+            if int(line_num) == 0:
+                return
+            while refline == None:
                 refline = self.sp.read_line(self.sp.fic_model, int(line_num))
-                refline_num = line_num
-            else:
-                if self.sp.do_cosmetik:
-                    line = self.sp.read_line(self.sp.fic_cosmetik, int(line_num))
+                if refline is None:
+                    curr_line = self.sp.read_line(self.sp.fic_cosmetik, int(line_num))
+                    if curr_line == None:
+                        curr_line = self.sp.read_line(self.sp.phyat_file, int(line_num))
+                    LineList.append(curr_line)
+                    line_num = self.sp.fieldStrFromLine(curr_line,'ref')
+            if len(LineList) > 0: 
+                if isSubRefLine(LineList[0]):
+                    subrefline = LineList[:1]
                 else:
-                    line = None
-                if line == None:
-                    line = self.sp.read_line(self.sp.phyat_file, int(line_num))
-                if line == None:
-                    subrefline = None
-                    refline = None
-                else:
-                    if isSubRefLine(line):
-                        subrefline = line
-                        subrefline_num = line_num
-                        line = None
-                        line_num = None
-                        refline_num = self.sp.fieldStrFromLine(subrefline, 'ref')
-                        refline = self.sp.read_line(self.sp.fic_model, int(refline_num))
-                    else:
-                        refline_num = self.sp.fieldStrFromLine(line, 'ref')
-                        if isRefLineNum(refline_num):
-                            refline = self.sp.read_line(self.sp.fic_model, int(refline_num))
-                            subrefline = None
-                        else:
-                            subrefline_num = refline_num
-                            if self.sp.do_cosmetik:
-                                subrefline = self.sp.read_line(self.sp.fic_cosmetik, int(subrefline_num))
-                            else:
-                                subrefline = None
-                            if subrefline == None:
-                                subrefline = self.sp.read_line(self.sp.phyat_file, int(subrefline_num))
-                            refline_num = self.sp.fieldStrFromLine(subrefline, 'ref')
-                            refline = self.sp.read_line(self.sp.fic_model, int(refline_num))
+                    line = LineList[0]
+                    if len(LineList) > 1:
+                        subrefline = LineList[1:]
             if subrefline is not None:
-                subsatellites = self.sp.read_satellites(self.sp.phyat_file, int(subrefline_num))
-                n_subsat = len(subsatellites)
-                for i in range(0,n_subsat):
-                    sat_line = subsatellites[i]
-                    sat_line_num = int(self.sp.fieldStrFromLine(sat_line,'num'))
-                    if self.sp.do_cosmetik:
-                        cosmetic_line = self.sp.read_line(self.sp.fic_cosmetik, sat_line_num)
-                    else:
-                        cosmetic_line = None
-                    if cosmetic_line is not None:
-                        subsatellites[i] = cosmetic_line
+                n_subref = len(subrefline)
             else:
-                n_subsat = 0
+                n_subref = 0
+            subsatellites = []
+            for k in range(0, n_subref):
+                subsat = []
+                subrefline_num = self.sp.fieldStrFromLine(subrefline[k], 'num')             
+                subsat = self.sp.read_satellites(self.sp.phyat_file, int(subrefline_num))
+                n_subsat = len(subsat)
+                for i in range(0,n_subsat):
+                    sat_line = subsat[i]
+                    sat_line_num = int(self.sp.fieldStrFromLine(sat_line,'num'))
+                cosmetic_line = self.sp.read_line(self.sp.fic_cosmetik, sat_line_num)
+                if cosmetic_line is not None:
+                    subsat[i] = cosmetic_line
+                subsatellites = subsatellites + subsat
+            n_subsat = len(subsatellites)
             if refline is not None:
+                refline_num = self.sp.fieldStrFromLine(refline,'num')
                 satellites = self.sp.read_satellites(self.sp.phyat_file, int(refline_num))
+                do_sort(satellites)
                 n_sat = len(satellites)
                 for i in range(0,n_sat):
                     sat_line = satellites[i]
                     sat_line_num = int(self.sp.fieldStrFromLine(sat_line,'num'))
-                    if self.sp.do_cosmetik:
-                        cosmetic_line = self.sp.read_line(self.sp.fic_cosmetik, sat_line_num)
-                    else:
-                        cosmetic_line = None
+                    cosmetic_line = self.sp.read_line(self.sp.fic_cosmetik, sat_line_num)
                     if cosmetic_line is not None:
                         satellites[i] = cosmetic_line
             else:
                 n_sat = 0
             if line is None and refline is None:
-                title = 'Error in line data display'
-                msg = 'Line code number not found.'
+                title = 'Error in line info dialog'
+                msg = 'Line number not found.'
                 QtGui.QMessageBox.critical(self, title, msg, QtGui.QMessageBox.Ok )
-                return
+            self.line = line
+            self.subrefline = subrefline
+            self.refline = refline
+            self.subsatellites = subsatellites
+            self.satellites = satellites
+            self.n_sat = n_sat 
+            self.n_subsat = n_subsat
+            self.n_subref = n_subref
+
+        def do_sort(lines):
+            waves = []
+            for i in range(0,len(lines)):
+                waves.append(self.sp.fieldStrFromLine(lines[i], 'lambda'))
+            lines = [x for _,x in sorted(zip(waves,lines))]
+            return lines
+               
+        def fill_line_info_table():  
+            self.line_info_table.blockSignals(True)
+            line = self.line
+            subrefline = self.subrefline
+            refline = self.refline
+            subsatellites = self.subsatellites
+            satellites = self.satellites
+            n_sat = self.n_sat 
+            n_subsat = self.n_subsat
+            n_subref = self.n_subref
+            SelectedSatellites = []
+            SelectedSubSatellites = []
+            if self.show_satellites == 0:
+                n_sat = 0
+                n_subsat = 0
+            else:
+                max_wave = np.float(self.sp_max_box.text())
+                min_wave = np.float(self.sp_min_box.text())
+                for i in range(0, len(satellites)):
+                    wavelength = float(self.sp.fieldStrFromLine(satellites[i],'lambda'))
+                    if self.show_satellites == 2 or \
+                       (self.show_satellites == 1 and (wavelength > min_wave) and (wavelength < max_wave)):
+                        SelectedSatellites.append(satellites[i])
+                for i in range(0, len(subsatellites)):
+                    wavelength = float(self.sp.fieldStrFromLine(subsatellites[i],'lambda'))
+                    if self.show_satellites == 2 or \
+                      (self.show_satellites == 1 and (wavelength > min_wave) and (wavelength < max_wave)):
+                        SelectedSubSatellites.append(subsatellites[i])
+                n_sat = len(SelectedSatellites)
+                n_subsat = len(SelectedSubSatellites)
             self.line_info_table.setRowCount(n_sat+n_subsat+20)
             self.line_info_table.clearSpans()
             k = 0
@@ -1118,48 +1170,61 @@ class AppForm(QtGui.QMainWindow):
                 fill_text(k,'Line:')
                 k += 2
                 fill_data(k, line, 'sat')
-                k += 1  
+                k += 1
             if subrefline is not None:
                 fill_text(k,'Subreference line:')
                 k += 2
-                fill_data(k, subrefline)
-                k += 1
-                fill_text(k, str(n_subsat) + ' satellites:')
-                k += 2
-                for i in range(0,n_subsat):
-                    fill_data(k+i, subsatellites[i])
-                k += n_subsat   
+                for i in range(0,n_subref):
+                    fill_data(k, subrefline[i], 'sat')
+                    k += 1
+                if n_subsat > 0:
+                    SelectedSubSatellites = do_sort(SelectedSubSatellites)
+                    fill_text(k, str(n_subsat) + ' satellites:')
+                    k += 2
+                    for i in range(0,n_subsat):
+                        fill_data(k+i, SelectedSubSatellites[i], 'sat')
+                    k += n_subsat
             fill_text(k,'Reference line:')
             k += 2
             fill_data(k, refline, 'ref')
             k += 1
-            fill_text(k, str(n_sat) + ' satellites:')
-            k += 2
-            for i in range(0,n_sat):
-                fill_data(k+i, satellites[i])
-            k += n_sat
+            if n_sat > 0:
+                SelectedSatellites = do_sort(SelectedSatellites)
+                fill_text(k, str(n_sat) + ' satellites:')
+                k += 2
+                for i in range(0,n_sat):
+                    fill_data(k+i, SelectedSatellites[i], 'sat')
+                k += n_sat
             self.line_info_table.setRowCount(k)
             self.line_info_table.resizeColumnsToContents()
             self.line_info_table.resizeRowsToContents()
+            self.line_info_table.blockSignals(False)
             return
- 
+       
         def rightFormat(s,col):
             try:
-                r = float(s)
+                if col == self.sp.fields.index('profile'):
+                    r = int(s)
+                else:
+                    r = float(s)
                 s = self.sp.field_format[fieldItems[col]].format(r)
                 if len(s) == self.sp.field_width[fieldItems[col]] and not np.isinf(r):
-                    output = s
+                    if col == 8 and (r < 0 or s.strip() == '0.00'):
+                        output = None
+                    else:    
+                        output = s
                 else:
                     output = None
             except:
                 output = None
             return output
-        
+
         def on_itemChanged():
+            self.line_info_table.blockSignals(True)
             item = self.line_info_table.currentItem()
             if not (item.flags() & QtCore.Qt.ItemIsEditable):
+                self.line_info_table.blockSignals(False)
                 return
-            self.line_info_table.blockSignals(True)
             row = item.row()
             col = item.column()
             s = item.text()
@@ -1174,10 +1239,14 @@ class AppForm(QtGui.QMainWindow):
                 s0 = self.sp.field_format[fieldItems[col]]
                 s0 = s0[2:-1]
                 msg = "'" + s + "' can not be converted into the proper field format: " + s0
+                if col == self.sp.fields.index('vitesse'):
+                    msg = msg + '\nor it is not a positive number.'
                 QtGui.QMessageBox.critical(self, title, msg, QtGui.QMessageBox.Ok )
+            get_info(self.curr_line_num)
+            fill_line_info_table()
             self.line_info_table.blockSignals(False)
-            
-        def save_change(row, col):
+       
+        def get_line_from_table(row):
             line = ' '*85
             for j in range(0,len(fieldItems)):
                 s = self.line_info_table.item(row,j).text()
@@ -1187,14 +1256,31 @@ class AppForm(QtGui.QMainWindow):
                 s = '{:{a}{w}s}'.format(s, a=align, w=width)
                 line = line[:pos] + s + line[pos:]
             line = line.rstrip()
-            if col in [3,5]:
-                filename = self.sp.fic_cosmetik
-            else:
+            return line
+       
+        def save_change(row, col):
+            line = get_line_from_table(row)
+            if isRefLine(line):
                 filename = self.sp.fic_model
+            else:
+                filename = self.sp.fic_cosmetik
             self.sp.replace_line(filename, line)
             if self.sp.get_conf('update_after_editing_lines', False):
                 self.adjust()
-         
+ 
+        statusBar = QtGui.QStatusBar()
+        s = 'Click on the button Satellites to cycle the tri-state display of satellite lines:\n' \
+            '   1 - The satellite lines in the spectral range of the synthesis are shown; \n' \
+            '   2 - All satellite lines (including subreference lines and lines outside the spectral range of the synthesis) are shown. \n' \
+            '   3 - No satellite line is shown; \n' \
+            'Double-click on line number to show the data for that line. \n' \
+            'Double-click on wavelength to draw a tick at that position and recenter the spectrum if necessary. \n' \
+            'Click on reset to return to the original line and plot settings.'
+        statusBar.addWidget(QtGui.QLabel(s),1)
+        self.showStatusBar = False
+        statusBar.setVisible(self.showStatusBar)
+        self.show_satellites = 1
+        self.curr_line_num = self.line_info_box.text()
         self.line_info_dialog = QtGui.QDialog()
         self.line_info_dialog.resize(self.line_info_dialog_width,self.line_info_dialog_height)
         self.line_info_dialog.move(self.line_info_dialog_x,self.line_info_dialog_y)
@@ -1205,34 +1291,69 @@ class AppForm(QtGui.QMainWindow):
         self.line_info_table.setHorizontalHeaderLabels(fieldNames)
         for j in range(0,len(fieldItems)):
             self.line_info_table.horizontalHeaderItem(j).setToolTip(self.sp.field_tip[fieldItems[j]])
-        self.line_info_table.horizontalHeaderItem(9).setTextAlignment(QtCore.Qt.AlignLeft);
+        self.line_info_table.horizontalHeaderItem(8).setText(u'\u0394v (factor)')
+        s = 'For a reference line, it is the thermal broadening parameter, in km/s. \n' \
+            'For satellite line, it is the dimensionless correction factor for the thermal broadening parameter with respect to the reference line.'
+        self.line_info_table.horizontalHeaderItem(8).setToolTip(s)
+        self.line_info_table.horizontalHeaderItem(9).setTextAlignment(QtCore.Qt.AlignLeft)
         self.line_info_table.horizontalHeaderItem(9).setText('  comment')
+        self.line = None
+        self.subrefline = None
+        self.refline = None
+        self.subsatellites = []
+        self.satellites = []
+        self.n_sat = 0 
+        self.n_subsat = 0
+        self.n_subref = 0
+        save_initial_plot_pars()
+        get_info(self.curr_line_num)
         fill_line_info_table()
-        self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Close)
-        #self.buttonBox.rejected.connect(self.line_info_dialog.close)
+        self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Help|
+                                               QtGui.QDialogButtonBox.Close|
+                                               QtGui.QDialogButtonBox.Reset|
+                                               QtGui.QDialogButtonBox.Apply)
+        self.buttonBox.button(QtGui.QDialogButtonBox.Apply).setText("Satellites")
+        self.buttonBox.button(QtGui.QDialogButtonBox.Apply).setToolTip("Click to toggle the satellite lines")
+        self.buttonBox.button(QtGui.QDialogButtonBox.Apply).clicked.connect(toggle_show_satellites)
+        s = "Click to return to the initial states of the line info dialog and figures"
+        self.buttonBox.button(QtGui.QDialogButtonBox.Reset).setToolTip(s)
+        self.buttonBox.button(QtGui.QDialogButtonBox.Reset).clicked.connect(do_reset)
+        self.buttonBox.button(QtGui.QDialogButtonBox.Help).clicked.connect(toggle_statusbar)
         self.buttonBox.rejected.connect(self.close_line_info_dialog)
         self.line_info_table.doubleClicked.connect(on_doubleClick)
         self.line_info_table.itemChanged.connect(on_itemChanged)
         vbox = QtGui.QVBoxLayout()
         vbox.addWidget(self.line_info_table)
         vbox.addWidget(self.buttonBox)
+        vbox.addWidget(statusBar)
         self.line_info_dialog.setLayout(vbox)
-        self.line_info_dialog.setWindowTitle('Line data')
+        self.line_info_dialog.setWindowTitle('line info dialog')
         self.line_info_dialog.setWindowModality(QtCore.Qt.NonModal)
         self.line_info_dialog.show()
             
     def show_nearbyLines_dialog(self):
-        
+      
+        def toggle_statusbar():
+            self.showStatusBar = not self.showStatusBar
+            statusBar.setVisible(self.showStatusBar)
+
         def on_doubleClick():
             item = self.nearbyLines_table.currentItem()
+            row = item.row()
             col = item.column()
             if col in [0,6]:
                 self.line_info_box.setText(item.text())
                 self.show_line_info_dialog()
-            if col == 1:
+            elif col == 1:
                 self.ion_box.setText(item.text())
                 self.draw_ion()
-        
+            elif col == 2:
+                wavelength = float(item.text())
+                l_shift = float(self.nearbyLines_table.item(row,3).text())
+                wavelength = wavelength + l_shift
+                ion = self.nearbyLines_table.item(row,1).text()
+                self.plot_tick_at(wavelength,ion)
+           
         def do_selection():
             selectedItems = self.nearbyLines_table.selectedItems()
             selected_ions = []
@@ -1240,7 +1361,7 @@ class AppForm(QtGui.QMainWindow):
             for item in selectedItems:
                 col = item.column()
                 if col == 1:
-                    ion = item.text()
+                    ion = str(item.text())
                     if not ion in selected_ions:
                         selected_ions.append(ion)
                 if col in [0,6]:
@@ -1265,7 +1386,14 @@ class AppForm(QtGui.QMainWindow):
         y = (sG.height()-self.nearbyLines_dialog.height())
         self.nearbyLines_dialog.move(x,y)
         statusBar = QtGui.QStatusBar()
-        statusBar.addWidget(QtGui.QLabel('Double-click on a line code number or on a reference line code number (or select and press ok) to edit parameters. '),1)
+        s = 'Double-click on a line number (or select the line number and press Apply) to show line info dialog. \n' \
+            'Double-click on an ion to plot line ticks and spectrum for that single ion. \n' \
+            'Double-click on the wavelength to draw a tick at that position. \n' \
+            'Select multiple ions (using click, Shift+click, and Ctrl+click) and press Apply plot line ticks and spectra for a list of ions. \n' \
+            'Click on the ion header to select all ions.'
+        statusBar.addWidget(QtGui.QLabel(s),1)
+        self.showStatusBar = False
+        statusBar.setVisible(self.showStatusBar)
         self.nearbyLines_table = QtGui.QTableWidget()   
         self.nearbyLines_table.setRowCount(len(self.nearbyLines))
         self.nearbyLines_table.setColumnCount(10)
@@ -1275,6 +1403,13 @@ class AppForm(QtGui.QMainWindow):
         for j in range(0,len(fieldItems)):
             self.nearbyLines_table.horizontalHeaderItem(j).setToolTip(self.sp.field_tip[fieldItems[j]])
         self.nearbyLines_table.horizontalHeaderItem(9).setTextAlignment(QtCore.Qt.AlignLeft);
+        self.nearbyLines_table.horizontalHeaderItem(8).setText(u'\u0394v')
+        s = u'\u0394v is the thermal broadening parameter of the line, in km/s. \n' \
+             'For a single Gaussian profile, it is the half-width of the line at the level of 1/e of the peak, \n' \
+             'related to the full-width at half maximum and the Gaussian standard deviation by:\n\n' \
+            u'     \u0394v = FWHM/(2(ln2)^\u00BD) = FWHM/1.665\n' \
+            u'     \u0394v = \u221A2 \u03C3\n' 
+        self.nearbyLines_table.horizontalHeaderItem(8).setToolTip(s)
         self.nearbyLines_table.horizontalHeaderItem(9).setText('  comment')
         for i in range(0,len(self.nearbyLines)):
             for j in range(0,len(fieldItems)):
@@ -1288,7 +1423,8 @@ class AppForm(QtGui.QMainWindow):
         self.nearbyLines_table.resizeRowsToContents()
         self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Help|QtGui.QDialogButtonBox.Apply|QtGui.QDialogButtonBox.Close)
         self.buttonBox.rejected.connect(self.nearbyLines_dialog.close)
-        self.buttonBox.clicked.connect(do_selection)
+        self.buttonBox.button(QtGui.QDialogButtonBox.Apply).clicked.connect(do_selection)
+        self.buttonBox.button(QtGui.QDialogButtonBox.Help).clicked.connect(toggle_statusbar)
         self.nearbyLines_table.doubleClicked.connect(on_doubleClick)
         self.nearbyLines_table.verticalHeader().sectionDoubleClicked.connect(do_selection)
         vbox = QtGui.QVBoxLayout()
@@ -1296,29 +1432,29 @@ class AppForm(QtGui.QMainWindow):
         vbox.addWidget(self.buttonBox)
         vbox.addWidget(statusBar)
         self.nearbyLines_dialog.setLayout(vbox)
-        s = 'List of lines between {0:.2f} and {1:.2f} angstroms'.format(self.sp.cursor_w1, self.sp.cursor_w2)
+        s = 'nearby line dialog: list of lines between {0:.2f} and {1:.2f} angstroms'.format(self.sp.cursor_w1, self.sp.cursor_w2)
         self.nearbyLines_dialog.setWindowTitle(s)
         self.nearbyLines_dialog.setWindowModality(QtCore.Qt.NonModal)
         self.nearbyLines_dialog.show()
-            
+
     def cont_dialog(self):
-        
+
         Pars = [ ( 'cont_unred'     , 'Set to True if reddening is to be applied to the continuum' ),
-                ( 'cont_edens'     , u'Electron density, in cm\u207B\u00B3' ), 
-                ( 'cont_hi_t'      , 'Temperature for the H I continuum, in K' ),       
-                ( 'cont_hi_i'      , u'Intensity of the H I continuum (in theory, intensity of H\u03B2)' ),       
-                ( 'cont_hei_t'     , 'Temperature for the He I continuum, in K' ),      
-                ( 'cont_hei_i'     , 'Intensity of the He I continuum (in theory, intensity of He I 4471)' ),      
-                ( 'cont_heii_t'    , 'Temperature for the He II continuum, in K' ),     
-                ( 'cont_heii_i'    , 'Intensity of the He II continuum (in theory, intensity of He I 4686)' ),     
-                ( 'cont_bb_t'      , 'Temperature of the blackbody continuum, in K' ),      
-                ( 'cont_bb_i'      , 'Intensity of the blackbody continuum' ),      
-                ( 'cont_pl_alpha'  , u'Index \u03B1 of the power-law continuum F = I*(\u03BB/5000 \u212B)**\u03B1' ),   
-                ( 'cont_pl_i'      , 'Intensity I of the power-law continuum' ),      
-                ( 'cont_in_lambda' , 'True (False) to interpolate continuum using list of wavelengths (pixels)' ),  
-                ( 'cont_lambda'    , 'List of wavelenghs of the interpolated continuum' ),    
-                ( 'cont_pix'       , 'List of pixels of the interpolated continuum' ),       
-                ( 'cont_intens'    , 'List of intensities of the interpolated continuum' ) ]
+                 ( 'cont_edens'     , u'Electron density, in cm\u207B\u00B3' ), 
+                 ( 'cont_hi_t'      , 'Temperature for the H I continuum, in K' ),       
+                 ( 'cont_hi_i'      , u'Intensity of the H I continuum (in theory, intensity of H\u03B2)' ),       
+                 ( 'cont_hei_t'     , 'Temperature for the He I continuum, in K' ),      
+                 ( 'cont_hei_i'     , 'Intensity of the He I continuum (in theory, intensity of He I 4471)' ),      
+                 ( 'cont_heii_t'    , 'Temperature for the He II continuum, in K' ),     
+                 ( 'cont_heii_i'    , 'Intensity of the He II continuum (in theory, intensity of He I 4686)' ),     
+                 ( 'cont_bb_t'      , 'Temperature of the blackbody continuum, in K' ),      
+                 ( 'cont_bb_i'      , 'Intensity of the blackbody continuum' ),      
+                 ( 'cont_pl_alpha'  , u'Index \u03B1 of the power-law continuum F = I*(\u03BB/5000 \u212B)**\u03B1' ),   
+                 ( 'cont_pl_i'      , 'Intensity I of the power-law continuum' ),      
+                 ( 'cont_in_lambda' , 'True (False) to interpolate continuum using list of wavelengths (pixels)' ),  
+                 ( 'cont_lambda'    , 'List of wavelenghs of the interpolated continuum' ),    
+                 ( 'cont_pix'       , 'List of pixels of the interpolated continuum' ),       
+                 ( 'cont_intens'    , 'List of intensities of the interpolated continuum' ) ]
 
         def set_conf_from_table(row):
             s = str(self.table.item(row,1).text())
@@ -1328,7 +1464,7 @@ class AppForm(QtGui.QMainWindow):
                 self.table.setItem(row, 1, QtGui.QTableWidgetItem(str(value)))
             else:
                 self.table.setItem(row, 1, QtGui.QTableWidgetItem('Error in ' + s))
-        
+
         def on_itemChanged():
             self.table.blockSignals(True)
             item = self.table.currentItem()
@@ -1370,16 +1506,16 @@ class AppForm(QtGui.QMainWindow):
         if self.table.columnWidth(1) > 300:
             self.table.setColumnWidth(1,300) 
         self.table.itemChanged.connect(on_itemChanged)
-        self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Save|QtGui.QDialogButtonBox.Close)
+        self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Save|QtGui.QDialogButtonBox.Apply|QtGui.QDialogButtonBox.Close)
         self.buttonBox.rejected.connect(self.cont_pars_dialog.close)
         self.buttonBox.accepted.connect(self.save_cont_pars)
+        self.buttonBox.clicked.connect(self.adjust)
         vbox = QtGui.QVBoxLayout()
         vbox.addWidget(self.table)
         vbox.addWidget(self.buttonBox)
         self.cont_pars_dialog.setLayout(vbox)
         self.cont_pars_dialog.setWindowTitle('Continuum parameters')
-        #       self.cont_pars_dialog.setWindowModality(QtCore.Qt.ApplicationModal)
-        self.cont_pars_dialog.setWindowModality(QtCore.Qt.NonModal)
+        #       self.cont_pars_dialog.setWindowModality(QtCore.Qt.ApplicationModal)        self.cont_pars_dialog.setWindowModality(QtCore.Qt.NonModal)
         #       self.cont_pars_dialog.exec_()
         self.cont_pars_dialog.show()
 
@@ -1437,7 +1573,7 @@ class AppForm(QtGui.QMainWindow):
 
         if self.show_line_ticks_action.isChecked() and ( k == 2 ):
             self.axes2.cla()
-#            self.sp.plot_ax2(self.axes2)
+            # self.sp.plot_ax2(self.axes2)
             self.sp.plot_line_ticks(self.axes2, 0.2, 0.8)
         
         if self.residual_GroupBox.isChecked():
@@ -1448,7 +1584,7 @@ class AppForm(QtGui.QMainWindow):
             self.axes.set_xlabel(r'Wavelength ($\AA$)')
         
         self.restore_axes()
-        self.update_lim_boxes()
+        # self.update_lim_boxes()
         self.canvas.draw()
         self.statusBar().showMessage('Redraw is finished.', 4000) 
         log_.debug('Exit on_drawn', calling=self.calling)
@@ -1721,13 +1857,14 @@ class AppForm(QtGui.QMainWindow):
         self.sp = spectrum(config_file=self.init_file_name)
         if self.sp.phyat_file == 'NO_phyat.dat':
             self.status_text.setText('pySSN, v {}. init file: {}, No synthesis'.format(__version__, 
-                                                                                        self.sp.config_file.split('/')[-1]))
+                     self.sp.config_file.split('/')[-1]))
         else:
             self.status_text.setText('pySSN, v {}. init file: {}, at. data: {}, model: {}, cosmetic: {}'.format(__version__, 
-                                                                                                      self.sp.config_file.split('/')[-1], 
-                                                                                                      self.sp.phyat_file.split('/')[-1],
-                                                                                                      self.sp.get_conf('fic_modele').split('/')[-1],
-                                                                                                      self.sp.get_conf('fic_cosmetik').split('/')[-1]))
+                     self.sp.config_file.split('/')[-1], 
+                     self.sp.phyat_file.split('/')[-1],
+                     self.sp.get_conf('fic_modele').split('/')[-1],
+                     self.sp.get_conf('fic_cosmetik').split('/')[-1]))
+
         self.axes = None
         self.sp.ax2_fontsize = 6
         self.sp_norm_box.setText('{}'.format(self.sp.get_conf('sp_norm')))   
@@ -1741,6 +1878,14 @@ class AppForm(QtGui.QMainWindow):
         self.cyan_label_box.setText('{}'.format(self.sp.label_cyan))
         self.sp_min_box.setText('{}'.format(self.sp.get_conf('limit_sp')[0]))
         self.sp_max_box.setText('{}'.format(self.sp.get_conf('limit_sp')[1]))
+
+        self.xlim_min_box.setText('{}'.format(self.sp.get_conf('x_plot_lims')[0]))
+        self.xlim_max_box.setText('{}'.format(self.sp.get_conf('x_plot_lims')[1]))
+        self.y1lim_min_box.setText('{}'.format(self.sp.get_conf('y1_plot_lims')[0]))
+        self.y1lim_max_box.setText('{}'.format(self.sp.get_conf('y1_plot_lims')[1]))
+        self.y3lim_min_box.setText('{}'.format(self.sp.get_conf('y3_plot_lims')[0]))
+        self.y3lim_max_box.setText('{}'.format(self.sp.get_conf('y3_plot_lims')[1]))
+
         self.verbosity_ag.actions()[self.sp.get_conf('log_level', 0)].setChecked(True)
         self.line_tick_ax_ag.actions()[self.sp.get_conf('line_tick_ax', 0)].setChecked(True)
         self.line_tick_pos_ag.actions()[self.sp.get_conf('line_tick_pos', 0)].setChecked(True)
@@ -1768,7 +1913,6 @@ class AppForm(QtGui.QMainWindow):
             self.set_ion()
         except:
             self.ion_box.setText('')
-
         self.line_sort_ag.actions()[self.sp.get_conf('line_saved_ordered_by', 0)].setChecked(True)
         self.show_header_action.setChecked(self.sp.get_conf('line_saved_header', False))
         self.get_line_fields_to_print()
@@ -1778,7 +1922,6 @@ class AppForm(QtGui.QMainWindow):
 
         self.line_info_dialog_width = 800
         self.line_info_dialog_height = 470
-        #???
 
         sG = QtGui.QApplication.desktop().screenGeometry()
         self.line_info_dialog_x = sG.width()-self.line_info_dialog_width
@@ -1943,12 +2086,32 @@ class AppForm(QtGui.QMainWindow):
     def line_info(self):
         if self.sp is None:
             return
-        new_ref = np.int(self.line_info_box.text())
-        self.line_info_ref = new_ref
-        if self.sp.get_conf('show_dialogs', True):
-            self.show_line_info_dialog()
+        msg = ''
+        s = self.line_info_box.text()
+        w = self.sp.field_width['num'] - 1
+        s = s[-w:]
+        if s[0] == '0':
+            s = s[1:]
+        self.line_info_box.setText(s)
+        try:
+            new_ref = int(s)
+        except ValueError:
+            msg = 'Invalid input.\n It is not an integer'
+        if msg == '':
+            line = self.sp.read_line(self.sp.phyat_file, new_ref)
+            if line is None:
+                line = self.sp.read_line(self.sp.fic_model, new_ref)
+                if line is None:
+                    msg = 'No line associated to this number.'
+        if msg == '':
+            self.line_info_ref = new_ref
+            if self.sp.get_conf('show_dialogs', True):
+                self.show_line_info_dialog()
+            else:
+                self.sp.line_info(new_ref, sort='i_rel')
         else:
-            self.sp.line_info(new_ref, sort='i_rel')
+            title = 'Error in line number'
+            QtGui.QMessageBox.critical(self, title, msg, QtGui.QMessageBox.Ok )
         
     def magenta_line(self):
         if self.sp is None:
@@ -2048,6 +2211,7 @@ class AppForm(QtGui.QMainWindow):
         self.on_draw()
         
     def leave_fig(self, event):
+        self.sp.firstClick = True
         if not self.axes_fixed:
             self.save_axes()
             self.update_lim_boxes()
