@@ -370,7 +370,7 @@ class AppForm(QtGui.QMainWindow):
         self.connect(self.ion_cb, QtCore.SIGNAL('clicked()'), self.ion_cb_changed)
         
         self.line_info_box = QtGui.QLineEdit()
-        self.line_info_box.setFixedWidth(100)
+        self.line_info_box.setFixedWidth(120)
         self.connect(self.line_info_box, QtCore.SIGNAL('returnPressed()'), self.line_info)
 
         self.mpl_toolbar.addSeparator()
@@ -484,7 +484,7 @@ class AppForm(QtGui.QMainWindow):
              '    sp_norm = <float>'
         self.sp_norm_box.setToolTip(s)        
 
-        s = 'Rebinning factor, the integer factor by which the number of points \n' \
+        s = 'Rebinning factor, the odd integer factor by which the number of points \n' \
             'of the original spectrum is multiplied in the rebinning process\n\n' \
             'Set with: \n' \
             '    resol = <integer>\n\n' \
@@ -656,7 +656,7 @@ class AppForm(QtGui.QMainWindow):
                                 ( 'i_cor'   , 'intensity correction factor' ), 
                                 ( 'i_tot'   , 'corrected intensity' ) ])
         
-        items = self.line_print_dic.values()
+        items = list(self.line_print_dic.values())
         s = 'Fields to be printed:\n'
         for i in range(len(items)):
             s = s + '    ' + str(i) + ' - ' + items[i] + '\n'
@@ -896,6 +896,39 @@ class AppForm(QtGui.QMainWindow):
             result = None
         return result
 
+    def save_par_in_file(self, field, value, path, help_=None):
+        if self.isValidFilename(path):
+            if os.path.isfile(path):
+                f = open(path, 'r')
+                lines = f.readlines()[::-1]
+                f.close()
+            else:
+                lines = []
+            j = 0
+            found = False
+            while ( j < len(lines) ) and ( not found ):
+                line = str(lines[j])
+                if line.find(field) == 0:
+                    if type(value) is str:
+                        s0 = ' = \''
+                        s1 = '\'\n'
+                    else:
+                        s0 = ' = '
+                        s1 = '\n'
+                    line = '# ' + line + field + s0 + value  + s1
+                    lines[j] = line
+                    found = True
+                    break
+                j += 1
+            if not found:
+                if help_ is not None:
+                    lines.insert(0, '\n# ' + help_ + '\n')
+                lines.insert(0, field + ' = ' + value + '\n')
+            lines = lines[::-1]
+            f = open(path, 'w')
+            f.writelines(lines)
+            f.close()
+
     def save_cont_pars(self):
         file_choices = "Python files (*.py) (*.py);;Text files (*.txt *.dat) (*.txt *.dat);;All Files (*) (*)"
         filename = self.sp.config_file.split('/')[-1]
@@ -910,7 +943,12 @@ class AppForm(QtGui.QMainWindow):
             for i in range(0, self.table.rowCount()):
                 field = str(self.table.item(i,0).text())
                 value = str(self.table.item(i,1).text())
-                help_ = self.table.item(i,2).text().toUtf8()
+                help_ = str(self.table.item(i,2).text().toUtf8())
+                help_ = help_.replace('\xce\xb2', 'beta')
+                help_ = help_.replace('\xe2\x81\xbb\xc2\xb3', '-3')
+                help_ = help_.replace('\xce\xb1', 'alpha')
+                help_ = help_.replace('\xce\xbb/5000 \xe2\x84\xab', 'lambda/5000 A')
+                print help_
                 j = 0
                 found = False
                 while ( j < len(lines) ) and ( not found ):
@@ -934,15 +972,7 @@ class AppForm(QtGui.QMainWindow):
             f = open(path, 'w')
             f.writelines(lines)
             f.close()
-
-    # mvfc: I should have created classes for the dialogs to capture events like dragging, closing, resizing
-    def close_line_info_dialog(self):
-        self.line_info_dialog_width = self.line_info_dialog.width()
-        self.line_info_dialog_height = self.line_info_dialog.height()
-        self.line_info_dialog_x = self.line_info_dialog.pos().x()
-        self.line_info_dialog_y = self.line_info_dialog.pos().y()
-        self.line_info_dialog.close()
-  
+    
     def plot_tick_at(self, wavelength, ion=None):
         if ion == None:
             self.on_draw()
@@ -955,6 +985,19 @@ class AppForm(QtGui.QMainWindow):
 
     def show_line_info_dialog(self):
 
+        def get_window_size_and_position():
+            if self.line_info_dialog is None:
+                self.line_info_dialog_width = 800
+                self.line_info_dialog_height = 470
+                sG = QtGui.QApplication.desktop().screenGeometry()
+                self.line_info_dialog_x = sG.width()-self.line_info_dialog_width
+                self.line_info_dialog_y = 0
+            else:
+                self.line_info_dialog_width = self.line_info_dialog.width()
+                self.line_info_dialog_height = self.line_info_dialog.height()
+                self.line_info_dialog_x = self.line_info_dialog.pos().x()
+                self.line_info_dialog_y = self.line_info_dialog.pos().y()
+    
         def save_initial_plot_pars():
             self.init_ion = self.ion_box.text()
             self.init_xmin = self.xlim_min_box.text()
@@ -986,6 +1029,12 @@ class AppForm(QtGui.QMainWindow):
             row = item.row()
             col = item.column()
             s = item.text()
+            print 's=', s
+            if col == 1:
+                ion = self.line_info_table.item(row, 1).text()
+                print 'ion=', ion
+                self.ion_box.setText(ion)
+                self.draw_ion()
             if not self.isFloat(s):
                 return               
             if col in [0,6] and int(s) != 0:
@@ -1036,8 +1085,15 @@ class AppForm(QtGui.QMainWindow):
             editableCols = []
             if self.sp.get_conf('allow_editing_lines', False):
                 if cat == 'sat':
-                    # mvfc: which are editable fields?
-                    editableCols = ['l_shift', 'i_cor', 'profile', 'vitesse']
+                    if do_cosmetics:
+                        editableCols = ['l_shift', 'i_cor', 'profile', 'vitesse']
+                    else:
+                        editableCols = []
+                elif cat == 'subref':
+                    if do_cosmetics:
+                        editableCols = ['i_cor']
+                    else:
+                        editableCols = []
                 elif cat == 'ref':
                     editableCols = ['l_shift', 'i_cor', 'i_rel', 'profile', 'vitesse']
             for j in range(0,len(fieldItems)):
@@ -1070,7 +1126,10 @@ class AppForm(QtGui.QMainWindow):
             while refline == None:
                 refline = self.sp.read_line(self.sp.fic_model, int(line_num))
                 if refline is None:
-                    curr_line = self.sp.read_line(self.sp.fic_cosmetik, int(line_num))
+                    if do_cosmetics:
+                        curr_line = self.sp.read_line(self.sp.fic_cosmetik, int(line_num))
+                    else:
+                        curr_line = None
                     if curr_line == None:
                         curr_line = self.sp.read_line(self.sp.phyat_file, int(line_num))
                     LineList.append(curr_line)
@@ -1092,12 +1151,13 @@ class AppForm(QtGui.QMainWindow):
                 subrefline_num = self.sp.fieldStrFromLine(subrefline[k], 'num')             
                 subsat = self.sp.read_satellites(self.sp.phyat_file, int(subrefline_num))
                 n_subsat = len(subsat)
-                for i in range(0,n_subsat):
-                    sat_line = subsat[i]
-                    sat_line_num = int(self.sp.fieldStrFromLine(sat_line,'num'))
-                cosmetic_line = self.sp.read_line(self.sp.fic_cosmetik, sat_line_num)
-                if cosmetic_line is not None:
-                    subsat[i] = cosmetic_line
+                if do_cosmetics:
+                    for i in range(0,n_subsat):
+                        sat_line = subsat[i]
+                        sat_line_num = int(self.sp.fieldStrFromLine(sat_line,'num'))
+                        cosmetic_line = self.sp.read_line(self.sp.fic_cosmetik, sat_line_num)
+                        if cosmetic_line is not None:
+                            subsat[i] = cosmetic_line
                 subsatellites = subsatellites + subsat
             n_subsat = len(subsatellites)
             if refline is not None:
@@ -1105,12 +1165,13 @@ class AppForm(QtGui.QMainWindow):
                 satellites = self.sp.read_satellites(self.sp.phyat_file, int(refline_num))
                 do_sort(satellites)
                 n_sat = len(satellites)
-                for i in range(0,n_sat):
-                    sat_line = satellites[i]
-                    sat_line_num = int(self.sp.fieldStrFromLine(sat_line,'num'))
-                    cosmetic_line = self.sp.read_line(self.sp.fic_cosmetik, sat_line_num)
-                    if cosmetic_line is not None:
-                        satellites[i] = cosmetic_line
+                if do_cosmetics:
+                    for i in range(0,n_sat):
+                        sat_line = satellites[i]
+                        sat_line_num = int(self.sp.fieldStrFromLine(sat_line,'num'))
+                        cosmetic_line = self.sp.read_line(self.sp.fic_cosmetik, sat_line_num)
+                        if cosmetic_line is not None:
+                            satellites[i] = cosmetic_line
             else:
                 n_sat = 0
             if line is None and refline is None:
@@ -1175,7 +1236,7 @@ class AppForm(QtGui.QMainWindow):
                 fill_text(k,'Subreference line:')
                 k += 2
                 for i in range(0,n_subref):
-                    fill_data(k, subrefline[i], 'sat')
+                    fill_data(k, subrefline[i], 'subref')
                     k += 1
                 if n_subsat > 0:
                     SelectedSubSatellites = do_sort(SelectedSubSatellites)
@@ -1259,6 +1320,7 @@ class AppForm(QtGui.QMainWindow):
             return line
        
         def save_change(row, col):
+
             line = get_line_from_table(row)
             if isRefLine(line):
                 filename = self.sp.fic_model
@@ -1267,20 +1329,32 @@ class AppForm(QtGui.QMainWindow):
             self.sp.replace_line(filename, line)
             if self.sp.get_conf('update_after_editing_lines', False):
                 self.adjust()
- 
+
+        def init_lines():
+            self.line = None
+            self.subrefline = None
+            self.refline = None
+            self.subsatellites = []
+            self.satellites = []
+            self.n_sat = 0 
+            self.n_subsat = 0
+            self.n_subref = 0
+
         statusBar = QtGui.QStatusBar()
-        s = 'Click on the button Satellites to cycle the tri-state display of satellite lines:\n' \
+        s = 'Click on \"Satellites\" to cycle the tri-state display of satellite lines:\n' \
             '   1 - The satellite lines in the spectral range of the synthesis are shown; \n' \
             '   2 - All satellite lines (including subreference lines and lines outside the spectral range of the synthesis) are shown. \n' \
             '   3 - No satellite line is shown; \n' \
-            'Double-click on line number to show the data for that line. \n' \
-            'Double-click on wavelength to draw a tick at that position and recenter the spectrum if necessary. \n' \
-            'Click on reset to return to the original line and plot settings.'
+            'Double-click on a line number to show the data for that line. \n' \
+            'Double-click on an ion to plot line ticks and spectrum for that single ion. \n' \
+            'Double-click on a wavelength to draw a tick at that position and recenter the spectrum if necessary. \n' \
+            'Click on \"Reset\" to return to the original line and plot settings. \n' \
+            'The green fields are editable.'
         statusBar.addWidget(QtGui.QLabel(s),1)
         self.showStatusBar = False
         statusBar.setVisible(self.showStatusBar)
         self.show_satellites = 1
-        self.curr_line_num = self.line_info_box.text()
+        get_window_size_and_position()
         self.line_info_dialog = QtGui.QDialog()
         self.line_info_dialog.resize(self.line_info_dialog_width,self.line_info_dialog_height)
         self.line_info_dialog.move(self.line_info_dialog_x,self.line_info_dialog_y)
@@ -1297,21 +1371,16 @@ class AppForm(QtGui.QMainWindow):
         self.line_info_table.horizontalHeaderItem(8).setToolTip(s)
         self.line_info_table.horizontalHeaderItem(9).setTextAlignment(QtCore.Qt.AlignLeft)
         self.line_info_table.horizontalHeaderItem(9).setText('  comment')
-        self.line = None
-        self.subrefline = None
-        self.refline = None
-        self.subsatellites = []
-        self.satellites = []
-        self.n_sat = 0 
-        self.n_subsat = 0
-        self.n_subref = 0
+        init_lines()
+        do_cosmetics = self.sp.get_conf('do_cosmetik')
         save_initial_plot_pars()
+        self.curr_line_num = self.line_info_box.text()
         get_info(self.curr_line_num)
         fill_line_info_table()
         self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Help|
-                                               QtGui.QDialogButtonBox.Close|
-                                               QtGui.QDialogButtonBox.Reset|
-                                               QtGui.QDialogButtonBox.Apply)
+                                                QtGui.QDialogButtonBox.Close|
+                                                QtGui.QDialogButtonBox.Reset|
+                                                QtGui.QDialogButtonBox.Apply)
         self.buttonBox.button(QtGui.QDialogButtonBox.Apply).setText("Satellites")
         self.buttonBox.button(QtGui.QDialogButtonBox.Apply).setToolTip("Click to toggle the satellite lines")
         self.buttonBox.button(QtGui.QDialogButtonBox.Apply).clicked.connect(toggle_show_satellites)
@@ -1319,7 +1388,7 @@ class AppForm(QtGui.QMainWindow):
         self.buttonBox.button(QtGui.QDialogButtonBox.Reset).setToolTip(s)
         self.buttonBox.button(QtGui.QDialogButtonBox.Reset).clicked.connect(do_reset)
         self.buttonBox.button(QtGui.QDialogButtonBox.Help).clicked.connect(toggle_statusbar)
-        self.buttonBox.rejected.connect(self.close_line_info_dialog)
+        self.buttonBox.rejected.connect(self.line_info_dialog.close)
         self.line_info_table.doubleClicked.connect(on_doubleClick)
         self.line_info_table.itemChanged.connect(on_itemChanged)
         vbox = QtGui.QVBoxLayout()
@@ -1332,6 +1401,19 @@ class AppForm(QtGui.QMainWindow):
         self.line_info_dialog.show()
             
     def show_nearbyLines_dialog(self):
+
+        def get_window_size_and_position():
+            if self.nearbyLines_dialog is None:
+                self.nearbyLines_dialog_width = 800
+                self.nearbyLines_dialog_height = 470
+                sG = QtGui.QApplication.desktop().screenGeometry()
+                self.nearbyLines_dialog_x = sG.width()-self.nearbyLines_dialog_width
+                self.nearbyLines_dialog_y = sG.height()-self.nearbyLines_dialog_height
+            else:
+                self.nearbyLines_dialog_width = self.nearbyLines_dialog.width()
+                self.nearbyLines_dialog_height = self.nearbyLines_dialog.height()
+                self.nearbyLines_dialog_x = self.nearbyLines_dialog.pos().x()
+                self.nearbyLines_dialog_y = self.nearbyLines_dialog.pos().y()
       
         def toggle_statusbar():
             self.showStatusBar = not self.showStatusBar
@@ -1379,17 +1461,15 @@ class AppForm(QtGui.QMainWindow):
                 self.line_info_box.setText(s)
                 self.line_info()
 
+        get_window_size_and_position()
         self.nearbyLines_dialog = QtGui.QDialog()
-        self.nearbyLines_dialog.resize(800,300)
-        sG = QtGui.QApplication.desktop().screenGeometry()
-        x = (sG.width()-self.nearbyLines_dialog.width())
-        y = (sG.height()-self.nearbyLines_dialog.height())
-        self.nearbyLines_dialog.move(x,y)
+        self.nearbyLines_dialog.resize(self.nearbyLines_dialog_width, self.nearbyLines_dialog_height)
+        self.nearbyLines_dialog.move(self.nearbyLines_dialog_x,self.nearbyLines_dialog_y)
         statusBar = QtGui.QStatusBar()
-        s = 'Double-click on a line number (or select the line number and press Apply) to show line info dialog. \n' \
+        s = 'Double-click on a line number (or select the line number and press \"Apply\") to show line info dialog. \n' \
             'Double-click on an ion to plot line ticks and spectrum for that single ion. \n' \
             'Double-click on the wavelength to draw a tick at that position. \n' \
-            'Select multiple ions (using click, Shift+click, and Ctrl+click) and press Apply plot line ticks and spectra for a list of ions. \n' \
+            'Select multiple ions (using click, Shift+click, and Ctrl+click) and press \"Apply\" plot line ticks and spectra for a list of ions. \n' \
             'Click on the ion header to select all ions.'
         statusBar.addWidget(QtGui.QLabel(s),1)
         self.showStatusBar = False
@@ -1456,6 +1536,26 @@ class AppForm(QtGui.QMainWindow):
                  ( 'cont_pix'       , 'List of pixels of the interpolated continuum' ),       
                  ( 'cont_intens'    , 'List of intensities of the interpolated continuum' ) ]
 
+      
+        def toggle_statusbar():
+            self.showStatusBar = not self.showStatusBar
+            statusBar.setVisible(self.showStatusBar)
+
+        def get_window_size_and_position():
+            if self.cont_pars_dialog is None:
+                self.cont_pars_dialog_width = 800
+                self.cont_pars_dialog_height = 460
+                sG = QtGui.QApplication.desktop().screenGeometry()
+                self.cont_pars_dialog_x = sG.width()-self.cont_pars_dialog_width
+                self.cont_pars_dialog_y = sG.height()-self.cont_pars_dialog_height
+                self.cont_pars_dialog_x = 0
+                self.cont_pars_dialog_y = 0
+            else:
+                self.cont_pars_dialog_width = self.cont_pars_dialog.width()
+                self.cont_pars_dialog_height = self.cont_pars_dialog.height()
+                self.cont_pars_dialog_x = self.cont_pars_dialog.pos().x()
+                self.cont_pars_dialog_y = self.cont_pars_dialog.pos().y()
+
         def set_conf_from_table(row):
             s = str(self.table.item(row,1).text())
             value = self.ConvStrToValidTypes(s)
@@ -1481,11 +1581,18 @@ class AppForm(QtGui.QMainWindow):
                 self.table.item(row, 1).setBackgroundColor(QtGui.QColor('red'))
             self.table.blockSignals(False)
  
+        get_window_size_and_position()
         self.cont_pars_dialog = QtGui.QDialog()
-        self.cont_pars_dialog.resize(800,460)
+        self.cont_pars_dialog.resize(self.cont_pars_dialog_width, self.cont_pars_dialog_height)
+        self.cont_pars_dialog.move(self.cont_pars_dialog_x, self.cont_pars_dialog_y) 
+        statusBar = QtGui.QStatusBar()
+        s = 'Click on \"Save\" to write the continuum parameters to a file. \n' \
+            'Click on \"Update\" to adjust the synthesis to the changes in the continuum parameters. \n' \
+            'The green fields are editable.'
+        statusBar.addWidget(QtGui.QLabel(s),1)
+        self.showStatusBar = False
+        statusBar.setVisible(self.showStatusBar)
         self.table = QtGui.QTableWidget()   
-        #       self.table.keyPressEvent = test
-        #       self.table.itemChanged(self.changeIcon)
         self.table.setRowCount(len(Pars))
         self.table.setColumnCount(3)
         self.table.setHorizontalHeaderLabels([ 'parameter', 'value', 'help' ])
@@ -1506,17 +1613,23 @@ class AppForm(QtGui.QMainWindow):
         if self.table.columnWidth(1) > 300:
             self.table.setColumnWidth(1,300) 
         self.table.itemChanged.connect(on_itemChanged)
-        self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Save|QtGui.QDialogButtonBox.Apply|QtGui.QDialogButtonBox.Close)
+        self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Help|
+                                                QtGui.QDialogButtonBox.Save|
+                                                QtGui.QDialogButtonBox.Apply|
+                                                QtGui.QDialogButtonBox.Close)
+        self.buttonBox.button(QtGui.QDialogButtonBox.Help).setDefault(True)
+        self.buttonBox.button(QtGui.QDialogButtonBox.Apply).setText('Update')
+        self.buttonBox.button(QtGui.QDialogButtonBox.Apply).setToolTip('Click to update synthesis with changes in the continuum parameters.')
+        self.buttonBox.button(QtGui.QDialogButtonBox.Apply).clicked.connect(self.adjust)
         self.buttonBox.rejected.connect(self.cont_pars_dialog.close)
-        self.buttonBox.accepted.connect(self.save_cont_pars)
-        self.buttonBox.clicked.connect(self.adjust)
+        self.buttonBox.button(QtGui.QDialogButtonBox.Save).clicked.connect(self.save_cont_pars)
+        self.buttonBox.button(QtGui.QDialogButtonBox.Help).clicked.connect(toggle_statusbar)
         vbox = QtGui.QVBoxLayout()
         vbox.addWidget(self.table)
         vbox.addWidget(self.buttonBox)
+        vbox.addWidget(statusBar)
         self.cont_pars_dialog.setLayout(vbox)
         self.cont_pars_dialog.setWindowTitle('Continuum parameters')
-        #       self.cont_pars_dialog.setWindowModality(QtCore.Qt.ApplicationModal)        self.cont_pars_dialog.setWindowModality(QtCore.Qt.NonModal)
-        #       self.cont_pars_dialog.exec_()
         self.cont_pars_dialog.show()
 
     def get_line_tick_lim(self, line_tick_pos):
@@ -1825,6 +1938,11 @@ class AppForm(QtGui.QMainWindow):
         file_choices = "Python initialization files (*init.py) (*init.py);;Python files (*.py) (*.py);;All files (*) (*)"
         title = 'Open pySSN initialization file'
         if init_file_name is None:
+            msg = "An initialization file is needed! \n" \
+                  "It can be supplied with the line command \n" \
+                  "     pySSN -f init_file. \n\n" \
+                  "Click \"Ok\" to open a file dialog to select this file."
+            QtGui.QMessageBox.critical(self, 'pySSN', msg, QtGui.QMessageBox.Ok )  
             self.init_file_name = str(QtGui.QFileDialog.getOpenFileName(self, title, '', file_choices))
         else:
             self.init_file_name = init_file_name
@@ -1842,11 +1960,50 @@ class AppForm(QtGui.QMainWindow):
             self.do_save = True
             self.restore_axes()
         else:
-            if self.sp is None:
-                raise ValueError('An initialization filename must be given')
-            else:
-                log_.warn('A filename must be given', calling=self.calling)
-                return
+            log_.warn('A filename must be given', calling=self.calling)
+            sys.exit('An initialization filename must be given')
+
+            
+    def isValidFilename(self, filename):
+        try:
+            open(filename,'r')
+            return True
+        except IOError:
+            try:
+                open(filename, 'w')
+                return True
+            except IOError:
+                return False
+        
+    def set_cosmetic_file(self, cosmetic_file):
+        if cosmetic_file is not None and self.isValidFilename(cosmetic_file):
+            return
+        file_choices = "Line cosmetic files (*.dat) (*.dat);;All files (*) (*)"
+        title = 'Set the line cosmetic file'
+        msg = "A line cosmetic file is needed! \n"
+        msg = "Line cosmetic file '{}' not valid. \n" \
+              "It can be supplied in the initialization file with:\n" \
+              "     fic_cosmetik = <cosmetic_file> . \n\n" \
+              "Click \"Ok\" to open a file dialog to select this file.".format(cosmetic_file)
+        QtGui.QMessageBox.critical(self, 'pySSN', msg, QtGui.QMessageBox.Ok )  
+        cosmetic_file = str(QtGui.QFileDialog.getSaveFileName(self, title, '', file_choices, options=QtGui.QFileDialog.DontConfirmOverwrite))
+        while cosmetic_file and not self.isValidFilename(cosmetic_file):
+            msg = "Line cosmetic file '{}' not valid!".format(cosmetic_file)
+            QtGui.QMessageBox.critical(self, 'pySSN', msg, QtGui.QMessageBox.Ok )  
+            cosmetic_file = str(QtGui.QFileDialog.getSaveFileName(self, title, '', file_choices))
+        if not cosmetic_file:
+            self.sp.set_conf('do_cosmetik', False)
+            msg = "Line cosmetics disable. \n"  \
+                  "do_cosmetik = False" 
+            QtGui.QMessageBox.warning(self, 'pySSN', msg, QtGui.QMessageBox.Ok )
+        else:
+            dir_ = os.path.dirname(cosmetic_file)
+            if dir_ == os.getcwd():
+                cosmetic_file = cosmetic_file.split('/')[-1]
+            self.sp.set_conf('fic_cosmetik', cosmetic_file)
+            self.save_par_in_file('fic_cosmetik', cosmetic_file, self.init_file_name, 'line cosmetic file')
+            self.sp.fic_cosmetik = cosmetic_file
+            self.start_spectrum()
         
     def start_spectrum(self):
         init_file = self.init_file_name.split('/')[-1]
@@ -1865,6 +2022,8 @@ class AppForm(QtGui.QMainWindow):
                      self.sp.get_conf('fic_modele').split('/')[-1],
                      self.sp.get_conf('fic_cosmetik').split('/')[-1]))
 
+        if self.sp.get_conf('do_cosmetik'):
+            self.set_cosmetic_file(self.sp.fic_cosmetik)
         self.axes = None
         self.sp.ax2_fontsize = 6
         self.sp_norm_box.setText('{}'.format(self.sp.get_conf('sp_norm')))   
@@ -1920,13 +2079,6 @@ class AppForm(QtGui.QMainWindow):
         self.readOnlyCells_bg_color = QtGui.QColor('white')
         self.editableCells_bg_color = QtGui.QColor('lightgreen')
 
-        self.line_info_dialog_width = 800
-        self.line_info_dialog_height = 470
-
-        sG = QtGui.QApplication.desktop().screenGeometry()
-        self.line_info_dialog_x = sG.width()-self.line_info_dialog_width
-        self.line_info_dialog_y = 0
-    
     def sp_norm(self):
         if self.sp is None:
             return

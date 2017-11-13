@@ -73,7 +73,9 @@ def read_data(filename, NF=True):
         log_.error('Some intensity corrections are not defined {}'.format(dd['num'][np.isnan(dd['i_cor'])]))
     if np.isnan(dd['i_rel']).sum() > 0:
         log_.error('Some relative intensities are not defined {}'.format(dd['num'][np.isnan(dd['i_rel'])]))
-    
+
+    if dd.size == 1:
+        dd = np.atleast_1d(dd)
     return dd.view(np.recarray)
 
 
@@ -280,10 +282,7 @@ class spectrum(object):
                 self.n_models = len(self.model_arr)
                 
                 self.fic_cosmetik = self.get_conf('fic_cosmetik', message='warn')
-                if self.fic_cosmetik is None:
-                    self.cosmetik_arr = []
-                else:
-                    self.cosmetik_arr = self.read_cosmetik(self.fic_cosmetik)
+                self.cosmetik_arr = self.read_cosmetik(self.fic_cosmetik, self.do_cosmetik)
                 self.n_cosmetik = len(self.cosmetik_arr)
 
                 self.sp_theo, self.liste_totale, self.liste_raies = \
@@ -525,16 +524,16 @@ class spectrum(object):
         model_arr['ref'] = 0
         return model_arr
         
-    def read_cosmetik(self, cosmetik_file):
-        
+    def read_cosmetik(self, cosmetik_file, do_cosmetik):
+        if not os.path.isabs(cosmetik_file):
+            cosmetik_file = '{0}'.format(self.directory + cosmetik_file)
         cosmetik_arr = []
-        try:
-            cosmetik_arr = read_data('{0}'.format(self.directory + cosmetik_file))
-            log_.message('cosmetik read from {0}'.format(self.directory + cosmetik_file),
-                                calling = self.calling)
-        except:
-            log_.warn('unable to read from {0}'.format(self.directory + cosmetik_file),
-                                calling = self.calling)
+        if do_cosmetik:
+            try:
+                cosmetik_arr = read_data(cosmetik_file)
+                log_.message('cosmetik read from {0}'.format(cosmetik_file), calling = self.calling)
+            except:
+                log_.warn('unable to read from {0}'.format(cosmetik_file), calling = self.calling)
         return cosmetik_arr
 
     def read_obs(self, k_spline = 1):
@@ -1028,7 +1027,7 @@ class spectrum(object):
                 
     def adjust(self):
         new_model_arr = self.read_model(self.fic_model)        
-        new_cosmetik_arr = self.read_cosmetik(self.fic_cosmetik)
+        new_cosmetik_arr = self.read_cosmetik(self.fic_cosmetik, self.do_cosmetik)
         new_sp_theo, new_liste_totale, new_liste_raies = self.append_lists(self.phyat_arr, new_model_arr, new_cosmetik_arr)
         mask_diff = np.zeros(len(new_liste_raies), dtype=bool)
         for key in ('lambda', 'l_shift', 'i_rel', 'i_cor', 'vitesse', 'profile'):
@@ -1149,28 +1148,34 @@ class spectrum(object):
         return satellites
 
     def read_line(self, filename, line_num):
-        with open(filename, 'r') as f:
-            line = None
-            for eachline in f:
-                if int(self.fieldStrFromLine(eachline,'num')) == line_num:
-                    line = eachline
-                    break
+        if not os.path.isfile(filename):
+            return None
+        else:
+            with open(filename, 'r') as f:
+                line = None
+                for eachline in f:
+                    if int(self.fieldStrFromLine(eachline,'num')) == line_num:
+                        line = eachline
+                        break
         return line
 
     def replace_line(self, filename, line):
         line_num = int(self.fieldStrFromLine(line,'num'))
-        lineNotFound = True
-        with open(filename, 'r') as f:
-            lines = f.read().splitlines()
-            for i in range(0, len(lines)):
-                curr_line = lines[i]
-                if int(self.fieldStrFromLine(curr_line,'num')) == line_num:
-                    lines[i] = line + '\n'
-                    lineNotFound = False
-                else:
-                    lines[i] = lines[i] + '\n'
-        if lineNotFound:    
-            lines.append(line)
+        if os.path.isfile(filename):
+            lineNotFound = True
+            with open(filename, 'r') as f:
+                lines = f.read().splitlines()
+                for i in range(0, len(lines)):
+                    curr_line = lines[i]
+                    if int(self.fieldStrFromLine(curr_line,'num')) == line_num:
+                        lines[i] = line + '\n'
+                        lineNotFound = False
+                    else:
+                        lines[i] = lines[i] + '\n'
+            if lineNotFound:    
+                lines.append(line)
+        else:
+            lines = [line]                
         with open(filename, 'w') as f:
             f.writelines(lines)
 
