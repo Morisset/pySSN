@@ -27,7 +27,7 @@ from ..core.spectrum import spectrum
 from ..utils.misc import get_parser
 
 from collections import OrderedDict
-
+log_.level = 4
 #ToDo : 
 
 class NavigationToolbar( NavigationToolbar2QT ):
@@ -1929,7 +1929,7 @@ class AppForm(QtGui.QMainWindow):
         self.print_axes()
         
     def print_axes(self):
-        log_.debug('{} {} {} {}'.format(self.x_plot_lims, self.y1_plot_lims, self.y2_plot_lims, self.y3_plot_lims), calling=self.calling)
+        log_.debug('lims: {} {} {} {}'.format(self.x_plot_lims, self.y1_plot_lims, self.y2_plot_lims, self.y3_plot_lims), calling=self.calling)
         log_.debug('Axes IDs {} {} {}'.format(id(self.axes), id(self.axes2), id(self.axes3)), calling=self.calling)
         log_.debug(' IDs {} {} {}'.format(id(self.axes), id(self.axes2), id(self.axes3)), calling=self.calling)
 
@@ -2038,12 +2038,16 @@ class AppForm(QtGui.QMainWindow):
         self.sp_min_box.setText('{}'.format(self.sp.get_conf('limit_sp')[0]))
         self.sp_max_box.setText('{}'.format(self.sp.get_conf('limit_sp')[1]))
 
-        self.xlim_min_box.setText('{}'.format(self.sp.get_conf('x_plot_lims')[0]))
-        self.xlim_max_box.setText('{}'.format(self.sp.get_conf('x_plot_lims')[1]))
-        self.y1lim_min_box.setText('{}'.format(self.sp.get_conf('y1_plot_lims')[0]))
-        self.y1lim_max_box.setText('{}'.format(self.sp.get_conf('y1_plot_lims')[1]))
-        self.y3lim_min_box.setText('{}'.format(self.sp.get_conf('y3_plot_lims')[0]))
-        self.y3lim_max_box.setText('{}'.format(self.sp.get_conf('y3_plot_lims')[1]))
+        self.init_axes()
+        log_.debug('x_plot_lims={}'.format(self.x_plot_lims), calling='start_spectrum')
+        log_.debug('y1_plot_lims={}'.format(self.y1_plot_lims), calling='start_spectrum')
+        log_.debug('y3_plot_lims={}'.format(self.y3_plot_lims), calling='start_spectrum')
+        self.xlim_min_box.setText('{}'.format(self.x_plot_lims[0]))
+        self.xlim_max_box.setText('{}'.format(self.x_plot_lims[1]))
+        self.y1lim_min_box.setText('{}'.format(self.y1_plot_lims[0]))
+        self.y1lim_max_box.setText('{}'.format(self.y1_plot_lims[1]))
+        self.y3lim_min_box.setText('{}'.format(self.y3_plot_lims[0]))
+        self.y3lim_max_box.setText('{}'.format(self.y3_plot_lims[1]))
 
         self.verbosity_ag.actions()[self.sp.get_conf('log_level', 0)].setChecked(True)
         self.line_tick_ax_ag.actions()[self.sp.get_conf('line_tick_ax', 0)].setChecked(True)
