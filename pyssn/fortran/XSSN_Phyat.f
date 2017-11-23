@@ -1,5 +1,6 @@
 c  gfortran XSSN_Phyat.f
 c     gfortran -fcheck=all XSSN_Phyat.f
+c  gfortran -fcheck=all XSSN_Phyat_Chris_new_repert_2.f
 c  ./a.out
 c
 c-------------------------------------------------------
@@ -7,7 +8,7 @@ c-------------------------------------------------------
 c
 c  Compute recombination lines for nebulae in physical conditions to be specified.
 c  Output is in format corresponding to code pySSN (Spectral Synthesis for Nebulae).
-c  Daniel Péquignot, Oct. 2015 - Sept. 2017.
+c  Daniel Péquignot, Oct. 2015 - Nov. 2017.
 c
       IMPLICIT NONE
 c  ***  EXPLICIT: IONS ***
@@ -93,10 +94,10 @@ c Control address fort ReadSto: r read, w write
 c Control address for ion astrophysical data: 
       in_ions=17 ! adr. ions_rec.dat file (17 arb)
       in_lim=32  ! adr. outputcond.dat file (32 arb)
-c**** ESSAI 12/11/15
+c**** TRIAL 12/11/15, 8/11/17
       istow=0  ! istow=0: no write, stdd ! istow=20 (\rm alfsto.res) (arb)
 c Control address fort HBD : write in BA5.out
-c****ESSAI 12/11/15
+c**** TRIAL 12/11/15
       ibr=0    ! ibr=0: no write, stdd ! ibr=15 (touch BA5.out): write (arb)
 c Control write XSSN:   (ATT: update iprint.ne.0 to be checked ?)
       iprint=0 ! iprint=0: input + XSSN output only, stdd ! .ne.0: print all 1/14: OBSO ?
@@ -188,12 +189,12 @@ c
          indice=0
 c
       if(nomion.eq.'HI     ') then
-      Call XSSN_Hlike(Te,Ne,'HI_2.lab','HI_2.res',PHYAT)
-        indice=1
+      Call HI_HeII(Te,Ne,'HI_2.lab','HI_2.res',PHYAT)
+      indice=1
       endif
 c
       if(nomion.eq.'DI     ') then
-      Call XSSN_Hlike(Te,Ne,'DI_2.lab','DI_2.res',PHYAT)
+      Call HI_HeII(Te,Ne,'DI_2.lab','DI_2.res',PHYAT)
         indice=1
       endif
 c
@@ -208,12 +209,12 @@ c        indice=1
 c      endif
 c
       if(nomion.eq.'HeII   ') then
-      Call XSSN_Hlike(Te,Ne,'HeII_2.lab','HeII_2.res',PHYAT)
+      Call HI_HeII(Te,Ne,'HeII_2.lab','HeII_2.res',PHYAT)
         indice=1
       endif
 c
       if(nomion.eq.'3HeII  ') then
-      Call XSSN_Hlike(Te,Ne,'3HeII_2.lab','3HeII_2.res',PHYAT)
+      Call HI_HeII(Te,Ne,'3HeII_2.lab','3HeII_2.res',PHYAT)
         indice=1
       endif
 c
@@ -255,6 +256,13 @@ c
       endif
 ccc SUPPR 11/11: Call XSSN_Hlike(Te,Ne,'CIV_2D5.lab','CIV_2D5.res',PHYAT)
 ccc SUPPR 11/11: Call XSSN_Hlike(Te,Ne,'CIV_2D3.lab','CIV_2D3.res',PHYAT)
+c
+c  Not treated
+c      if(nomion.eq.'CVI    ') then
+c      Call HI_HeII(Te,Ne,'CVI_2.lab','CVI_2.res',PHYAT)
+c        indice=1
+c      endif
+c etc.
 c
 c *** NI TBD
 c
@@ -440,7 +448,7 @@ c   ion is computred several times, with auxiliary tabulation restricted
 c   to lines corresponding to the changing energy level. Cf logics nmult, imult. 
 c  Tables start from l=1 (p), followed by l=2 (d), etc., but l=0 (s) 
 c   is considered implicitely in the tables (extended fortran 77). 
-c  The 'l' considerds are generaly > 1, except for 'exact' H-likes
+c  The 'l' considered are generaly > 1, except for 'exact' H-likes
 c   HI and HeII (with 'l' grouped together or not for each 'n'). 
 c  Level energy of a level E(n,l) = chi_ion - chi_Hli/n**2 + cor(n,l) in cm-1.
 c  Known energies EN(n,l) ('N' for 'NIST') are read from nmil1 to nmal1
@@ -461,7 +469,7 @@ c III) Calls :
 c                 Function Int_Hlike
 c  Compute emissivity of X-SSN lines in quasi-hydrogenic approximation,
 c   using effective recombination coefficients listed by  
-c   Storey et Hummer (1995) for n < 51, read by:
+c   Storey et Hummer (1995) for n < 51, read and interpolated by:
 c                 Subroutine Readsto, 
 c  and branching ratios computed in:
 c                 Subroutine HBD,
@@ -480,7 +488,7 @@ c
 c V) The .res are transfered in PHYAT (= liste_phyat... for X-SSN) by:
 c                 Subr Write_Phyat
 c
-c VI) Treatments in separate Subr: HeI, ... OIII_5g, etc. 
+c VI) Treatments in separate Subr: HI_HeII, HeI, ... OIII_5g, etc. 
 c
       INTEGER ni_ref,li_ref,ns_ref,k,km !ATT: normally k=1 on calling Int_Hlike
       INTEGER numin,numax !Br table
@@ -488,7 +496,7 @@ c
       REAL az,am
       CHARACTER zc*1,bidon*1
       INTEGER iz,izz,iprint,i,im
-      DOUBLE PRECISION alfeff,b_SH
+      DOUBLE PRECISION alf,b_SH
       DOUBLE PRECISION Br,A_tp
       DOUBLE PRECISION Ne,Te
       DOUBLE PRECISION Int_Hlike,int_ref_Hli
@@ -502,16 +510,15 @@ cc      INTEGER lc1,lc2    ! check string tables
       INTEGER inmitab,inmatab,iraies
       INTEGER mult,imult,nmult,nimult(20),limult(20),j
       INTEGER niregr,nsregr,indregr,lregr,hydrostrict
-      INTEGER inep1
       INTEGER iextrapol
       INTEGER iwlim,iw,iecr,iecrb
       DOUBLE PRECISION ryd,charge,chi_Hli,chi_ion,x,A
       DOUBLE PRECISION cmult,comult(99,0:99)
       DOUBLE PRECISION E(99,0:99),EN(99,0:99),cor(99,0:99),corN(99,0:99)
-      DOUBLE PRECISION wl(99,0:99,99),Emisto(0:99) !trans 'normales' ns l+1 --> ni l
-      DOUBLE PRECISION wk(50,0:50,50)           !trans eventuelles ns l-1 --> ni l
-      DOUBLE PRECISION wlhydrostr(22,500) !wl pr 10 series H et He+ Sto
-      DOUBLE PRECISION emhydr(22,500),int_hydr_ref !emis rel H et He+ Sto
+      DOUBLE PRECISION wl(99,0:99,99),Emisto(0:99) ! 'normal' trans ns l+1 --> ni l
+      DOUBLE PRECISION wk(50,0:50,50)           ! 'occasional' trans ns l-1 --> ni l
+      DOUBLE PRECISION wlhydrostr(22,500) ! wl for 10 series H and He+ Sto
+      DOUBLE PRECISION emhydr(22,500),int_hydr_ref ! rel emis H and He+ Sto
       COMMON/MOCR1/wlmin,wlmax,wlim,Irelmin_H,Ionab,Ionab_min,iwlim
       DOUBLE PRECISION int_ref_mod_H
       COMMON/MOCR2/int_ref_mod_H
@@ -520,7 +527,7 @@ cc      INTEGER lc1,lc2    ! check string tables
       DOUBLE PRECISION wlmin,wlmax
       DOUBLE PRECISION Irelmin(21)
       COMMON/MOCR3/Irelmin
-      DOUBLE PRECISION va,vb,pente1,ve,vf,vg
+      DOUBLE PRECISION va,vb,pente1,ve
       DOUBLE PRECISION vh   !pr test H
       DOUBLE PRECISION vzero
       CHARACTER*17 titre
@@ -529,7 +536,6 @@ cc      INTEGER lc1,lc2    ! check string tables
       CHARACTER*3 inmitabc,inmatabc,ni_refc,ns_refc
       CHARACTER Irelminc*5,lambda_refc*6,iraiesc*4,wlminc*8,wlmaxc*8
       CHARACTER*1 nom(21),nom2
-      CHARACTER tabsto*9
       CHARACTER zero*1,nc1*1,nc2*2
       CHARACTER ns_alph*2,ni_alph*2,lp1_alph*2,ns_alph3*3
       INTEGER ifre1,ifre2,ifre2b,ifre1_ref !supplementary caracteristics of X-SSN line label
@@ -562,7 +568,7 @@ c
       COMMON/MOC1/in_niv,out_niv,iwr_phyat
 c
       COMMON/MOC2/iprint
-      COMMON/MOCS2/inep1,iz,zc,tabsto
+      COMMON/MOCS2/iz,zc
       COMMON/MOCH2/az,am,numin,numax
       COMMON/MOCX1/lambda_refc
       COMMON/MOCX2/int_ref,lambda_ref,ifre1_ref
@@ -571,7 +577,7 @@ c For direct computation of a few non Hli trans (NeIII):
       DOUBLE PRECISION hc,hc8,hcsk,Ryd_inf
       COMMON/MOCC1/hc,hc8,hcsk,Ryd_inf
       COMMON/MOCH1/Br(100,100,100,2),A_tp(100,100,100,2) !Br(nu,lup,nl,k) lup=lu+1
-      COMMON/MOCS1/alfeff(50,50),b_SH(50,0:50) !alfeff(nu,lup) lup=lu+1
+      COMMON/MOCS1/alf(50,50),b_SH(50,50) !alf(nu,lup) lup=lu+1
 c
       data zero/'0'/
 c
@@ -601,7 +607,7 @@ c NeIII 4s-4p 5 ou 3 'by hand'
 c IBr_Li(ns-1+l,i_Li)= Inverse Branching 
       Data IBr_Li/1.0d0,146.0d0,3.02d4,    ! CIV 2s-2p 3s-3p 3p-3d NIST
      $            1.0d0,292.0d0,4.45d4,    ! NV 
-     $     1.0d0,513.0d0,6.32d4/ ! OVI
+     $            1.0d0,513.0d0,6.32d4/    ! OVI
 cc 5/9/17 ***ATT: see E_levels CIV in Tunklev, M. et al. 1997 PhyS...55..707
 cc       wlCIV(1)=1548.202 .667?       wlCIV(2)=1550.774  .333
 cc       wlCIV(1)=5801.31       wlCIV(2)=5811.97
@@ -731,7 +737,7 @@ c
         read(in_niv,160) izz ! atomic nber
  160   format(9x,i2)
 c
-c Transition ref emissivity X-SSN :
+c Ref. transition X-SSN :
       read(in_niv,22) ni_ref,li_ref,ns_ref,hydrostrict
  22   format(20i4)
 c Ref. int: sum over l fm li_ref to ni_ref-1. Check :
@@ -748,7 +754,7 @@ c  IF mult > 0, choose lma according to effective limult (hence lma < 100)
       read(in_niv,22) nmi,nma,lmi,lma
 c nma2 keep initial value read for nma (nma = maximum n considered):
         nma2=nma !tabulation PSto nl-nu H et He+ up to nl=10 and nu=500
-c Lim. for energy reading: lab (NIST, etc.) then effectivs (X-SSN)
+c Lim. for energy reading: lab (NIST, etc.) then effectives (X-SSN)
       read(in_niv,22) nmil1,nmal1,lmal1,nmil2,nmal2,lmal2
 c Lim. for tables X-SSN and limites for l grouping:
       read(in_niv,22) nmitab,nmatab,niregr,nsregr
@@ -766,22 +772,14 @@ c (Rem: further weighting below)
       lmax_del3=min0(lmax_del2/3,3) !lmax_del3=1: penultimate orbital, etc.
 c
 c SECU (dimensions, writings)
-       if(nma.gt.99.and.
-     $    numion.ne.' 101'.and.numion.ne.' 202') then ! 3 nbers EXPLICIT
+       if(nma.gt.99) then ! EXPLICIT
          print *,'*** ',nomion,': nma=',nma,' LEVELED OFF AT 99 ***'
          nma=99
        endif
         nma_orig=min0(nma,99) !for H-like extrapol ns>50 (except H, He+)
-       if(hydrostrict.eq.2.and.
-     $    (numion.eq.' 101'.or.numion.eq.' 202')) then
-c tabulation PSto nl-nu H and He+ up to nl=10 and nu=500 : nma2=nma higher
-        nma=nsregr !(no splitting of multiplets for ns>nsregr)
-c (**Rem 1/15 : below, hydrostrict.eq.2 only for HI and HeII. Correct logics?)
-       endif
 c  Controls possible extrapolation of emissivities:
         iextrapol=0
-c For lack of alfeff, emissivities are extrapolees for ns = 50 - 99 in H-like 
-c  (except for H et He+, treated by tabulation PSto nl,nu) :
+c For lack of alf, emissivities are extrapolated for ns = 50 - 99 in H-like 
         if(nma.gt.50) then
          nma=50
           if(nsregr.le.40) then !extrapol only if basis sufficient
@@ -790,8 +788,6 @@ c  (except for H et He+, treated by tabulation PSto nl,nu) :
       print *,'nma=',nma_orig,' nsregr=',nsregr,' >40, nma=50 no extrap'
           endif
         endif
-cc No extrapol for HI HeII. HeI treated separately. 
-       if(numion.eq.' 101'.or.numion.eq.' 202') iextrapol=0 ! 2 EXPLICIT: H, He
 c INIT   (!REM: lmi and lmin = 0 possible; extended gfortran)
       do n=1,nma
         do l=0,n-1
@@ -806,7 +802,7 @@ c INIT   (!REM: lmi and lmin = 0 possible; extended gfortran)
 c
       do n=nmil1,nmal1
       lmax=min0(lmal1,n-1)
-       read(in_niv,24) (EN(n,l),l=lmi,lmax)
+      read(in_niv,24) (EN(n,l),l=lmi,lmax)
  24    format(6d12.3)
         do l=lmi,lmax
          E(n,l)=EN(n,l)
@@ -814,11 +810,11 @@ c
         enddo
       enddo
 c
-c  Computation done for a defibnit ion and a definite multiplicity. 
+c  Computation done for a definite ion and a definite multiplicity. 
 c When 2 multiplicities exist, eg, singlet+triplet, the computation is 
 c performed several times, applying a multiplicative coefficient cmult  < 1
 c to the only lower levels (ni,li) whose energies change according to 
-c multiplicity. The ouput params of X-SSN aere chosen so as to prevent 
+c multiplicity. The ouput params of X-SSN are chosen so as to prevent 
 c line duplications. 
 c
       if(nmult.gt.0) then
@@ -852,7 +848,6 @@ c
 c
       lmax=ni-1
 c If only the greatest l for each ni, eg: 3 (lmax_del1=2), 4 (lmax_del1=3)...
-c HeI: all of the 'l' : take large lmax_del1 (eg, 100) and lmi = 0
       lmin=max0(lmi,lmax-lmax_del1) !REM: lmi and lmin = 0 possible
 c IMPLICITLY HERE** : 
 c   'l' corresp. to an orbital of lower level ni
@@ -900,19 +895,16 @@ c   air refraction wl > 2000A AND wl < 20000A:
 c
       ENDDO ! DO ni (tabulation wl, wk)
 c
-c Tabulation wlhydrostr (without l) for H or He+; 
-c  useful for hydrostrict=2, but nalso for int corr
+c  Tabulation wlhydrostr (without l) useful for int corr
 c  (P Storey intensities also for large ns). In parallel with wl(). 
-c**** SECU hydrostrict :
-      IF((numion.ne.' 101'.and.numion.ne.' 202').and.
-     $    (hydrostrict.eq.2)) Then      ! 2 nbers EXPLICIT
+c**** SECU hydrostrict:
+      IF(hydrostrict.eq.2) Then      ! EXPLICIT
        print *,'**** numion=',numion,' : hydrostrict 2 --> 0 ****'
         hydrostrict=0  !ATT 1/15: REALLY only H and He+ ? and why not =1 ? VOIR
       ENDIF
 c
-cccc    If(hydrostrict.eq.2) then !If removed: systematic computation for int cor
        do ni=nmitab,nmatab
-         do ns=ni+1,nma2   !nma2 < 500 defini +haut (nma lu)
+         do ns=ni+1,nma2   !nma2 < 500 defined above (nma read)
           va=chi_Hli/dble(ni**2)-chi_Hli/dble(ns**2)
           wlhydrostr(ni,ns)=1.d8/va
 c   air refraction wl > 2000A AND wl < 20000A:
@@ -936,19 +928,19 @@ c
       if(nmult.gt.0) then
         write(out_niv,23) (nimult(j),limult(j),j=1,nmult)
       else
-        write(out_niv,23) nimult(1),limult(1)  !pour eviter ligne blanche
+        write(out_niv,23) nimult(1),limult(1)   !to fill in empty line
       endif
       write(out_niv,67) Ne,Te
- 67   format(1p,' Ne =',e9.2,'  Te =',e9.2, ' alfeff')
+ 67   format(1p,' Ne =',e9.2,'  Te =',e9.2, ' alf')
       write(out_niv,68) numin,numax
  68   format(2i4,'  numin numax Br (HBD)')
       write(out_niv,62) numion,numion4,nomion
  62   format(' numion :',a4,' numion4 :',a4,' nomion :',a7,' a4,a4,a7')
       write(out_niv,63) wlmin,wlmax
  63   format(1p,2e10.3,' wlmin, wlmax X-SSN')
-c This modified nma corresponds to explicit treatmt  of 'multiplets' (l)
-c By def, the larges ns are only possible with grouped l's. 
-c nma2 still useful for HI HeII (PSto treatmt of large n's)
+c This modified nma corresponds to explicit treatmt of 'multiplets' (l)
+c By def, the large ns are only possible with grouped l's. 
+c  (nma2 useful only for HI HeII)
       write(out_niv,42) nmi,nma,lmi,lma,nma2
  42   format(5i4,'  nmi,nma,lmi,lma,nma2 = nma lu')
       write(out_niv,72) nmil1,nmal1,lmal1,nmil2,nmal2,lmal2
@@ -972,7 +964,7 @@ c
  45   format(i3,(10f12.4)) !(i3,(10(4x,f8.4))) 11/13
       enddo
 c (corN repeated to make easier comparison/transcription to cor)
-c *Q: change format for convenience?
+c *Q: change format for more convenient transcription?
       write(out_niv,49) 
  49   format(4x,'corN(n,l)  Lab')
       do n=nmil1,nmal1
@@ -1015,36 +1007,11 @@ c  **********************
 c  Tabulation for X-SSN : 
 c  **********************
 c
-c*****  Tabulation of alfeff:  (n,l, n->50)
+c*****  Tabulation of alf:  (n,l, n->50)
       Call ReadSto(Te,Ne)
 c**     Computation/tabulation of branching ratio Br:
       Call HBD
 c**
-c****   Emissivities (ni, ns) of PSto for H and He+. (Possibly 
-c   modified LATER for splitting of 1st lines, ie if n<nregr). 
-      IF(numion.eq.' 101'.and.hydrostrict.eq.2) Then ! EXPLICIT
-c  H0: reading e1bx.d  (n, n->500)
-       Call hdatx
-         Call hlinex(ns_ref,ni_ref,Te,Ne,int_hydr_ref,1)
-       Do ni=nmitab,nmatab
-        Do ns=ni+1,nma2
-         Call hlinex(ns,ni,Te,Ne,va,1) !iopt=1 for linees
-         emhydr(ni,ns)=va/int_hydr_ref !usually 'vb'
-        Enddo
-       Enddo
-      ENDIF
-c
-      IF(numion.eq.' 202'.and.hydrostrict.eq.2) Then ! nbre EXPLICIT
-c  He+: reading e2bx.d  (n, n->500)
-       Call hepdatx
-         Call heplinex(ns_ref,ni_ref,Te,Ne,int_hydr_ref,1)
-       Do ni=nmitab,nmatab
-        Do ns=ni+1,nma2
-         Call heplinex(ns,ni,Te,Ne,va,1) !iopt=1 pour raies
-         emhydr(ni,ns)=va/int_hydr_ref !vb habituel
-        Enddo
-       Enddo
-      ENDIF !end H He+, hydrostrict.eq.2
 c
 c Labeling treatment of possible 2nd multiplicity of the ion.
 c  same nmitab,nmatab,nmult,nimult,limult assumed / 1st mult.
@@ -1053,14 +1020,14 @@ c
 c General ref line X-SSN : 
 c     IF several times the same ion, lambda_ref is from imult = 0 
 c  lambda_ref, int_ref, ifre1_ref, in COMMON, are known for imult > 0
-c    (ATT.: imult = 0 computed 1st)
+c    (ATT.: imult = 0 should be computed 1st)
 c
           IF(imult.eq.0) THEN
              ifre1_ref=ifre1  !anticipating write imult > 0
 c
 c Reference H-like transition:
       if(li_ref.eq.0) then
-c   k=1 et 2 (H like complet), if all l's considered
+c   k=1 and 2 (H like complet), if all l's considered
        km=2
       else
 c   k=1 only, in case only large l's considered
@@ -1074,17 +1041,13 @@ c   k=1 only, in case only large l's considered
       ENDDO
 c Emissivity and wavelength of H-like ref line:
       int_ref_Hli=vb
-cc9/17 out:      va=chi_Hli*(1./dble(ni_ref**2)-1./dble(ns_ref**2))
 c Effective wl of ref line: 
+c   (Note: possibly inaccurate if the reference is the sum of several components,
+c   but only int(lambda_ref) will be displayed in practice)
       lambda_ref=wl(ni_ref,ni_ref-1,ns_ref)
-c Corr for non-H-like wl and possible 'leakage' du niv sup: (fuite: slmt CII)
+c Corr for non-H-like wl and possible 'leakage' of upper lev: (only CII? obsolete)
       int_ref=int_ref_Hli*leakns_ref*
-     $     wlhydrostr(ni_ref,ns_ref)/lambda_ref !int_ref en common
-c
-c Storage of Hbeta emissivity for normalisations and choice of Irelmin's:
-      if(numion.eq.' 101'.and.ifre1.eq.0) then
-      int_ref_mod_H=int_ref
-      endif
+     $     wlhydrostr(ni_ref,ns_ref)/lambda_ref !int_ref in common
 c
 c Wavelength ranges:
 c
@@ -1113,15 +1076,9 @@ c
       Write(out_niv,106) lambda_ref,int_ref
  106  Format(' X-SSN: effective lambda reference =',
      $  1p,e12.6,' effective emissivity =',e10.4,' erg.cm3.s-1')
-c P Storey for H, He+ with interpolation (Te, Ne):
-      If(hydrostrict.eq.2) Then
-       Write(out_niv,107) int_hydr_ref
- 107   Format(' **Emissivity (interpol) P Storey =',1p,e10.4,
-     $   ' (NOT adopted)')
-      Endif
 c
 c  START WRITING FOR SYNTHESIS: 
-c   START ref lin or sub-ref
+c   START ref line or sub-ref
        IF(imult.eq.0) THEN  !ref
 c
       Write(out_niv,210)  ! imult = 0
@@ -1134,10 +1091,10 @@ c
       Write(out_niv,211)
  211  Format(' Ref. for liste_phyat.dat :')
         Write(out_niv,111) numion4,ifre1_ref,nomion,int_ref,
-     $  int(lambda_ref),ni_ref,nom(li_ref),nom2,ns_ref,tabsto,inep1
+     $  int(lambda_ref),ni_ref,nom(li_ref),nom2,ns_ref,Te,Ne
  111  Format('9',A4,I1,'00000000',1x,A7,'        1.0   0.   ',
-     $  1p,e10.3,'  1.               999   1   1.00 ',I5,'++',
-     $  I2,2A1,'-',I2,1x,'(',a9,i3,')')
+     $  1p,e10.3,'  1.               999  -1   1.00 ',I5,'++',
+     $  I2,2A1,'-',I2,1x,'(Te =',e9.2,' Ne =',e9.2,')')
 c
        ELSE   ! imult > 0  sub-ref
 c
@@ -1147,19 +1104,19 @@ c
      $  numion,ifre1_ref,int(lambda_ref),
      $  ni_ref,nom(li_ref),nom2,ns_ref
  112  Format(1x,A4,3I1,'000000',1x,A7,'        1.0   0.     1.000e+0',
-     $  '  1.     ',A4,I1,'00000000   1   1.00 (',I5,
+     $  '  1.     ',A4,I1,'00000000  -1   1.00 (',I5,
      $  I2,2A1,'-',I2,')')
 c
        ENDIF  ! imult 0 ou > 0
 c   END ref line or sub-ref
 c
-        if(li_ref.eq.21) li_ref=0 !reset after writing
+        if(li_ref.eq.21) li_ref=0 ! reset after writing
 c
 c line counter:
-               iraies=0
+            iraies=0
 c
-                  n1=nmitab
-                  n2=nmatab
+               n1=nmitab
+               n2=nmatab
 c  imult > 0 --> 2nd, 3rd 'multiplicity', etc, PROVIDED THAT nmult > 0 AS WELL
                If(imult.gt.0.and.nmult.gt.0) Then
 c  ATT: nimult read by increasing ordrer
@@ -1178,7 +1135,7 @@ c  **possible CHANGE of lmi
                   print *,'  Practical limits : n1,n2,lmi',n1,n2,lmi
 cc#####
 c********  ********** ************
-	   Do ni=n1,n2 !ni lower lev******* loop ni + external
+           Do ni=n1,n2 !ni lower lev******* ni + external loop
 c********  ********** ************
 c#####
 c For Write:
@@ -1201,19 +1158,19 @@ c   for 2nd multiplicities, such that mult=1 completing mult=3;
 c   otherwise, choose lma large (100) to inhibit this possibility.
       lmax=min0(ni-1,lma)
       lmin=max0(lmi,lmax-lmax_del2) !imposed: lmax-lmin < 9 ; 2/15: still this way?
-c  useful only when lines are grouped: domaine l regroupes
+c  useful only when lines are grouped: range of grouped l's
         lmax_int=lmax
         lmin_int=lmin
-c  for write only :
+c  for write only:
         lmin_wr=lmin_int  !lmin_wr for nom() of smaller l of the sum over l
            if(lmin_wr.le.0) then
 c  nom(0) does not exist: 's' in nom(21)
             lmin_wr=21
            endif
 c
-c************************* (here nma < 50, cf extrapol)
-       Do ns=ni+1,nma !ns = niv sup  ****** loop ns intermediary 1
-c**************** Rem hydrostrict=2 : nma=nsregr, prevent interference with indregr
+c************************* (here nma < 50, cf 'extrapol')
+       Do ns=ni+1,nma !ns = niv sup  ****** ns intermediary loop 1
+c**************** 
 c For Write:
         if(ns.lt.10) then
        write(nc1,'(I1)') ns
@@ -1226,12 +1183,11 @@ c  Re-initialise line grouping index:
        indregr=0
         If(ni.ge.niregr.or.ns.ge.nsregr) Then 
 c  One only line per (ni,ns) if ni > niregr-1 or ns > nsregr-1
-          indregr=1  !VOIR : ? interference with hydrostrict=1 or 2 ?
+          indregr=1  !SEE ? interference with hydrostrict=1?
 c 'Average' wl adopted for grouped lines:
 cc **Here, last l (yrast) imposed for the 'average':
 c    (perhaps inappropriate for large charges, see alternative)
-c ***1/15 wl grouping inappropriate for HI and HeII? 
-c       Average over lower sub-levels required, NOT lmin=lmax=ni-1
+c   **ATT: Average over lower sub-levels required, NOT lmin=lmax=ni-1
           lmax=ni-1
          if(charge.gt.5.d0) Then  !*** alternative to be watched at *** :
           lmax=max0(0,ni-1-lmax_del3,(4*(ni-1))/5)
@@ -1240,13 +1196,10 @@ c       Average over lower sub-levels required, NOT lmin=lmax=ni-1
 c  and emissivity = sum over l fm lmin_int to lmax_int
         Endif
 c
-c  Auxil variable vf useful only for 'J' treatment of HI and HeII components:
-           vf=0.
-c (for HI and HeII, required: lmax= ni-1, lmin= 0 and hydrostrict > 0)
-c 1/15 DEF hydrostrict = 1 : int of each line wk added to int of corresponding wl
+c DEF hydrostrict = 1 : int of each line wk added to int of corresponding wl
 c
 c*************** l associated to ni ***
-        DO l=lmax,lmin,-1  ! ******** loop l internal (lmin=0 acceptable in fortran)
+        DO l=lmax,lmin,-1  ! ******** internal loop l (lmin=0 acceptable)
 c***************
 c For Write:
         if(l+1.lt.10) then
@@ -1273,8 +1226,8 @@ c***###***
 c***###***
               ve=Int_Hlike(iz,Mat,ni,l,ns,k,Te)
            vb=ve*comult(ni,l)/int_ref
-ccc Case hydrostrict.eq.1 or 2: all transitions; k=2 put in same ll (convention)
-            if(hydrostrict.gt.0) Then  !(.gt.0 required for HI and HeII; 1 optionnel otherwise)
+ccc Case hydrostrict.eq.1: all transitions; k=2 put in same ll (convention)
+            if(hydrostrict.gt.0) Then  !(1 is option)
           if(l.gt.0) then
             k=2  !(int. k=2 added to usual int. k=1)
               ve=Int_Hlike(iz,Mat,ni,l,ns,k,Te)
@@ -1289,19 +1242,7 @@ c  potential leak ns_ref (**obsolete? CII ref now according to DSK):
              vb=vb*leakns_ref
             endif
 c
-c  INTENSITIES IN SPECIAL CASES :
-c
-c HI, DI, HeII and 3HeII: wl, AND THEREFORE INTENSITES redistributed 
-C              according to the J's (NOT the l's) of lower level ni
-               If(numion.eq.' 101'.or.numion.eq.' 202') Then !HI et HeII
-cc            print *,'numion,ni,l,ns,vb,vg,vf',numion,ni,l,ns,vb,vg,vf
-c On utilise chaque fois le vb ant et le vb actu. Pourtant une fois sur 2 le 
-c    vb ant n'est-il pas associé à une raie de ns diff ??********
-                 vg=vb !***? 1/15 logicS: 1st vf=0. 11/15 check: sum multiplets is conserved
-                 vb=(l+1.)*(vf/(2.*l+3.)+vg/(2.*l+1.)) !OK. Explain formula?
-                 vf=vg
-               Endif    !end special case HI and HeII
-c
+c  INTENSITIES IN SPECIAL CASE CII:
 c Eliminate / correct CII lines already computed according to DSK:
 c  3d-nf and 4d-nf, remove n=4,9 and correct n>9. 
 c  Prefer ref int 4267 by DSK.
@@ -1319,7 +1260,7 @@ c  Prefer ref int 4267 by DSK.
                   Endif
                  Endif
                 Endif   !end special case CII
-c  END INTENSITY TREATMENT OF SPECIAL CASES
+c  END SPECIAL TREATMENT OF CII
 c
 c  START WRITINGS:
 c
@@ -1462,12 +1403,12 @@ c
           iecr=1
         endif
 c
-           if(iecr.eq.1) then !iecr=1
-               iraies=iraies+2  ! (2 nouvelles raies)
+           if(iecr.eq.1) then ! iecr=1
+               iraies=iraies+2  ! (2 new lines)
               ifre2=ifre2+1
         Write(out_niv,187) numion,ifre1,imult,ifre2,ni_alph,ns_alph,
      $    lp1_alph,nomion,wk(ni,l,ns),vc*2./3.,numion,
-     $    ifre1,imult,ifre2b,ni,nom(lmin_wr),mult,ns,nom(21) !nom(21) pour 's'
+     $    ifre1,imult,ifre2b,ni,nom(lmin_wr),mult,ns,nom(21) !nom(21) for 's'
               ifre2=ifre2+1
              wlp=1./(1./wk(ni,l,ns)-1.d-8*del_Li(ni,l,i_Li))
 c        write(out_niv,1189) del_Li(ni,l,i_Li),l
@@ -1545,25 +1486,14 @@ c     $          ' l=',i2)
 c
               iecr=iecrb
 c
-c F) Notation J H_like:
-                Elseif  ! end split Li_like
-     $     (numion.eq.' 101'.or.numion.eq.' 202') then
-c  HI, DI, HeII et 3HeII special impressions: notation J
-c
-        Write(out_niv,487) numion,ifre1,imult,ifre2,ni_alph,ns_alph,
-     $    lp1_alph,nomion,wl(ni,l,ns),vb,numion,ifre1,imult,ifre2,
-     $    ni,2*l+1,ns
- 487    Format(1x,A4,3I1,3A2,1x,A7,f13.3,' 0.   ',1p,e10.3,'  1.     ',
-     $    A4,3I1,'000000   1   1.00 ',I2,'(J=',I1,'/2)-',I2)
-c
-c G)  General Case:
+c F)  GENERAL CASE:
                 Else  ! END SPECIAL CASES: back to general case write
 c
         Write(out_niv,187) numion,ifre1,imult,ifre2,ni_alph,ns_alph,
      $    lp1_alph,nomion,wl(ni,l,ns),vb,numion,ifre1,imult,ifre2,
      $    ni,nom(lmin_wr),mult,ns,nom(l+1)
  187    Format(1x,A4,3I1,3A2,1x,A7,f13.3,' 0.   ',1p,e10.3,'  1.     ',
-     $    A4,3I1,'000000   1   1.00 ',I2,A1,I1,'-',I2,A1,1x,A8)
+     $    A4,3I1,'000000  -1   1.00 ',I2,A1,I1,'-',I2,A1,1x,A8)
 c
                 Endif  ! END ALTERNATIVE SPECIAL CASE / GENERAL CASE
 c
@@ -1574,13 +1504,11 @@ c***###***
            Else !indregr.ne.0; end indregr=0
 c               --> Grouping: in that case, lmin=lmax in DO loop above
 c***###***
-              IF(hydrostrict.ne.2) THEN !hydrostrict eq 0 or 1
             vb=0.
             do lregr=lmax_int,lmin_int,-1
             vb=vb+Int_Hlike(iz,Mat,ni,lregr,ns,k,Te)*comult(ni,lregr)
             enddo
 ccc  hydrostrict.eq.1 : Case H-like strict: all transitions, including the k=2
-c (Rem : hydrostrict.eq.2 and indregr.ne.0 : lecture et interp int tot dirctmt dans PSto)
 cc  The sum l=ni-1 to 0 is not imposed by the logics, but is desirable in general:
             If(hydrostrict.eq.1) Then
             k=2
@@ -1592,9 +1520,6 @@ cc  The sum l=ni-1 to 0 is not imposed by the logics, but is desirable in genera
 ccc 
            vb=vb/int_ref
 ccc
-              ELSE    !hydrostrict.eq.2
-            vb=-1.d0   !inhibit indregr, cf Bracket hydrostrict=2
-              ENDIF   !hydrostrict end
 c
 c  (***1/15 ATT origin ni ns l to be clarified here)
           iecr=0
@@ -1623,10 +1548,10 @@ c
      $    lp1_alph,nomion,wl(ni,l,ns),vb,numion,ifre1,imult,ifre2,
      $     ni,nom(lmax_int),nom(lmin_wr),mult,ns
  178      Format(1x,A4,3I1,3A2,1x,A7,f13.3,' 0.   ',1p,e10.3,'  1.     ',
-     $      A4,3I1,'000000   1   1.00 ',I2,A1,'_',A1,I1,'-',I2)
+     $      A4,3I1,'000000  -1   1.00 ',I2,A1,'_',A1,I1,'-',I2)
              ENDIF             ! end 2e iecr=1
 c***###***
-           Endif   !end else indregr.ne.0 (grouping)
+           Endif   ! end else indregr.ne.0 (grouping)
 c***###***
 c**********
           ENDIF   !wl range
@@ -1635,17 +1560,19 @@ c********************
          ENDIF    !imult, nmult, comult
 c********************
 c***************
-        ENDDO     !l=lmax,lmin,-1   loop internal
+        ENDDO     !l=lmax,lmin,-1   internal loop
 c***************
 c Storage for extrapolation in case nma_orig > 50 :
             if(iextrapol.eq.1) Emisto(ns)=vb
 c*************************
-       Enddo      !ns = upper level, here ns.le.50  loop intermed 1
+       Enddo      !ns = upper level, here ns.le.50  intermed loop 1
 c*************************
 c
 c******  (Bracket 100 > nma_orig > 50 beginning)
-c Extrapolation ns > 50 :
+c     Extrapolation ns > 50:
+c
          l=lmax  ! (cf 'average' wl)
+c
 c***######
        If(iextrapol.eq.1.and.         !begin iextrapol=1
      $     wl(ni,l,50).gt.wlmin.and.wl(ni,l,50).lt.wlmax) then
@@ -1655,7 +1582,7 @@ c***######
           Emisto(ns)=Emisto(50)*(dble(ns)/50.)**pente1
          enddo
 c**********
-         Do ns=51,nma_orig  ! 100 > ns > 50   loop intermed 2
+         Do ns=51,nma_orig  ! 100 > ns > 50   intermed loop 2
 c**********
           IF(wl(ni,l,ns).gt.wlmin.and.wl(ni,l,ns).lt.wlmax) THEN !wl range
           vb=Emisto(ns)
@@ -1686,92 +1613,18 @@ c
 c**********
           ENDIF    !wl range
 c**********
-         Enddo     !ns > 50    loop intermed 2
+         Enddo     !ns > 50   intermed loop 2
 c**********
        Endif       !end iextrapol=1
 c***######
-c******  (Bracket 100 > nma_orig > 50 end)
-c
-c******  (Bracket hydrostrict=2 beginning)
-c  H, He+ : PSto (with interpol) if the l's are grouped
-c  (transitions inhibited by vb=-1 above, hence no duplication)
-       If(hydrostrict.eq.2) Then
-         if(ni.lt.niregr) then
-           nh2=nsregr
-         else
-           nh2=ni+1
-         endif
+c******  (Bracket 100 > nma_orig > 50: end)
 c**********
-         Do ns=nh2,nma2 !nma2 < 500    loop intermed 3
-c********** !!!!!***** ICIC
-          va=wlhydrostr(ni,ns) !**1/15: PB: USE EXACT AVERAGE WL, NOt HYDROSTRICT WL
-          IF(va.gt.wlmin.and.va.lt.wlmax) THEN !wl range
-          vb=emhydr(ni,ns)
-c
-          iecr=0
-c
-         iw=1
-         if(va.le.wlim(iw).and.vb.ge.Irelmin(iw)) then
-          iecr=1
-         endif
-        do iw=2,iwlim
-         if(va.gt.wlim(iw-1).and.va.le.wlim(iw)
-     $     .and.vb.ge.Irelmin(iw))then
-          iecr=1
-         endif
-        enddo
-        if(va.gt.wlim(iwlim).and.vb.ge.Irelmin(iwlim+1)) then
-          iecr=1
-        endif
-c
-             IF(iecr.eq.1) THEN !iecr=1
-               iraies=iraies+1
-               ini(ni)=1
-c   cas part H et He+ ns > 99 possible (PSto) :
-        if(ns.lt.10) then
-       write(nc1,'(I1)') ns
-        ns_alph3=zero//zero//nc1
-         elseif(ns.lt.100) then
-        write(nc2,'(I2)') ns
-       ns_alph3=zero//nc2
-          else   !(assume ns < 1000)
-        write(ns_alph3,'(I3)') ns
-        endif
-c  
-        if(l+1.lt.10) then
-       write(nc1,'(I1)') l+1
-       lp1_alph=zero//nc1
-        else   !(assume l+1 < 100)
-       write(lp1_alph,'(I2)') l+1
-        endif
-c
-                  if(ns.lt.100) then ! ns<100,  ifre2 suppressed here
-          Write(out_niv,179) numion,ifre1,imult,ni_alph,ns_alph3,
-     $    lp1_alph,nomion,va,vb,numion,ifre1,imult,ifre2,
-     $     ni,nom(lmax_int),nom(lmin_wr),mult,ns
- 179      Format(1x,A4,2I1,A2,A3,A2,1x,A7,f13.3,' 0.   ',1p,e10.3,
-     $      '  1.     ',
-     $      A4,3I1,'000000   1   1.00 ',I2,A1,'_',A1,I1,'-',I2)
-                  else  ! 99<ns<1000,           ifre2 suppressed here
-          Write(out_niv,180) numion,ifre1,imult,ni_alph,ns_alph3,
-     $    lp1_alph,nomion,va,vb,numion,ifre1,imult,ifre2,
-     $     ni,nom(lmax_int),nom(lmin_wr),mult,ns
- 180      Format(1x,A4,2I1,A2,A3,A2,1x,A7,f13.3,' 0.   ',1p,e10.3,
-     $      '  1.     ',
-     $      A4,3I1,'000000   1   1.00 ',I2,A1,'_',A1,I1,'-',I3)
-                  endif
-             ENDIF !iecr
+c         Enddo ! 100 > ns > 50   intermed loop 2
 c**********
-          ENDIF    !wl range
-c**********
-         Enddo     !ns    loop intermed 3
-c**********
-       Endif       !hydrostrict=2
-c******  (Bracket hydrostrict=2 end)
 c
 c#####
 c********  ********** ************
-           Enddo   !ni lower level, ****** loop + external ni
+           Enddo   !ni lower level ****** + external loop ni
 c********  ********** ************
 c#####
 c
@@ -1838,8 +1691,8 @@ c
           endif
 c
              do i=1,im
-c alfeff(nu,lup), lup=lu+1 idem lp1+1
-          vb=alfeff(ns,lp1+1)*BrNeIII*hc8/wlNeIII(i)/int_ref
+c alf(nu,lup), lup=lu+1 idem lp1+1
+          vb=alf(ns,lp1+1)*BrNeIII*hc8/wlNeIII(i)/int_ref
 c **Rem: no intensity test
           ifre2=ifre2+1
 c (comult not necessarily defined here)
@@ -1847,7 +1700,7 @@ c (comult not necessarily defined here)
      $    lp1_alph,nomion,wlNeIII(i),vb*coNeIII(i)*cmult,numion,
      $    ifre1,imult,ifre2b,ni,nom(lmin_wr),mult,ns,nom(l+1),comNeIII
  1781   Format(1x,A4,3I1,3A2,1x,A7,f13.3,' 0.   ',1p,e10.3,'  1.     ',
-     $        A4,3I1,'000000   1   1.00 ',I2,A1,I1,'-',I2,A1,1x,A10)
+     $        A4,3I1,'000000  -1   1.00 ',I2,A1,I1,'-',I2,A1,1x,A10)
              enddo
           ifre2=ifre2b
            ENDDO  !lp1=1,2
@@ -1880,16 +1733,16 @@ c
            IF(wl_Li(1).gt.wlmin.and.wl_Li(1).lt.wlmax) THEN !wl range
          If(ns-1+l.eq.1) then      ! 2s-2p (UV)
 c case B
-       vb=alfeff(2,1)+alfeff(2,2)
+       vb=alf(2,1)+alf(2,2)
          Elseif(ns-1+l.eq.2) then  ! 3s-3p
 c case B with cascade correction from 5p,6p,7p 
 c    Br(nu,lup,nl,k), lup=lu+1
-       vb=alfeff(3,2)+alfeff(5,2)*Br(5,2,2,1)*
+       vb=alf(3,2)+alf(5,2)*Br(5,2,2,1)*
      $  (Br(5,2,4,1)*Br(4,1,3,2)+Br(5,2,4,2)*Br(4,3,3,1))+
-     $  alfeff(6,2)*Br(6,2,2,1)*
+     $  alf(6,2)*Br(6,2,2,1)*
      $  (Br(6,2,4,1)*Br(4,1,3,2)+Br(6,2,4,2)*Br(4,3,3,1)+
      $  Br(6,2,5,1)*Br(5,1,3,2)+Br(6,2,5,2)*Br(5,3,3,1))+
-     $  alfeff(7,2)*Br(7,2,2,1)*
+     $  alf(7,2)*Br(7,2,2,1)*
      $  (Br(7,2,4,1)*Br(4,1,3,2)+Br(7,2,4,2)*Br(4,3,3,1)+
      $  Br(7,2,5,1)*Br(5,1,3,2)+Br(7,2,5,2)*Br(5,3,3,1)+
      $  Br(7,2,6,1)*Br(6,1,3,2)+Br(7,2,6,2)*Br(6,3,3,1)+
@@ -1900,11 +1753,11 @@ c    Br(nu,lup,nl,k), lup=lu+1
          Else               ! 3p-3d  (3/2 -> 3/2 (I/15) mise dans 5/2 -> 3/2)
 c case B with cascade correc from 4p,5p,6p, 
 c   but with 2p-3d trans remaining optically thin (branching maintained)
-c (case C if 2p-3d optically thick: improbable)
+c (case C if 2p-3d optically thick: improbable, not treated)
 c    Br(nu,lup,nl,k), lup=lu+1
-       vb=(alfeff(3,3)+alfeff(4,2)*Br(4,2,2,1)*Br(4,2,3,2)+
-     $  alfeff(5,2)*Br(5,2,2,1)*Br(5,2,3,2)+
-     $  alfeff(6,2)*Br(6,2,2,1)*(Br(6,2,3,2)+(Br(6,2,5,1)*Br(5,1,4,2)+
+       vb=(alf(3,3)+alf(4,2)*Br(4,2,2,1)*Br(4,2,3,2)+
+     $  alf(5,2)*Br(5,2,2,1)*Br(5,2,3,2)+
+     $  alf(6,2)*Br(6,2,2,1)*(Br(6,2,3,2)+(Br(6,2,5,1)*Br(5,1,4,2)+
      $  Br(6,2,5,2)*Br(5,3,4,1))*Br(4,2,2,1)))/IBr_Li(ns-1+l,i_Li)
 c   air refraction wl > 2000A and wl < 20000A:
            IF(wl_Li(1).gt.2.d3.and.wl_Li(1).lt.2.d4)THEN
@@ -1912,7 +1765,7 @@ c   air refraction wl > 2000A and wl < 20000A:
           wl_Li(2)=wl_Li(2)/A(1.d4/wl_Li(2))
            ENDIF
          Endif
-       BsA=vb/(alfeff(ns,l+1)/IBr_Li(ns-1+l,i_Li))     ! case B / case A
+       BsA=vb/(alf(ns,l+1)/IBr_Li(ns-1+l,i_Li))     ! case B / case A
        vb=vb*hc8/(wl_Li(1)*co_Li(1)+wl_Li(2)*co_Li(2))/int_ref ! case B
 c
             iecr=0
@@ -1937,7 +1790,7 @@ c
      $   ni,nom(lmin_wr),mult,ns,nom(l+1),BsA
         enddo
  877    Format(1x,A4,3I1,3A2,1x,A7,f13.3,' 0.   ',1p,e10.3,'  1.     ',
-     $  A4,3I1,'000000   1   1.00 ',I2,A1,I1,'-',I2,A1,' A=B/',e8.2)
+     $  A4,3I1,'000000  -1   1.00 ',I2,A1,I1,'-',I2,A1,' A=B/',e8.2)
              ENDIF !iecr
            ENDIF !wl range
           ENDDO     ! ni
@@ -2003,28 +1856,25 @@ c      Units: erg.cm3.s-1
 c
 c Emissivity of line (nu,lu,nl,ll) [Notation: k=1: lu=ll+1, k=2: lu=ll-1] 
 c  in the quasi hydrogenic approximation for charge iz, atomic mass Mat, 
-c  based on H-like effective recombination coefficients alfeff from 
-c  tables of Storey & Hummer (1995, SH95), read elsewhere by:
+c  based on H-like effective recombination coefficients alf from tables 
+c  of Storey & Hummer (1995, SH95), read and interpolated elsewhere by:
 c                 Subroutine Readsto, 
 c  for given conditions (Ne, Te), and on H-like branching ratios Br_nl,n'l'
 c   computed by:
 c                 Subroutine HBD,
 c  adapted from program BA5.2 by Hoang Binh, Dy: 1990, A&A, 238, 449.
 c
-c     CONCERNING the use of PARAMETER Te, SEE BELOW
-c
 c IMPORTANT: the alphaeff of SH95 include all cascades and n-changing collisions, 
 c     but NOT the l-changing collisions for given n. This is adequate for 'quasi' 
 c     (but not exactly) H-like ions, in which small energy shifts will decrease 
 c     the efficiency of nl --> nl' collisions relative to the pure hydrogenic case.
 c
-c   For PURE H-like (normally HI, HeII) line emissivities, use the departure 
-c   coefficients from LTE, b_SH(Ne,Te) tabulated by SH95, Saha and the A_tp_nl,n'l' 
-c   (unlike the alfaeff, the b_SH account for the nl --> nl' collisions). 
+c     For PURE H-like (normally HI, HeII and isotopes, and conceivably CVI, etc.)
+c      line emissivities, use the departure coefficients from LTE, b_SH(n,l), 
+c   tabulated by SH95 in (Ne,Te) (interpolated in Readsto), Saha and the A_tp_nl,n'l' 
+c   (Note: unlike the alf's, the b_SH's account for the nl --> nl' collisions). 
 c
-c     The two cases are differenciated locally by means of Te: 
-c                 Te </= 0. for any quasi H-like.
-c                 Te = Te for pure H-like (Te used in Saha equation)
+c     The two cases are differenciated locally by means of the atomic mass and the charge.
 c
       IMPLICIT NONE
 c
@@ -2033,7 +1883,7 @@ c
       INTEGER iz
       INTEGER nu,nl,ll,lup,k
       DOUBLE PRECISION Te
-      DOUBLE PRECISION alfeff,b_SH
+      DOUBLE PRECISION alf,b_SH
       DOUBLE PRECISION csaha,cons,kboltz
       DOUBLE PRECISION Mat
       DOUBLE PRECISION Br,A_tp
@@ -2043,11 +1893,11 @@ c
       COMMON/MOCC1/hc,hc8,hcsk,Ryd_inf
       COMMON/MOCC2/csaha,kboltz
       COMMON/MOCH1/Br(100,100,100,2),A_tp(100,100,100,2) !Br(nu,lup,nl,k) lup=lu+1
-      COMMON/MOCS1/alfeff(50,50),b_SH(50,0:50) !alfeff(nu,lup) lup=lu+1
+      COMMON/MOCS1/alf(50,50),b_SH(50,50) !alf(nu,lup) lup=lu+1
 c
       chi_Hli=dble(iz*iz)*hc*Ryd_inf/(1.d0+1.d0/(Mat*1823.d0)) !erg
 c
-c alfeff(nu,lup), Br(nu,lup,nl,k), b_SH(nu,lup), A_tp(nu,lup,nl,k), lup=lu+1
+c alf(nu,lup), Br(nu,lup,nl,k), b_SH(nu,lup), A_tp(nu,lup,nl,k), lup=lu+1
 c
       if(k.eq.1) then
        lup=ll+2 !trans lu=ll+1 --> ll
@@ -2066,9 +1916,9 @@ c impossible transition:
 c
         if(Mat.ge.5.d0.and.(2.*dble(iz)+1.).lt.Mat) then
 c Quasi H-like (exclude pure H-like CVI, etc.): 
-      Int_Hlike=alfeff(nu,lup)*Br(nu,lup,nl,k)*Eline !erg.cm3.s-1
+      Int_Hlike=alf(nu,lup)*Br(nu,lup,nl,k)*Eline !erg.cm3.s-1
         else
-c Pure H-like: (Note: if Mat = 3 or 4: Int_Hlike not called for He I)
+c Pure H-like H & He+: (Note: if Mat = 3 or 4, Int_Hlike not called for He I)
       Int_Hlike=csaha*2*(2*dble(lup-1)+1.)/(2.*1)/Te**1.5*b_SH(nu,lup)*
      $ A_tp(nu,lup,nl,k)*Eline*dexp(chi_Hli/nu/nu/kboltz/Te) !erg.cm3.s-1 (*1 for proton)
         endif
@@ -2414,7 +2264,7 @@ c
       Write(out_niv,112) numion,ifre1,imult,ifre2,nomion,
      $  numion,ifre1_ref,int(lambda_ref)
  112  Format(1x,A4,3I1,'000000',1x,A7,'        1.0   0.     1.000e+0', ! 3I1=290
-     $  '  1.     ',A4,I1,'00000000   1   1.00 ',I5,'++')
+     $  '  1.     ',A4,I1,'00000000  -1   1.00 ',I5,'++')
 c
         Do k=1,kmax
          Do nc=1,ncomp(k)
@@ -2453,22 +2303,22 @@ c
        Write(out_niv,40) numion,ifre1,imult,ifre2,k,nc,nomion,wl(k,nc),
      $     va,numion,ifre1,imult,ifre2,comw
  40    Format(1x,A4,3I1,'00',I1,'00',I1,1x,A7,f13.3,' 0.   ',
-     $      1p,e10.3,'  1.     ',A4,3I1,'000000   1   1.00 ',a28)
+     $      1p,e10.3,'  1.     ',A4,3I1,'000000  -1   1.00 ',a28)
              Elseif(k.ge.10.and.nc.lt.10) then
        Write(out_niv,41) numion,ifre1,imult,ifre2,k,nc,nomion,wl(k,nc),
      $     va,numion,ifre1,imult,ifre2,comw
  41    Format(1x,A4,3I1,'0',I2,'00',I1,1x,A7,f13.3,' 0.   ',
-     $      1p,e10.3,'  1.     ',A4,3I1,'000000   1   1.00 ',a28)
+     $      1p,e10.3,'  1.     ',A4,3I1,'000000  -1   1.00 ',a28)
              Elseif(k.lt.10.and.nc.ge.10) then
        Write(out_niv,42) numion,ifre1,imult,ifre2,k,nc,nomion,wl(k,nc),
      $     va,numion,ifre1,imult,ifre2,comw
  42      Format(1x,A4,3I1,'00',I1,'0',I2,1x,A7,f13.3,' 0.   ',
-     $      1p,e10.3,'  1.     ',A4,3I1,'000000   1   1.00 ',a28)
+     $      1p,e10.3,'  1.     ',A4,3I1,'000000  -1   1.00 ',a28)
              Elseif(k.ge.10.and.nc.ge.10) then
        Write(out_niv,43) numion,ifre1,imult,ifre2,k,nc,nomion,wl(k,nc),
      $     va,numion,ifre1,imult,ifre2,comw
  43      Format(1x,A4,3I1,'0',I2,'0',I2,1x,A7,f13.3,' 0.   ',
-     $      1p,e10.3,'  1.     ',A4,3I1,'000000   1   1.00 ',a28)
+     $      1p,e10.3,'  1.     ',A4,3I1,'000000  -1   1.00 ',a28)
              Endif
             ENDIF !iecr
 c
@@ -2552,7 +2402,6 @@ c      DOUBLE PRECISION emi(10000),wli(10000),ES(10000),EI(10000)
       CHARACTER Irelminc*5,lambda_refc*6,iraiesc*4,wlminc*8,wlmaxc*8
       CHARACTER numion*4,numion4*4,nomion*7
       CHARACTER*1 nom(21),nom2
-      CHARACTER tabsto*9
       CHARACTER lab_Directory*9, res_Directory*4
       DOUBLE PRECISION Ne,Te
       DOUBLE PRECISION cmult,comult(99,99)
@@ -2603,7 +2452,7 @@ c
       INTEGER numin,numax !Br table
       DOUBLE PRECISION Mat
       REAL az,am
-      INTEGER iwlim,iw,iecr,inep1
+      INTEGER iwlim,iw,iecr
 c
       INTEGER in_niv,out_niv,iwr_phyat
       COMMON/MOC1/in_niv,out_niv,iwr_phyat
@@ -2612,7 +2461,7 @@ c
       COMMON/MOCX2/int_ref,lambda_ref,ifre1_ref
       COMMON/MOCV1/vzero
       COMMON/MOCC1/hc,hc8,hcsk,Ryd_inf
-
+c
       CHARACTER typemis*19,Tec4*4,Tec5*5,Directory*8
       INTEGER Tei
 
@@ -2695,8 +2544,6 @@ c  correction for possible 'leak' fm level ns_ref
  25   format(d9.3)
 
       read(in_niv,22) nmi,nma,lmi,lma
-c nma2 conserve la valeur initialmt lue de nma = n maxi considere :
-        nma2=nma !tabulation PSto nl-nu H et He+ jusqu'a nl=10 et nu=500
 c Lim. lecture energies : lab (NIST etc) puis effectives (X-SSN)
       read(in_niv,22) nmil1,nmal1,lmal1,nmil2,nmal2,lmal2
 c Lim. tables X-SSN et limites pour regroupements des l
@@ -3329,7 +3176,7 @@ c
       Write(out_niv,1111) numion4,ifre1,nomion,int_ref,
      $  int(lambda_ref),ni_ref,nom(li_ref),ns_ref,Te_m,dlgNe_m  !suppr nom2
  1111 Format('9',A4,I1,'00000000',1x,A7,'        1.0   0.   ',
-     $  1p,e10.3,'  1.               999   1   1.00 ',I5,'++',
+     $  1p,e10.3,'  1.               999  -1   1.00 ',I5,'++',
      $  I2,A1,'^3P -',I2,i7,i2)
 c line counter: for triplet and singlet together
                iraies=0
@@ -3462,7 +3309,7 @@ c
      $    ni,nom(li_wr),mult,ns,nom(ls_wr)
  187    Format(1x,A4,3I1,2A2,2I1,1x,A7,f13.3,' 0.   ',
      $    1p,e10.3,'  1.     ',   
-     $    A4,3I1,'000000   1   1.00 ',I2,A1,I1,'-',I2,A1,1x,A8)
+     $    A4,3I1,'000000  -1   1.00 ',I2,A1,I1,'-',I2,A1,1x,A8)
                If(mult.eq.3.and.ni.eq.2.and.lp1i.eq.2) then ! duplication mult. 2^3P-...
                iraies=iraies+1
            va=wl3pi(ns,ni,lp1s,lp1i)
@@ -3472,7 +3319,7 @@ c
      $    ni,nom(li_wr),mult,ns,nom(ls_wr)
  1871   Format(1x,A4,3I1,2A2,2I1,1x,A7,f13.3,' 0.   ',
      $    1p,e10.3,'  1.     ',   
-     $    A4,3I1,'000000   1   1.00 ',I2,A1,I1,'-',I2,A1,1x,A8)
+     $    A4,3I1,'000000  -1   1.00 ',I2,A1,I1,'-',I2,A1,1x,A8)
                Endif
 c
 c*****##
@@ -3715,7 +3562,7 @@ c
  141   format('  mult =',i4,' nmult =',i4,' imult =',i4,
      $   ' cmult =',f7.4,' ifre1 =',i4,' ifre2 =',i4)
       write(out_niv,67) Ne,Te
- 67   format(1p,' Ne =',e9.2,'  Te =',e9.2, ' alfeff')
+ 67   format(1p,' Ne =',e9.2,'  Te =',e9.2, ' alf')
       write(out_niv,62) numion,numion4,nomion
  62   format(' numion :',a4,' numion4 :',a4,' nomion :',a7,' a4,a4,a7')
       write(out_niv,63) wlmin,wlmax
@@ -3754,7 +3601,7 @@ c  for liste_phyat.dat:
      $  int(wlDSK(i_ref)*10.),
      $  ni(i_ref),orbi(i_ref),nom2,ns(i_ref),orbs(i_ref),Te
  111  Format('9',A4,I1,'00000000',1x,A7,'        1.0   0.   ',
-     $  1p,e10.3,'  1.               999   1   1.00 ',I5,'++',
+     $  1p,e10.3,'  1.               999  -1   1.00 ',I5,'++',
      $  I2,2A1,'-',I2,A1,1x,'(Te=',f7.0,')')
 c
       DO i=1,ntrans
@@ -3932,7 +3779,7 @@ c
      $    mpi(i),ni(i),orbi(i),SPDF(Li(i)+1),OE(Pi(i)+1),
      $    mps(i),ns(i),orbs(i),SPDF(Ls(i)+1),OE(Ps(i)+1),AsB(i)
  119    Format(1x,A4,3I1,'00',I2,'0',I1,1x,A7,f13.3,   ! 3I1=100
-     $    ' 0.   ',1p,e10.3,'  1.     ',A4,I1,'00000000   1   1.00 ',
+     $    ' 0.   ',1p,e10.3,'  1.     ',A4,I1,'00000000  -1   1.00 ',
      $    '(',I1,')',I1,A1,'2',A1,A1,'-','(',I1,')',I2,A1,'2',A1,A1,A9)
 c
              ENDIF  !iecr
@@ -4000,7 +3847,7 @@ c
       CHARACTER i_alph*4
       CHARACTER zero*1,nc1*1,nc2*2,nc3*3
       INTEGER imult,ifre1,ifre2,mult,nmult,ifre1_ref
-      INTEGER iwlim,iw,iecr,iraies,inep1
+      INTEGER iwlim,iw,iecr,iraies
 c
       CHARACTER*1 text
       CHARACTER Stat(6187)*2,ExTh(6187)*2
@@ -4109,7 +3956,7 @@ c   pour liste_phyat.dat :
       Write(out_niv,112) numion,ifre1,imult,ifre2,nomion,
      $  numion,ifre1_ref,int(lambda_ref)
  112  Format(1x,A4,3I1,'000000',1x,A7,'        1.0   0.     1.000e+0',
-     $  '  1.     ',A4,I1,'00000000   1   1.00 (',I5,
+     $  '  1.     ',A4,I1,'00000000  -1   1.00 (',I5,
      $  ' 3d - 4) pure diel')
 c
 c For suppression lines also in CII_DSK.res:
@@ -4199,7 +4046,7 @@ c
      $      Stat(i),ExTh(i),Conf1a(i),Conf1b(i),Term1(i),J1(i),
      $      Conf2a(i),Conf2b(i),Term2(i),J2(i)
  190    Format(1x,A4,3I1,'0',A4,'0',1x,A7,f13.3,' 0.   ',1p,E10.3,
-     $   '  1.     ',A4,3I1,'000000   1   1.00 ',
+     $   '  1.     ',A4,3I1,'000000  -1   1.00 ',
      $   a2,a2,x,a4,a7,a3,i2,'/2',x,a4,a7,a3,i2,'/2')
              Endif
 c
@@ -4476,7 +4323,7 @@ c   for liste_phyat.dat :
          Write(out_niv,1112) numion,ifre1,imult,ifre2,nomion,
      $      absref_new,numion,ifre1_ref,int(wvlgth(kref,lref(kref)))
  1112    Format(1x,A4,3I1,'000000',1x,A7,'        1.0   0.   ', ! 3I1=280
-     $      1p,e10.3,'  1.     ',A4,I1,'00000000   1   1.00 ',I5,'++')
+     $      1p,e10.3,'  1.     ',A4,I1,'00000000  -1   1.00 ',I5,'++')
 c
          iw=1
          if(4.4d3.le.wlim(iw)) iv=iw
@@ -4499,7 +4346,7 @@ c Ref lev :
            Write(out_niv,110) numion,ifre1,imult,ifre2,k,nomion,
      $      relref(k),numion,ifre1,imult,ifre2,int(wvlgth(k,lref(k)))
  110    Format(1x,A4,3I1,'000',I1,'00',1x,A7,'        1.0   0.   ',   !k<10
-     $      1p,e10.3,'  1.     ',A4,3I1,'000000   1   1.00 ',I5,'+')
+     $      1p,e10.3,'  1.     ',A4,3I1,'000000  -1   1.00 ',I5,'+')
            Do l=1,nlmax(k)
           if(relint(k,l).gt.Irelmin(iv).and.width(k,l).lt.widthmax)then
 cc   (selected) Reduced width(k,l) for liste_phyat
@@ -4518,7 +4365,7 @@ c
            Write(out_niv,111) numion,ifre1,imult,ifre2,k,nomion,
      $      relref(k),numion,ifre1,imult,ifre2,int(wvlgth(k,lref(k)))
  111    Format(1x,A4,3I1,'00',I2,'00',1x,A7,'        1.0   0.   ',   !k>10
-     $      1p,e10.3,'  1.     ',A4,3I1,'000000   1   1.00 ',I5,'+')
+     $      1p,e10.3,'  1.     ',A4,3I1,'000000  -1   1.00 ',I5,'+')
            Do l=1,nlmax(k)
           if(relint(k,l).gt.Irelmin(iv).and.width(k,l).lt.widthmax)then
                iraies=iraies+1
@@ -4634,10 +4481,9 @@ c ***For readsto, Hli, HBD (tabul compa Hli) :
       DOUBLE PRECISION hc,hc8,hcsk,Ryd_inf
       DOUBLE PRECISION Br
       DOUBLE PRECISION Mat
-      DOUBLE PRECISION Int_Hlike
-      INTEGER inep1,iz
-      DOUBLE PRECISION Ne,Te,lgNe,dlgNe,t,lgt
-      CHARACTER zc*1,tabsto*9
+      INTEGER iz
+      DOUBLE PRECISION Ne,Te,lgNe,del_lgNe,t,lgt
+      CHARACTER zc*1
 c
       INTEGER in_niv,out_niv,iwr_phyat
       COMMON/MOC1/in_niv,out_niv,iwr_phyat
@@ -4645,7 +4491,7 @@ c
       COMMON/MOCC1/hc,hc8,hcsk,Ryd_inf
       COMMON/MOCV1/vzero
       COMMON/MOCH2/az,am,numin,numax
-      COMMON/MOCS2/inep1,iz,zc,tabsto
+      COMMON/MOCS2/iz,zc
 c
       data lab_Directory/'data_lab/'/
       data res_Directory/'res/'/
@@ -4653,8 +4499,8 @@ c Tables Fang et al:
       Data TeTab/125.d0,500.d0,1000.d0,5000.d0,10000.d0,
      $  15000.d0,20000.d0/
 c
-c 218 raies Tables 3-6 alf eff bruts : Ne=2 3 4 5,(Te=125 500 1000 5000 10000 15000 20000)
-c   *** beg 2011: obsolete
+c 218 lines Tables 3-6 raw eff alf's: Ne=2 3 4 5 /cc, (Te=125 500 1000 5000 10000 15000 20000 K)
+c   *** beg 2011: obsolete. See new Erratum and new fits 2013 ***
 c 55 lines Fit Fang alpha eff : Te < 1e4, tables 7 9 11 13 polynomial lgNe=2 3 4 5
 c   log({alpha}_eff_)+15 = a0+a1*t+a2*t^2^+a3*t^3^+a4t^4^+a5*t^5,
 c   where t is the log_10_ of electronic temperature, log(Te) (K).
@@ -4686,8 +4532,9 @@ c
 c Id + name ion (form X-SSN):
       read(in_niv,60) numion,numion4,nomion
  60   format(9x,a4,11x,a4,10x,a7)
-c I_detail=0 : stdd = only X-SSN output, .ne.0 --> more tables
-c I_2011=0 : stdd = use new tables 2013 (see erratum Fang et al),
+c Important:
+c I_detail=0: stdd = only X-SSN output, .ne.0 --> more tables
+c I_2011=0: stdd = use new tables 2013 (see erratum Fang et al),
 c            otherwise, ***ATT: change data set before activating .ne.0
       Read(in_niv,23) I_detail,I_2011
  23   Format(20I4)
@@ -4696,11 +4543,11 @@ c  Coeffs for alternative power law fits, D. Pequignot, 4 param:
       Read(in_niv,144) pl,ph
  144  Format(2F5.1)
 c
-c  alf eff raw Cas B Fang Tables 3-6 : 2011 ou 2013 (avc chgmt formats 11 et 311)
+c  Eff raw Cas B alf's Fang Tables 3-6: 2011 or 2013 (w/ chg formats 11 & 311)
 c
       Do ine=1,4
         read(in_niv,10) titre(ine)
-c (Rem : n_lambda = blank or asterisk, read but not used)
+c (Rem: n_lambda = blank or asterisk, read but not used)
          IF(ine.eq.1) then
        Do irai=1,218
         Read(in_niv,311) nu(irai),luC(irai),Trans(irai),
@@ -4714,9 +4561,9 @@ c (Rem : n_lambda = blank or asterisk, read but not used)
          ENDIF
       Enddo
  10   Format(A80)
-c2011 11   Format(A22,A33,D9.2,1X,A1,1X,7D8.3)
-c2011 311  Format(I1,A1,20X,A33,D9.2,1X,A1,1X,7D8.3)
-c 6/13 new format for 2013 data:
+c2011 11   Format(A22,A33,D9.2,1X,A1,1X,7D8.3) !I_2011.ne.0
+c2011 311  Format(I1,A1,20X,A33,D9.2,1X,A1,1X,7D8.3) !I_2011.ne.0
+c6/13   new format for 2013 data:
  11   Format(A23,A32,D9.2,1X,A1,7D8.2)   !stdd with I_2011=0
  311  Format(I1,A1,21X,A32,D9.2,1X,A1,7D8.2)   !stdd with I_2011=0
 c
@@ -4773,7 +4620,7 @@ c   (small departure for low Te's)
      $    parl(ine,irai),parh(ine,irai)
        Enddo
       Enddo
- 143   Format(14X,D9.2,3F9.5)
+ 143  Format(14X,D9.2,3F9.5)
 c
 c****************reading OLD TABLES (2011 fit) end **********
 c
@@ -4781,9 +4628,9 @@ c
 
 c****************reading NEW TABLES (2013 fit) begin **********
 c
-c     'Accurate new fit coeffs for 55 optical lines : CASE B
+c     'Accurate' new fit coeffs for 55 optical lines : CASE B
 c   Tables 7 8 9 10 for log(ne)= 2 3 4 5 (mult=No multiplet)
-c   (del3, del4 = av. and max. deviation in %)
+c   (del3, del4 = average and maximum deviation in %)
 c
       Do ine=1,4
         read(in_niv,10) titr3(ine)
@@ -4794,7 +4641,7 @@ c
       Enddo
  122  Format(A26,3X,A4,D8.2,7D9.4,D11.6,2D7.3)
 c
-c     'Accurate new fit coeffs for 55 optical lines : CASE A
+c     'Accurate' new fit coeffs for 55 optical lines : CASE A
 c   Tables 11 12 13 14 for log(ne)= 2 3 4 5 (mult=No multiplet)
 c   (del5, del6 = av. and max. deviation in %)
 c
@@ -4828,21 +4675,24 @@ c
  88   format(2i4,'  I_detail, I_2011')
 c
 c **2011 Intro correction a0 for continuite at 1.e4K : obsolete
-      Do ine=1,4
-       do k=1,55
-        ac(ine,k,1)=ac(ine,k,1)+a0_cor(ine,k)
-       enddo
-      Enddo
+c      Do ine=1,4
+c       do k=1,55
+c        ac(ine,k,1)=ac(ine,k,1)+a0_cor(ine,k)
+c       enddo
+c      Enddo
 c
 c  I_detail=0: only X-SSN output
 c
 c  Correspondance between num Table fit (55 raies) and ERC (218 lines)
 c   to possibly choose the fit type:
+c
         IF(I_detail.ne.0) THEN
        Write(out_niv,34)
  34   Format(' k, irai1, lambdf, lambda')
         ENDIF
+c
       Do k=1,55
+c
        indrai=0
        do irai=1,218
         if((lambdf(k).gt.lambda(irai)-0.05).and.
@@ -4852,25 +4702,29 @@ c   to possibly choose the fit type:
         endif
        enddo
        if(indrai.eq.0) then
-        print *,lambdf(k),' no corresp, **TO BE CORRECTED****'
+        print *,'NII ',lambdf(k),' no corresp, **TO BE CORRECTED****'
         irai1(k)=300 ! arb > 218 PROVISIONAL, TO BE CORRECTED
        endif
        if(indrai.gt.1) then
         print *,lambdf(k),' ',indrai,' corresp, **TO BE CORRECTED****'
        endif
+c
         IF(I_detail.ne.0) THEN
        Write(out_niv,33) k,irai1(k),lambdf(k),
      $     lambda(irai1(k))
-        ENDIF
-      Enddo
  33   Format(2I4,2F9.2)
+        ENDIF
+c
+      Enddo
+c
         IF(I_detail.ne.0) THEN
        Write(out_niv,233)
- 233   Format(' label in fit table then corresp label in ERC tab')
+ 233  Format(' label in fit table then corresp label in ERC tab')
        Write(out_niv,133) (k,k=1,55)
        Write(out_niv,133) (irai1(k),k=1,55)
- 133   Format(30I4)
+ 133  Format(30I4)
         ENDIF
+c
 c Spotting lines w/ Fang fit
       Do irai=1,218
        if_rai(irai)=0 !0 not in fit table of Fang; fit 'power law w/ corr'
@@ -4878,8 +4732,9 @@ c Spotting lines w/ Fang fit
       Do k=1,55
        if_rai(irai1(k))=k ! > 0 Fang fit; k = line label in Fang fit table
       Enddo
-c
+c**
         IF(I_detail.ne.0) THEN
+c**
         Write(out_niv,234)
 234   Format('label in ERC tab then corresp label in fit tab')
        Write(out_niv,133) (irai,irai=1,218)
@@ -4887,7 +4742,7 @@ c
 
 c  Check Fang fit
        Write(out_niv,176)
- 176    Format(' *** Check Fang 2013 fit : ')
+ 176  Format(' *** Check Fang 2013 fit : ')
       Do ine=1,4
        Write(out_niv,29) ine,(TeTab(ite),ite=1,7)
         Do k=1,55
@@ -4908,25 +4763,30 @@ c
 c  Fit power law w/ correc low & high Te
       Write(out_niv,77) !cc
  77   Format('*** COMPARING alf Tab to power law without and with corr') !cc
- 167   Format(I8,26X,7F10.0)
+c**
         ENDIF
-c
+c**
       flog=dlog10(2.d0)
        vb=dlog10(TeTab(5)/TeTab(3))
-c
-      Do ine=1,4
-c
+c********
+      DO ine=1,4
+c********
         IF(I_detail.ne.0) THEN
         Write(out_niv,167) ine,(TeTab(ite),ite=1,7) !cc
+ 167  Format(I8,26X,7F10.0)
         ENDIF
+c
          Do ite=1,7
           moyrap(ite)=0.d0
           moyrap2(ite)=0.d0
           moyfit(ite)=0.d0
           moyfit2(ite)=0.d0
          Enddo
+c
 c simple power law:
-       Do irai=1,218
+c*****
+       DO irai=1,218
+c*****
          A(ine,irai)=ERC(ine,irai,5)
          lp(ine,irai)=dlog10(A(ine,irai)/ERC(ine,irai,3))/vb
          Do ite=1,7
@@ -4935,10 +4795,13 @@ c simple power law:
           moyrap(ite)=moyrap(ite)+rap(ite)-1.d0
           moyrap2(ite)=moyrap2(ite)+dabs(rap(ite)-1.d0)
          Enddo
+c
         IF(I_detail.ne.0) THEN
          Write(out_niv,168) irai,Tr(irai),lambda(irai),
      $     (rap(ite),ite=1,7),lp(ine,irai)             !cc
+ 168  Format(I3,1X,A22,F9.2,1p,7e10.3,0p,' pente=',F10.5)
         ENDIF
+c
 c low Te corr:
          parl(ine,irai)=dlog10(rap(1))/(3.*flog)**pl
          Do ite=1,3
@@ -4958,12 +4821,15 @@ c high Te corr:
           moyfit(ite)=moyfit(ite)+rap(ite)-1.d0
           moyfit2(ite)=moyfit2(ite)+dabs(rap(ite)-1.d0)
          Enddo
+c
         IF(I_detail.ne.0) THEN
          Write(out_niv,172) irai,Tr(irai),lambda(irai),
      $     (rap(ite),ite=1,7),parl(ine,irai),parh(ine,irai) !cc
+ 172  Format(I3,1X,A22,F9.2,1p,7e10.3,0p,' parl,h=',2F10.5)
         ENDIF
-       Enddo
-c
+c*****
+       ENDDO  ! iraie
+c*****
          Do ite=1,7
           moyrap(ite)=moyrap(ite)/218.d0
           moyrap2(ite)=moyrap2(ite)/218.d0
@@ -4973,40 +4839,38 @@ c
 c
         IF(I_detail.ne.0) THEN
        Write(out_niv,162) ine,(moyrap(ite),ite=1,7)
-       Write(out_niv,163) ine,(moyrap2(ite),ite=1,7)
-       Write(out_niv,160) ine,(moyfit(ite),ite=1,7)
-       Write(out_niv,161) ine,(moyfit2(ite),ite=1,7)
-        ENDIF
-c
-      Enddo
-c
  162  Format(I10,5X,' moy ecart rap a 1.=',7F10.4)
+       Write(out_niv,163) ine,(moyrap2(ite),ite=1,7)
  163  Format(I10,' moy abs(ecart rap a 1.)=',7F10.4)
+       Write(out_niv,160) ine,(moyfit(ite),ite=1,7)
  160  Format(I10,5X,' moy ecart fit a 1.=',7F10.4)
+      Write(out_niv,161) ine,(moyfit2(ite),ite=1,7)
  161  Format(I10,' moy abs(ecart fit a 1.)=',7F10.4)
- 168  Format(I3,1X,A22,F9.2,1p,7e10.3,0p,' pente=',F10.5)
- 172  Format(I3,1X,A22,F9.2,1p,7e10.3,0p,' parl,a=',2F10.5)
-c
-c  Table of coeffs from D. Pequignot fit for the 218 lines and 4 Ne :
-       Write(out_niv,25) pl,ph
- 25    Format(' Coeffs fit D. Pequignot w/ pl, ph =',2F5.1,
-     $     ' : A,lp,parl,parh')
-c
+        ENDIF
+c********
+      ENDDO  ! ine
+c********
+c**
         IF(I_detail.ne.0) THEN
+c**
+c  Table of coeffs from D. Pequignot fit for the 218 lines & 4 Ne:
+       Write(out_niv,25) pl,ph
+ 25   Format(' Coeffs fit D. Pequignot w/ pl, ph =',2F5.1,
+     $     ' : A,lp,parl,parh')
  44   Format('  ine=',i3)
       Do irai=1,218
        Do ine=1,4
         Write(out_niv,43) irai,lambda(irai),A(ine,irai),lp(ine,irai),
      $    parl(ine,irai),parh(ine,irai)
+ 43   Format(i4,F10.2,1p,e9.2,0p,3F9.5)
        Enddo
       Enddo
- 43   Format(i4,F10.2,1p,e9.2,0p,3F9.5)
 c  Check Pequignot fit:
        Write(out_niv,76)
  76    Format(' *** Check Pequignot fit:')
       Do ine=1,4
        Write(out_niv,29) ine,(TeTab(ite),ite=1,7)
- 29    Format(I5,8X,7F7.0)
+ 29   Format(I5,8X,7F7.0)
         Do irai=1,218
          Do ite=1,7
            t4=TeTab(ite)*1.d-4
@@ -5025,11 +4889,12 @@ c  Check Pequignot fit:
           rap(ite)=ERCf(ite)/(1.d-15*ERC(ine,irai,ite))
          Enddo
          Write(out_niv,28) irai,lambda(irai),(rap(ite),ite=1,7)
+ 28   Format(I3,F10.2,7F7.3)
         Enddo
       Enddo
- 28   Format(I3,F10.2,7F7.3)
+c**
         ENDIF
-c
+c**
 c  ****************
 c  Table for X-SSN: 
 c  ****************
@@ -5037,41 +4902,46 @@ c
       t=Te/1.d4
       lgt=dlog10(t)
       lgNe=dlog10(Ne)
-c
+      print *,'t,lgt,lgNe ',t,lgt,lgNe
         ine_synth=0
         do ine=1,4 ! ine=1 --> lgNe=2., etc.
          if(lgNe.lt.dble(ine+1).and.ine_synth.eq.0) then
           ine_synth=ine
          endif
         enddo
+c#####
          IF(ine_synth.eq.1.or.ine_synth.eq.0) then
-c Without interpol :
-          ine=1
-          if(ine_synth.eq.0) ine=4
-c VOIR cas t exotique ?
+c#####
+c No interpol:
+          ine=1  ! (below first tabulated Ne)
+          if(ine_synth.eq.0) ine=4  ! (above last tabulated Ne)
+c (**? SEE cases of "exotic" t's?)
         do irai=1,218
          if(if_rai(irai).eq.0) then !218-55 fit Peq
            If(t.lt.0.1d0) Then
             alf(irai)=1.d-15*A(ine,irai)*t**lp(ine,irai)*
      $       10.**(parl(ine,irai)*(-lgt-1.)**pl)
-           Elseif(t4.lt.1.d0) Then
+           Elseif(t.lt.1.d0) Then
             alf(irai)=1.d-15*A(ine,irai)*t**lp(ine,irai)
            Else
             alf(irai)=1.d-15*A(ine,irai)*t**lp(ine,irai)*
      $       10.**(parh(ine,irai)*lgt**ph)
            Endif
-         else  !55 Fang fit (Cas B avec cc())
+         else  !55 Fang fit (Case B with cc())
             k=if_rai(irai)
             alf(irai)=alfit(t,cc(ine,k,1),cc(ine,k,2),
      $         cc(ine,k,3),cc(ine,k,4),cc(ine,k,5),
      $         cc(ine,k,6),cc(ine,k,7),cc(ine,k,8))
          endif
         enddo
+c#####
          ELSE
+c#####
             ine=ine_synth
-            dlgNe=lgNe-dble(ine+1)
-c Lin interpol in log(Ne):
-        do irai=1,218
+            del_lgNe=lgNe-dble(ine+1)
+c Linear interpol in log(Ne):
+        DO irai=1,218
+c
          if(if_rai(irai).eq.0) then !218-55 fit Peq
            If(t.lt.0.1d0) Then
             ERC1=1.d-15*A(ine,irai)*t**lp(ine,irai)*
@@ -5096,15 +4966,17 @@ c Lin interpol in log(Ne):
      $         cc(ine-1,k,3),cc(ine-1,k,4),cc(ine-1,k,5),
      $         cc(ine-1,k,6),cc(ine-1,k,7),cc(ine-1,k,8))
          endif
-          alf(irai)=ERC1+dlgNe*(ERC1-ERC0)
-        enddo
+          alf(irai)=ERC1+del_lgNe*(ERC1-ERC0)
+c
+        ENDDO
+c#####
          ENDIF
-
-c Ref line X-SSN :  3  192  5679.56  5679.56   (28 185)_2011 
+c#####
+c Ref line X-SSN:  3  192  5679.56  5679.56   (28 185)_2011 
        irai_ref=192   ! (185_2011)
-c Wavelength of ref line : 
+c Wavelength of ref line: 
        lambda_ref=lambda(irai_ref)
-c Absolute emissivity of ref :
+c Absolute emissivity of ref:
        int_ref=alf(irai_ref)*hc8/lambda_ref
 c
 c  Wavelength ranges:
@@ -5123,29 +4995,30 @@ c
  86   format(1p,13e10.3)
 c
       Write(out_niv,210)
- 210  Format(' Ref. for liste_modele.dat :')
+ 210  Format(' Ref. for liste_modele.dat:')
       Write(out_niv,110) numion,ifre1,imult,ifre2,nomion,
      $  vzero,int(lambda_ref),int_ref
  110  Format(1x,A4,3I1,'000000',1x,A7,'        1.0   0.     1.000e+0',
      $  '  1.                 0   1  ',f5.1,1x,I5,'++',
      $  1p,e10.3,' erg.cm3.s-1')
       Write(out_niv,211)
- 211  Format('Ref. for liste_phyat.dat :')
+ 211  Format('Ref. for liste_phyat.dat:')
 c   for liste_phyat.dat:
       Write(out_niv,111) numion4,ifre1,imult,ifre2,nomion,int_ref,
      $  int(lambda_ref),t,lgNe
 
  111  Format('9',A4,3I1,'000000',1x,A7,'        1.0   0.   ',
-     $  1p,e10.3,'  1.               999   1   1.00 ',I5,
-     $  '++ (t=',f6.2,' lgNe=',f6.2,')')
+     $  1p,e10.3,'  1.               999  -1   1.00 ',I5,
+     $  '++ (t4=',0p,f7.4,' lgNe=',f5.2,')')
 c
 c counter of written lines:
                iraies=0
-c
-      Do irai=1,218
+c***
+      DO irai=1,218
+c***
         IF(lambda(irai).ge.wlmin.and.lambda(irai).le.wlmax) Then
 c
-c VOIR air refract?
+c SEE air refract?
          vb=alf(irai)*hc8/lambda(irai)/int_ref
           iecr=0
          iw=1
@@ -5163,20 +5036,20 @@ c VOIR air refract?
         endif
 c
              If(iecr.eq.1) Then
-c
                iraies=iraies+1
           Write(out_niv,100) numion,ifre1,imult,ifre2,1000+irai,
      $     nomion,lambda(irai),vb,numion,ifre1,imult,ifre2,Trans(irai)
- 100      Format(1x,A4,3I1,I4,'00',1x,A7,
+ 100   Format(1x,A4,3I1,I4,'00',1x,A7,
      $      f13.3,' 0.   ',1p,e10.3,
-     $      '  1.     ',A4,3I1,'000000   1   1.00 ',A32)  !2011: A33
+     $      '  1.     ',A4,3I1,'000000  -1   1.00 ',A32) ! 2011: A33
              Endif
 c
-        ENDIF !end wlmin/max
-      Enddo !end irai ecr
-c
+        ENDIF ! end wlmin/max
+c***
+      Enddo ! end irai ecr
+c***
          Write(out_niv,75) iraies
- 75      format('Number of X-SSN lines: iraies =',i5)
+ 75    Format('Number of X-SSN lines: iraies =',i5)
 c
       write(lambda_refc,'(I5)') int(lambda_ref)
       write(iraiesc,'(I4)') iraies
@@ -5249,10 +5122,10 @@ cc      double precision wlnot(10000)
       CHARACTER*17 titre
       CHARACTER Irelminc*5,lambda_refc*6,iraiesc*4,wlminc*8,wlmaxc*8
       CHARACTER numion*4,numion4*4,nomion*7
-      DOUBLE PRECISION Ne,Te,lgNe,dlgNe,t,lgTe
+      DOUBLE PRECISION Ne,Te,lgNe,del_lgNe,t
       DOUBLE PRECISION cmult
       INTEGER imult,ifre1,ifre2,mult,nmult
-      INTEGER iwlim,iw,iecr,iraies,inep1   !,inot
+      INTEGER iwlim,iw,iecr,iraies
 c
        double precision ET(1000),emmin,em_rel
        integer ii,it,id,imaxl,ns,ni,nsmax,nimax
@@ -5292,7 +5165,6 @@ c
       print *,niv_input,'  ',lambda_output
 c
       t=Te/1.d4
-      lgTe=dlog10(Te)
       lgNe=dlog10(Ne)
 cc data mal lu ?
 cc      lines='lines'
@@ -5447,7 +5319,7 @@ c  START WRITING OII FOR SYNTHESIS:
      $  int(lambda_ref),name
  111  Format('9',A4,3I1,'000000',1x,A7,'        1.0   0.   ',
      $  1p,e10.3,
-     $  '  1.               999   1   1.00 ',I5,'++ (',a16,')')
+     $  '  1.               999  -1   1.00 ',I5,'++ (',a16,')')
 
 c counter des raies ecrites :
                iraies=0
@@ -5519,7 +5391,7 @@ c
      $      nomion,wli(i),em_rel,numion,ifre1,imult,ifre2,
      $      up1(i),up2(i),lo1(i),lo2(i)
  190    Format(1x,A4,3I1,2A3,1x,A7,f13.3,' 0.   ',1p,e10.3,
-     $   '  1.     ',A4,3I1,'000000   1   1.00 ',A6,A3,'-',A6,A3)
+     $   '  1.     ',A4,3I1,'000000  -1   1.00 ',A6,A3,'-',A6,A3)
              Endif
 c
         ENDDO                     !i
@@ -5585,20 +5457,21 @@ c
       COMMON/MOCC1/hc,hc8,hcsk,Ryd_inf
       COMMON/MOCV1/vzero
 c 5g-6h :
-      DOUBLE PRECISION alfeff,b_SH,asa
+      DOUBLE PRECISION alf,b_SH
+      DOUBLE PRECISION asa
       DOUBLE PRECISION wl6h(6),rel6h(6)
-      INTEGER inep1,iz
-      CHARACTER zc*1,tabsto*9
+      INTEGER iz
+      CHARACTER zc*1
       INTEGER m,k1,k2
       CHARACTER lab_Directory*9, res_Directory*4
-      COMMON/MOCS1/alfeff(50,50),b_SH(50,0:50) !alfeff(n,lp) lp=l+1 pr 5g-6h
-      COMMON/MOCS2/inep1,iz,zc,tabsto !a ver
+      COMMON/MOCS1/alf(50,50),b_SH(50,50) !alf(n,lp) lp=l+1 for 5g-6h
+      COMMON/MOCS2/iz,zc
 c
 c***  ADAPTED FROM SUBR. O3_5g.f IN NEBU  ***
 c
 c According to R. Kisielius & P.J. Storey, 1999, A&AS 137, 157
 c
-c   Calcul. of eff rec coeff alf(k) on to 5g levels k of de OIII
+c   Calcul. of eff rec coeff alfo3(k) on to 5g levels k of de OIII
 c   then emissivities relint(k,l) of 4f-5g lines, relatives 
 c   to absolute reference emissivities absref(k) in erg/s/ion. 
 c   
@@ -5610,7 +5483,7 @@ c  (dim 12 refers to kmax)
 	Double Precision pstat(12),g1mix(12),g2mix(12)
 	Double Precision a1(12),b1(12),c1(12),d1(12)
 	Double Precision a2(12),b2(12),c2(12),d2(12)
-	Double Precision alfdir1(12),alfdir2(12),alf(12)
+	Double Precision alfdir1(12),alfdir2(12),alfo3(12)
 	Double Precision relint(12,9),absref(12),relref(12)
 	Double Precision wl1(6),wl2(8),wl3(6),wl4(4),wl5(7),wl6(4)
 	Double Precision wl7(7),wl8(9),wl9(1),wl10(3),wl11(8),wl12(7)
@@ -5771,7 +5644,7 @@ cccc
 c  Coeff rec directes et totales :
         alfdir1(k)=1.d-15*a1(k)*tred**b1(k)*(1.+tred*(c1(k)+tred*d1(k)))
         alfdir2(k)=1.d-15*a2(k)*tred**b2(k)*(1.+tred*(c2(k)+tred*d2(k)))
-        alf(k)=popO4_1*(alfdir1(k)+g1mix(k)*alfcasc_5g*pstat(k)/36.)+
+        alfo3(k)=popO4_1*(alfdir1(k)+g1mix(k)*alfcasc_5g*pstat(k)/36.)+
      $         popO4_2*(alfdir2(k)+g2mix(k)*alfcasc_5g*pstat(k)/72.)
         enddo
         do k=1,kmax
@@ -5846,7 +5719,7 @@ c
             refr=1.+6432.8d-8+2949810.d0/(146.d8-Ener**2)+
      $           25540.d0/(41.d8-Ener**2)
             wvlvac=wvlgth(k,l)*refr
-            relint(k,l)=alf(k)*branch(k,l)/wvlvac
+            relint(k,l)=alfo3(k)*branch(k,l)/wvlvac
            enddo
            enddo
 c
@@ -5916,7 +5789,7 @@ c
  7	Format(1p,'  Te=',e9.3,' Ne=',e9.3,'  PopOIV = ',e9.3,1x,e9.3)
 	   Write(out_niv,9)
  9      Format('   Recombination coefficients for O III 5g')
-	      Write(out_niv,1) (alf(k),k=1,kmax)
+	      Write(out_niv,1) (alfo3(k),k=1,kmax)
  1	Format(1p,6e12.3)
 	   Write(out_niv,5) 
  5      Format('   Wavelengths, then relative emissivities:')
@@ -5959,7 +5832,7 @@ c   for liste_phyat.dat :
      $    int(wvlgth(kref,lref(kref))),Te/1.d4,dlog10(Ne),emitot_rel
  1100   Format('9',A4,3I1,'000000',1x,A7,
      $      '        1.0   0.   ',1p,e10.3,
-     $      '  1.               999   1   1.00 ',I5,'++ t=',
+     $      '  1.               999  -1   1.00 ',I5,'++ t=',
      $      0p,f4.2,' lgNe=',f4.1,' 4f-5g/ref=',f5.2)
 c Line counter:
           iraies=0
@@ -5970,33 +5843,33 @@ c Raie ref niv :
            Write(out_niv,110) numion,ifre1,imult,ifre2,k,nomion,
      $      relref(k),numion,ifre1,imult,ifre2,int(wvlgth(k,lref(k)))
  110    Format(1x,A4,3I1,'000',I1,'00',1x,A7,'        1.0   0.   ',
-     $      1p,e10.3,'  1.     ',A4,3I1,'000000   1   1.00 ',I5,'+')
+     $      1p,e10.3,'  1.     ',A4,3I1,'000000  -1   1.00 ',I5,'+')
             Do l=1,nlmax(k)
           iraies=iraies+1
 c Other lines (assumed: < 10 per level)
               Write(out_niv,10) numion,ifre1,imult,ifre2,k,l,nomion,
      $      wvlgth(k,l),relint(k,l),numion,ifre1,imult,ifre2,k
  10     Format(1x,A4,3I1,'000',I1,I1,'0',1x,A7,f13.3,' 0.   ',
-     $      1p,e10.3,'  1.     ',A4,3I1,'000',I1,'00   1   1.00 ')
+     $      1p,e10.3,'  1.     ',A4,3I1,'000',I1,'00  -1   1.00 ')
             Enddo
           Else
           iraies=iraies+1
            Write(out_niv,111) numion,ifre1,imult,ifre2,k,nomion,
      $      relref(k),numion,ifre1,imult,ifre2,int(wvlgth(k,lref(k)))
  111    Format(1x,A4,3I1,'00',I2,'00',1x,A7,'        1.0   0.   ',
-     $      1p,e10.3,'  1.     ',A4,3I1,'000000   1   1.00 ',I5,'+')
+     $      1p,e10.3,'  1.     ',A4,3I1,'000000  -1   1.00 ',I5,'+')
             Do l=1,nlmax(k)
           iraies=iraies+1
               Write(out_niv,11) numion,ifre1,imult,ifre2,k,l,nomion,
      $      wvlgth(k,l),relint(k,l),numion,ifre1,imult,ifre2,k
  11     Format(1x,A4,3I1,'00',I2,I1,'0',1x,A7,f13.3,' 0.   ',
-     $      1p,e10.3,'  1.     ',A4,3I1,'00',I2,'00   1   1.00 ')
+     $      1p,e10.3,'  1.     ',A4,3I1,'00',I2,'00  -1   1.00 ')
             Enddo
           Endif
         Enddo
 c
 c  Adding transitions 5g-6h, approximately transposed from 4f-5g:
-c*****  Tabulation of alfeff:
+c*****  Tabulation of effective alf:
 c charge :
       iz=3
       write(zc,'(I1)') iz ! conversion to character 
@@ -6005,14 +5878,14 @@ c
 c
       ifre2b=6
       nomion='O_III6h'
-      asa=alfeff(6,5+1)/alfeff(5,4+1) ! 6h / 5g
+      asa=alf(6,5+1)/alf(5,4+1) ! 6h / 5g
 c Six main lines. Neglected: ~ 10 lines 5-10% of main lines. 
 c  sub-ref :
           iraies=iraies+1
            Write(out_niv,410) numion,ifre1,imult,ifre2b,nomion,
      $      numion,ifre1,imult,ifre2,int(wvlgth(kref,lref(kref)))
  410    Format(1x,A4,3I1,'000000',1x,A7,'        1.0   0.     ',
-     $  '1.000e+0  1.     ',A4,3I1,'000000   1   1.00 (',I5,'+) 5g-6h')
+     $  '1.000e+0  1.     ',A4,3I1,'000000  -1   1.00 (',I5,'+) 5g-6h')
        Do m=1,6
         k1=2*m-1
         k2=2*m
@@ -6025,7 +5898,7 @@ c  sub-ref :
               Write(out_niv,310) numion,ifre1,imult,ifre2b,m,nomion,
      $      wl6h(m),rel6h(m),numion,ifre1,imult,ifre2b
  310     Format(1x,A4,3I1,'000',I1,'00',1x,A7,f13.3,' 0.   ',
-     $      1p,e10.3,'  1.     ',A4,3I1,'000000   1   1.00 ')
+     $      1p,e10.3,'  1.     ',A4,3I1,'000000  -1   1.00 ')
       Enddo
 c
          Write(out_niv,75) iraies
@@ -6049,60 +5922,71 @@ c
         End
 c-----------------------end OIII_5g---------------------
 c--------------------------------------------------------
+c     Call ReadSto(Te,Ne)
 c
       Subroutine ReadSto(Te,Ne)
 c
-c H-like effective recomb coeff fm tables Storey, Hummer 1995
-c   ATT: maxi n = 50
+c  From tables r...d of Storey, Hummer 1995
+c H-like effective recomb coeff: alf(n,l) /cm3/s
+c    these include all recombinations, radiative cascades,
+c    n - n' electron collision transitions (n.ne.n'),
+c    but NOT the n - n collisional transitions. 
+c H-like departure coefficients from LTE: bSN(n,l)
+c    these include all processes above and, in addition, 
+c    the n - n collisional transitions. 
+c
+c   ATT: here, maxi n = 50.
+c
+c  Reading at 2 consecutive Te and Ne for interpolation/extrapolation;
+c   int/ext will usually be linear in log(Ne) and Te. Nonetheless:
+c    * int/ext at "low" Te can be assumed exponential in the form A*10**(-C/Te)
+c      for bSN, when bSN is a rapidly increasing (concave) function of Te.
+c      Extrapolation below the 1st Te available is always exponential for bSN.
 c
       IMPLICIT NONE
-c
       INTEGER iz
-      INTEGER it,ine,inep1,i,j,n,l,lp,istor,istow
+      INTEGER it,ine,inep1,i,j,n,l,lp,istor,istow,it_out
       DOUBLE PRECISION Ne,Te
-      DOUBLE PRECISION alfeff,b_SH
-      DOUBLE PRECISION t2
+      DOUBLE PRECISION t2,t21,t22,sqt2,sq21,sq22
+      DOUBLE PRECISION alf,b_SH
+      DOUBLE PRECISION alf1(50,50),alf2(50,50),alf3(50,50),alf4(50,50)
+      DOUBLE PRECISION bSH1(50,50),bSH2(50,50),bSH3(50,50),bSH4(50,50)
+      DOUBLE PRECISION rT,rlN,c1,c2,c3,c4     ! linear interp/extrap T & Ne
+      DOUBLE PRECISION at,ct,bSH_Ti,bSH_Ts,co_slope ! expon interp/extrap T small
       CHARACTER*1 r,b,bidon,zc
       CHARACTER*2 d
-      CHARACTER*9 tabsto
-      CHARACTER*72 titre1,titre2
+      CHARACTER*9 tabstoTi,tabstoTs
+      CHARACTER*72 titre1a,titre2a,titre3a,titre4a
+      CHARACTER*72 titre1b,titre2b,titre3b,titre4b
       CHARACTER*4 T2T(12)
       CHARACTER*8 Directory
 c
-      COMMON/MOCS1/alfeff(50,50),b_SH(50,0:50) !alfeff(n,lp) lp=l+1
-      COMMON/MOCS2/inep1,iz,zc,tabsto
+      COMMON/MOCS1/alf(50,50),b_SH(50,50) !alf(n,lp) lp=l+1
+      COMMON/MOCS2/iz,zc
       COMMON/MOCS3/istor,istow
 c
-cc      Data T2T/'0005','0010','0030','0050','0075','0100','0125',
-cc     $  '0150','0200','0300','0500','1000'/
-c 2/15 Remplace data ci-dessus :
-      T2T(1)='0005'
-      T2T(2)='0010'
-      T2T(3)='0030'
-      T2T(4)='0050'
-      T2T(5)='0075'
-      T2T(6)='0100'
-      T2T(7)='0125'
-      T2T(8)='0150'
-      T2T(9)='0200'
-      T2T(10)='0300'
-      T2T(11)='0500'
-      T2T(12)='1000'
+      Data T2T/'0005','0010','0030','0050','0075','0100','0125',
+     $  '0150','0200','0300','0500','1000'/
 c
       Directory='data/d1/'
       r='r'
       b='b'
       d='.d'
 c
-c Look for closest table without interpolation.
-c  The first Ne (ine=1) is 1.d2 ; closest integer in log: 
-      ine=IDNINT(dlog10(Ne))-1
+      c1=0.
+      c2=0.
+      c3=0.
+      c4=0.
+      at=0.
+      ct=0.
+c
+c  The first Ne (ine=1) is 1.d2 ; closest lower integer in log: INT(dlog10(Ne))
+      ine=INT(dlog10(Ne))-1
       If(ine.lt.1) then
-       ine=1
+         ine=1
        elseif(ine.gt.13) then
-       ine=13
+         ine=13
       Endif
-c  inep1 = entier de log(Ne) pour sortie liste_phyat.dat
        inep1=ine+1
 c
       if(iz.le.8) then
@@ -6111,42 +5995,98 @@ c
 c Scaling for charge > 8: Te (Ne not done)
       t2=Te/100.*(8./dfloat(iz))**2
       endif
+       sqt2=dsqrt(t2)
 c
-      If(t2.lt.7.1d0) then
+        it_out=0
+c
+      If(t2.lt.5.d0) then
        it=1
-       elseif(t2.lt.17.3d0) then
+        it_out=1
+       t21=5.d0
+       t22=10.d0
+       elseif(t2.lt.10.d0) then
+       it=1
+       t21=5.d0
+       t22=10.d0
+       elseif(t2.lt.30.d0) then
        it=2
-       elseif(t2.lt.38.7d0) then
+       t21=10.d0
+       t22=30.d0
+       elseif(t2.lt.50.d0) then
        it=3
-       elseif(t2.lt.61.2d0) then
+       t21=30.d0
+       t22=50.d0
+       elseif(t2.lt.75.d0) then
        it=4
-       elseif(t2.lt.86.6d0) then
+       t21=50.d0
+       t22=75.d0
+       elseif(t2.lt.100.d0) then
        it=5
-       elseif(t2.lt.112.d0) then
+       t21=75.d0
+       t22=100.d0
+       elseif(t2.lt.125.d0) then
        it=6
-       elseif(t2.lt.137.d0) then
+       t21=100.d0
+       t22=125.d0
+       elseif(t2.lt.150.d0) then
        it=7
-       elseif(t2.lt.173.d0) then
+       t21=125.d0
+       t22=150.d0
+       elseif(t2.lt.200.d0) then
        it=8
-       elseif(t2.lt.245.d0) then
+       t21=150.d0
+       t22=200.d0
+       elseif(t2.lt.300.d0) then
        it=9
-       elseif(t2.lt.387.d0) then
+       t21=200.d0
+       t22=300.d0
+       elseif(t2.lt.500.d0) then
        it=10
-       elseif(t2.lt.707.d0) then
+       t21=300.d0
+       t22=500.d0
+       elseif(t2.lt.1000.d0) then
        it=11
+       t21=500.d0
+       t22=1000.d0
        else
-       it=12
+       it=11
+       t21=500.d0
+       t22=1000.d0
       Endif
-      IF(iz.eq.1) it=min0(it,10)
-      IF(iz.eq.3) it=max0(it,2)
-      IF(iz.ge.4.and.iz.le.6) it=max0(it,3)
-      IF(iz.ge.7) it=max0(it,4)
+       sq21=dsqrt(t21)
+       sq22=dsqrt(t22)
 c
-      tabsto=r//zc//b//T2T(it)//d
-      print *, 'reading ',tabsto
+      If(iz.eq.1) then
+        if(it.gt.9) then
+         it=9
+         it_out=2
+        endif
+      Endif
+      IF(iz.eq.3) then
+        if(it.lt.2) then
+         it=2
+         it_out=1
+        endif
+      Endif
+      IF(iz.ge.4.and.iz.le.6) then
+        if(it.lt.3) then
+         it=3
+         it_out=1
+        endif
+      Endif
+      IF(iz.ge.7) then
+        if(it.lt.4) then
+         it=4
+         it_out=1
+        endif
+      Endif
 c
-c Here file without '' as already alphanumeric
-      OPEN(unit=istor,file=Directory//tabsto,status='old')
+      tabstoTi=r//zc//b//T2T(it)//d
+      tabstoTs=r//zc//b//T2T(it+1)//d
+      print *, 'reading datasets ',tabstoTi,' ',tabstoTs
+c
+c lower Te:
+      OPEN(unit=istor,file=Directory//tabstoTi,status='old')
 c
       if(ine.gt.1) then
        do i=1,ine-1
@@ -6155,14 +6095,15 @@ c
         enddo
        enddo
       endif
+c lower Ne: (1)
        do j=1,276
         read(istor,15)bidon
        enddo
  15   format(A1)
-      read(istor,16)titre1
+      read(istor,16)titre1a
  16   format(A72)
       do n=50,2,-1
-        read(istor,30)(alfeff(n,lp),lp=1,n)
+        read(istor,30)(alf1(n,lp),lp=1,n)
         read(istor,15)bidon
       enddo
  30   format(4x,d10.3,3x,d10.3,3x,d10.3,3x,d10.3,3x,d10.3,3x,d10.3)
@@ -6170,47 +6111,179 @@ c
        do j=1,263
         read(istor,15)bidon
        enddo
-      read(istor,16)titre2
+      read(istor,16)titre1b
       do n=50,2,-1
-        read(istor,30)(b_SH(n,lp),lp=1,n)
+        read(istor,30)(bSH1(n,lp),lp=1,n)
         read(istor,15)bidon
       enddo
-
+c
+       do j=1,84
+        read(istor,15)bidon
+      enddo
+c
+c higher Ne: (2)
+       do j=1,276
+        read(istor,15)bidon
+       enddo
+      read(istor,16)titre2a
+      do n=50,2,-1
+        read(istor,30)(alf2(n,lp),lp=1,n)
+        read(istor,15)bidon
+      enddo
+c
+       do j=1,263
+        read(istor,15)bidon
+       enddo
+      read(istor,16)titre2b
+      do n=50,2,-1
+        read(istor,30)(bSH2(n,lp),lp=1,n)
+        read(istor,15)bidon
+      enddo
+c
+      CLOSE(istor)
+c
+c higher Te:
+      OPEN(unit=istor,file=Directory//tabstoTs,status='old')
+c
+      if(ine.gt.1) then
+       do i=1,ine-1
+        do j=1,1189
+         read(istor,15)bidon
+        enddo
+       enddo
+      endif
+c lower Ne: (3)
+       do j=1,276
+        read(istor,15)bidon
+       enddo
+      read(istor,16)titre3a
+      do n=50,2,-1
+        read(istor,30)(alf3(n,lp),lp=1,n)
+        read(istor,15)bidon
+      enddo
+c
+       do j=1,263
+        read(istor,15)bidon
+       enddo
+      read(istor,16)titre3b
+      do n=50,2,-1
+        read(istor,30)(bSH3(n,lp),lp=1,n)
+        read(istor,15)bidon
+      enddo
+c
+       do j=1,84
+        read(istor,15)bidon
+      enddo
+c
+c higher Ne: (4)
+       do j=1,276
+        read(istor,15)bidon
+       enddo
+      read(istor,16)titre4a
+      do n=50,2,-1
+        read(istor,30)(alf4(n,lp),lp=1,n)
+        read(istor,15)bidon
+      enddo
+c
+       do j=1,263
+        read(istor,15)bidon
+       enddo
+      read(istor,16)titre4b
+      do n=50,2,-1
+        read(istor,30)(bSH4(n,lp),lp=1,n)
+        read(istor,15)bidon
+      enddo
+c
+      CLOSE(istor)
+c
       if(iz.gt.8) then
 c Scaling for charge > 8:
       do n=50,2,-1
        do lp=1,n
-        alfeff(n,lp)=alfeff(n,lp)*dfloat(iz)/8.
+        alf1(n,lp)=alf1(n,lp)*dfloat(iz)/8.
+        alf2(n,lp)=alf2(n,lp)*dfloat(iz)/8.
+        alf3(n,lp)=alf3(n,lp)*dfloat(iz)/8.
+        alf4(n,lp)=alf4(n,lp)*dfloat(iz)/8.
        enddo
       enddo
 c****** 2/16 Scaling  b_SH ?? *******
-cc      print *,' *** Intsto: no scaling z > 8 for b_SH, except T/z**2, z = 8 used ***'
+cc     print *,' *** IntSto: no scaling z > 8 for b_SH, except T/z**2, z = 8 used ***'
       endif
 c
-      CLOSE(istor)
-c
-c Verif:
+c **Verif: (optional; do first: rm alfsto.res)
         IF(istow.gt.0) THEN
+c
       OPEN(unit=istow,file='alfsto.res',status='new')
 c
-      write(istow,16)titre1
+      write(istow,16)titre1a
       do n=50,2,-1
 c l = lp-1
-      write(istow,31)(lp-1,alfeff(n,lp),lp=1,n)
+      write(istow,31)(lp-1,alf1(n,lp),lp=1,n)
       enddo
  31   format(i3,1p,e10.3,i3,e10.3,i3,e10.3,i3,e10.3,i3,e10.3,i3,e10.3)
 c
-      write(istow,16)titre2
+      write(istow,16)titre1b
       do n=50,2,-1
 c l = lp-1
-      write(istow,31)(lp-1,b_SH(n,lp),lp=1,n)
+      write(istow,31)(lp-1,bSH1(n,lp),lp=1,n)
+      enddo
+c
+      write(istow,16)titre4a
+      do n=50,2,-1
+c l = lp-1
+      write(istow,31)(lp-1,alf4(n,lp),lp=1,n)
+      enddo
+c
+      write(istow,16)titre4b
+      do n=50,2,-1
+c l = lp-1
+      write(istow,31)(lp-1,bSH4(n,lp),lp=1,n)
       enddo
 c
       CLOSE(istow)
 c
         ENDIF
+c **End verif
 c
-      Return
+c   INTERPOLATION OR EXTRAPOLATION in t2=Te/100 and log(Ne)
+c    
+      rT=(t2-t21)/(t22-t21)
+      rlN=dlog10(Ne)-dfloat(inep1)
+      c4=rT*rlN
+      c3=rT-c4
+      c2=rlN-c4
+      c1=1.-rlN-rT+c4
+c
+      do n=50,2,-1
+c
+        do lp=1,n
+c  bilinear interpolation/extrapolation of alf*sqrt(T) in all cases:
+         alf(n,lp)=(alf1(n,lp)*sq21*c1+alf2(n,lp)*sq21*c2+
+     $     alf3(n,lp)*sq22*c3+alf4(n,lp)*sq22*c4)/sqt2
+        enddo
+c
+        co_slope=2.   !EXPLICIT
+c
+        do lp=1,n
+        if((it_out.eq.0).and.(bSH1(n,lp)*t22.lt.co_slope*bSH3(n,lp)*t21)
+     $     .and.(bSH2(n,lp)*t22.lt.co_slope*bSH4(n,lp)*t21)) then
+c  small slope for bSH=f(Te): bilinear interpolation of bSH
+           b_SH(n,lp)=bSH1(n,lp)*c1+bSH2(n,lp)*c2+
+     $       bSH3(n,lp)*c3+bSH4(n,lp)*c4
+         else
+c  large slope for bSH=f(Te) or Te smaller than the lowest tabulated T: linear 
+c  interpolation of bSH for f(Ne) followed by exponential (concave) interpolation
+           bSH_Ti=bSH1(n,lp)+(bSH2(n,lp)-bSH1(n,lp))*rlN
+           bSH_Ts=bSH3(n,lp)+(bSH4(n,lp)-bSH3(n,lp))*rlN
+            at=dlog10(bSH_Ts)+dlog10(bSH_Ts/bSH_Ti)*t21/(t22-t21)
+            at=10.**at
+            ct=dlog10(bSH_Ts/bSH_Ti)*t21*t22/(t22-t21)
+           b_SH(n,lp)=at*10.**(-ct/t2)
+        endif
+        enddo
+      enddo
+c
+      RETURN
 c
       END
 c---------------------end ReadSto---------------------------
@@ -7300,5 +7373,795 @@ c restore xd if necessary
       end
 c
 c*********************************************************************
+c--------------------------------------------------------
 c
-c---------------------------------------------------------------------
+      Subroutine HI_HeII(Te,Ne,niv_input,lambda_output,PHYAT)
+c
+c   See headings Subroutine XSSN_Hlike.
+c
+c   Important: here the energy levels listed corresponds to the J's rather than the l's.
+c   The nl n'l' intensities are converted into nJ n'J' before writing.
+c   For example, the two Hbeta components are: 
+c             1/ 2p3/2-4s1/2 + 2p3/2-4d5/2, noted: 2(J=3/2)- 4
+c             2/ 2s1/2-4p3/2 + 2p1/2-4d3/2, noted: 2(J=1/2)- 4
+c
+      IMPLICIT NONE
+c
+      CHARACTER niv_input*(*),lambda_output*(*),PHYAT*(*)
+c
+c
+      INTEGER in_niv,out_niv,iwr_phyat
+      COMMON/MOC1/in_niv,out_niv,iwr_phyat
+c
+      INTEGER ni_ref,li_ref,ns_ref,k,km !ATT: normally k=1 on calling Int_Hlike
+      INTEGER numin,numax !Br table
+      DOUBLE PRECISION Mat
+      REAL az,am
+      CHARACTER zc*1,bidon*1
+      INTEGER iz,izz,iprint,i,im
+      DOUBLE PRECISION alf,b_SH
+      DOUBLE PRECISION Br,A_tp
+      DOUBLE PRECISION Ne,Te
+      DOUBLE PRECISION Int_Hlike,int_ref_Hli
+      DOUBLE PRECISION int_ref,lambda_ref,leakns_ref
+cc      INTEGER lc1,lc2    ! check string tables
+      INTEGER ifre1,ifre2,ifre2b,ifre1_ref !supplementary caracteristics of X-SSN line label
+      INTEGER lmax_del1,lmax_del2,lmax_del3
+      INTEGER n,nmi,nma,nma2,nh2,l,lmi,lmi_orig,lma,nma50
+      INTEGER nmil1,nmal1,lmal1,nmil2,nmal2,lmal2
+      INTEGER lmin,lmax,lmin_int,lmax_int,lmin_wr
+      INTEGER nmitab,nmatab,ni,ns,n1,n2,ini(99)
+      INTEGER inmitab,inmatab,iraies
+      INTEGER mult,imult,nmult,nimult(20),limult(20),j
+      INTEGER niregr,nsregr,indregr,lregr,hydrostrict
+      INTEGER iwlim,iw,iecr,iecrb
+      DOUBLE PRECISION ryd,charge,chi_Hli,chi_ion,x,A
+      DOUBLE PRECISION cmult
+      DOUBLE PRECISION E(500,0:99),EN(500,0:99)
+      DOUBLE PRECISION cor(500,0:99),corN(500,0:99)
+      DOUBLE PRECISION wl(25,0:24,500) !wl(ni,l,ns) 'normal' trans ns l+1 --> ni l. See J notation
+      DOUBLE PRECISION wlhydrostr(25,500)          ! strict hydrogenic wl
+      DOUBLE PRECISION wl_average(25,500)          ! average multiplet wl (grouping)
+      DOUBLE PRECISION emhydr(25,500),int_hydr_ref ! H or He+ Sto: rel emis & absolute emis ref
+      DOUBLE PRECISION emi_rel(25,0:24,500)  ! rel emis corresp. to the wl's (but w/ k=2 incl)
+      DOUBLE PRECISION int_ref_mod_H
+      DOUBLE PRECISION Ionab,Ionab_min
+      DOUBLE PRECISION wlim(20),Irelmin_H(21)
+      DOUBLE PRECISION wlmin,wlmax
+      DOUBLE PRECISION Irelmin(21)
+      DOUBLE PRECISION va,vb,ve,vf,vg,vi
+      DOUBLE PRECISION vzero
+      CHARACTER*17 titre
+      CHARACTER lab_Directory*9, res_Directory*4
+      CHARACTER numion*4,numion4*4,nomion*7 !format: ' 705', '0705', 'N_V    '
+      CHARACTER*3 inmitabc,inmatabc,ni_refc,ns_refc
+      CHARACTER Irelminc*5,lambda_refc*6,iraiesc*4,wlminc*8,wlmaxc*8
+      CHARACTER*1 nom(21),nom2
+      CHARACTER zero*1,nc1*1,nc2*2
+      CHARACTER ns_alph*2,ni_alph*2,lp1_alph*2,ns_alph3*3
+c
+      COMMON/MOC2/iprint
+      COMMON/MOCS2/iz,zc
+      COMMON/MOCH2/az,am,numin,numax
+      COMMON/MOCX1/lambda_refc
+      COMMON/MOCX2/int_ref,lambda_ref,ifre1_ref
+      COMMON/MOCV1/vzero
+      COMMON/MOCH1/Br(100,100,100,2),A_tp(100,100,100,2) !Br(nu,lup,nl,k) lup=lu+1
+      COMMON/MOCR1/wlmin,wlmax,wlim,Irelmin_H,Ionab,Ionab_min,iwlim
+      COMMON/MOCR2/int_ref_mod_H
+      COMMON/MOCR3/Irelmin
+      COMMON/MOCS1/alf(50,50),b_SH(50,50) !alf(nu,lup) lup=lu+1
+c
+      data zero/'0'/
+c
+c orbital 's' in pos 21:
+      data nom/'p','d','f','g','h','i','k','l','m','n','o','q','r'
+     $   ,'t','u','v','w','x','y','z','s'/
+c
+      data lab_Directory/'data_lab/'/
+      data res_Directory/'res/'/
+c
+c Energies NIST EN() :
+c Rem : EN=0.d0 for unusefully small 'l' or unknown energies
+c
+c Correc atm refrac x=lambda_vac in um, dry air 15C p=760mmHg, Allen_3, p.124
+      A(x)=1.+(64.328+29498.1/(146.-1./x**2)+255.4/(41.-1./x**2))*1.d-6
+c Check:
+cc      lc1=LEN(niv_input)
+cc      lc2=LEN(lambda_output)
+cc      print *,niv_input,'  ',lambda_output,'   (sizes:',lc1,lc2,')'
+c
+      print *,niv_input,'  ',lambda_output
+c
+      OPEN(unit=in_niv,file=lab_Directory//niv_input,status='old')
+c
+      read(in_niv,15) titre
+ 15   format(A17)
+c rydberg, charge, ionization potential, atomic mass (uma)
+      read(in_niv,20) ryd,charge,chi_ion,Mat
+ 20   format(4x,d12.3,7x,d4.0,8x,d12.3,4x,d5.0)
+c  mult = multiplicity, nmult = nber of lower lev with mult, cmult = coeff mult
+c  imult= 1,2,.. ==> 2nd,3rd,.. multiplicity; only lower levels with mult shown
+c Rem: imult sert aussi bien pour des sous-niv differents dans une meme multiplicite
+c Rem: if nmult>0 for an ion, only imult=0 (TO BE OUT 1st) gives the ref line. 
+c  ATT: imult also used in line labeling ==> 0 < imult < 9 
+c       (not necessarily with nmult > 0).
+c  ifre1,2 (0 to 9, std = 0) : for further differenciation in line labeling
+c     where needed.
+      read(in_niv,21) mult,nmult,imult,cmult,ifre1,ifre2
+ 21   format(6x,i4,6x,i4,6x,i4,6x,d7.0,6x,i4,6x,i4)
+       if(nmult.gt.9) then  !ATT: nmult < 10
+          print *,' ********** nmult =',nmult, ' > 9 STOP *******'
+          STOP
+       endif
+             ifre1_ref=ifre1
+c
+        read(in_niv,1) bidon
+ 1    format(A1)
+        nimult(1)=0
+        limult(1)=0
+c
+c potential H-like cm-1 :
+      chi_Hli=ryd*charge*charge
+c charge & mass (atomic number = izz) :
+      iz=IDINT(charge)
+c Conversion to character (note: iz > 8 treated below)
+      write(zc,'(I1)') iz
+c Check:
+      If(iz.lt.1) then
+       print *,'**** iz=',iz,' < 1 STOP***'
+       STOP
+      Endif
+      If(iz.gt.8) then
+       print *,'*** iz=',iz,' : zc put to 8 for Storey tables.'
+       print *,'Scaling factor applied to recombination coefficients'
+       zc='8'
+c  (Note: Br has little dependence on az and am)
+      Endif
+	az=REAL(iz)
+	am=Mat
+c Table branching ratios Br :
+      read(in_niv,66) numin,numax
+ 66   format(6x,i4,6x,i4)
+c check:
+      if(numax.le.numin) then
+        print *,'numax=',numax, 'le. numin=',numin,'***STOP***'
+        STOP
+      endif
+c
+c Label + name ion (form X-SSN): numion=' 705' numion4='0705' nomion='N_V    '
+      read(in_niv,60) numion,numion4,nomion
+ 60   format(9x,a4,11x,a4,10x,a7)
+c
+         BACKSPACE(in_niv)  ! one line back
+        read(in_niv,160) izz ! atomic nber
+ 160   format(9x,i2)
+c
+c Ref transition emissivity: sum from li_ref to ni_ref-1
+      read(in_niv,22) ni_ref,li_ref,ns_ref,hydrostrict
+ 22   format(20i4)
+c  check:
+       if(li_ref.lt.0.or.li_ref.gt.ni_ref-1) then
+        print *,'**** li_ref=',li_ref,' out of range. STOP**'
+        STOP
+       endif
+c Correction for possible 'leakage' of ns_ref lev (probably useful now?)
+      read(in_niv,25) leakns_ref
+ 25   format(d9.3)
+
+c Lim. n & l calcul
+c  lma iF mult > 0, unuseful for H He+
+      read(in_niv,22) nmi,nma,lmi,lma
+c nma2 keep initial value read for nma (nma = maximum n considered):
+        nma2=nma !tabulation PSto nl-nu H and He+ up to nl=10 and nu=500
+c Lim. for energy reading: lab (NIST, etc.) then effectives (X-SSN)
+      read(in_niv,22) nmil1,nmal1,lmal1,nmil2,nmal2,lmal2
+c Lim. for tables X-SSN and limites for l grouping:
+      read(in_niv,22) nmitab,nmatab,niregr,nsregr
+c  Secu:
+      if(nmitab.gt.25) then
+       print *,'**** nmitab = ',nmitab,' > 25. STOP. ****'
+       print *,'**** Please, change dimensions wl, etc. in Subr HI_HeII'
+       STOP
+      endif
+c
+      read(in_niv,22) lmax_del1,lmax_del2 ! unuseful for HI HeII
+      lmax_del3=0 ! unuseful for HI HeII
+c
+c INIT   (Note: lmi and lmin = 0 acceptable; extended gfortran)
+      do n=1,500
+       
+        do l=0,99
+         E(n,l)=0.d0
+         EN(n,l)=0.d0
+         cor(n,l)=0.d0
+         corN(n,l)=0.d0
+        enddo
+      enddo
+c
+      do n=nmil1,nmal1
+      lmax=min0(lmal1,n-1)
+       read(in_niv,24) (EN(n,l),l=lmi,lmax)
+ 24    format(6d12.3)
+        do l=lmi,lmax
+         E(n,l)=EN(n,l)
+         corN(n,l)=E(n,l)-chi_ion+chi_Hli/dble(n*n)
+        enddo
+      enddo
+c
+      do n=nmil2,nmal2
+      lmax=min0(lmal2,n-1)
+       read(in_niv,26) (cor(n,l),l=lmi,lmax)
+      enddo
+ 26    format(10d8.2)
+c
+      CLOSE(in_niv)
+c
+      do n=nmi,nma
+       
+        do l=lmi,min0(n-1,99)
+         E(n,l)=chi_ion-chi_Hli/dble(n*n)+cor(n,l)
+        enddo
+      enddo
+c
+c Tabulation of wavelengths wl in AA with
+c  lower lev ni fm nmitab to nmatab and upper lev ns fm ni+1 to nma 
+c Normaly, nma < 100,
+c  except for HI and HeII possibly -> 500 by PSto without l's
+c  (l dependency only for n --> 50)
+c Normaly, ni < 25 --> l < 24.
+c
+      DO ni=nmitab,nmatab !tabul wl
+c
+        ini(ni)=0
+c
+      lmax=ni-1
+      lmin=0 !REM: lmi and lmin = 0 possible
+c  for write only: here always lmin_wr=21
+        lmin_wr=lmin  !lmin_wr for nom() of smaller l of the sum over l
+           if(lmin_wr.le.0) then
+c  nom(0) does not exist: 's' in nom(21)
+            lmin_wr=21
+           endif
+c IMPLICITLY HERE** : 
+c   'l' corresp. to an orbital of lower level ni
+c   wl: spontaneous transition is l+1 --> l
+       Do l=lmin,lmax  ! l of lower level (ni)
+c Here, original nma=500 preferable:
+          do ns=ni+1,nma
+          va=E(ns,l+1)-E(ni,l)
+          if(va.gt.0.d0) then
+           wl(ni,l,ns)=1.d8/va
+c   air refraction wl > 2000A AND wl < 20000A:
+            IF(wl(ni,l,ns).gt.2.d3.and.wl(ni,l,ns).lt.2.d4)THEN
+             wl(ni,l,ns)=wl(ni,l,ns)/A(1.d4/va)
+            ENDIF
+          else !va </= 0 pathol
+           wl(ni,l,ns)=1.d0
+       print *,nomion,' wl : ni,l,ns',ni,l,ns,'** E(ns,l+1)-E(ni,l)=',va
+       print *,'****STOP*****************************'
+       STOP
+          endif
+         enddo
+       Enddo
+c
+      ENDDO ! DO ni (tabulation wl)
+c
+c Tabulation wlhydrostr (without l and pure hydrogenic) for H or He+:
+c
+       do ni=nmitab,nmatab
+         do ns=ni+1,nma2   !nma2 < 500 defined above (here nma)
+          va=chi_Hli/dble(ni**2)-chi_Hli/dble(ns**2)
+          wlhydrostr(ni,ns)=1.d8/va
+c   air refraction wl > 2000A AND wl < 20000A:
+          IF(wlhydrostr(ni,ns).gt.2.d3.and.wlhydrostr(ni,ns).lt.2.d4)
+     $    THEN
+           wlhydrostr(ni,ns)=wlhydrostr(ni,ns)/A(1.d4/va)
+          ENDIF
+         enddo
+       enddo
+c
+      OPEN(unit=out_niv,file=res_Directory//lambda_output,status='old')
+c
+      write(out_niv,15) titre
+      write(out_niv,40) ryd,charge,chi_ion,chi_Hli,Mat,iz
+ 40   format(1p,' ryd =',e17.10,' charge =',e8.1,' chi_ion =',e17.10,
+     $  /,' chi_Hli =',e17.10,' Mat =',e8.1,'  (iz =',0p,i3,')')
+      write(out_niv,41) mult,nmult,imult,cmult,ifre1,ifre2
+ 41   format('  mult =',i4,' nmult =',i4,' imult =',i4,
+     $   ' cmult =',f7.4,' ifre1 =',i4,' ifre2 =',i4,' ni,li-mult :')
+      write(out_niv,23) nimult(1),limult(1)  !to fill in empty line
+ 23   Format(20I4)
+      write(out_niv,67) Ne,Te
+ 67   format(1p,' Ne =',e9.2,'  Te =',e9.2, ' alf')
+      write(out_niv,68) numin,numax
+ 68   format(2i4,'  numin numax Br (HBD)')
+      write(out_niv,62) numion,numion4,nomion
+ 62   format(' numion :',a4,' numion4 :',a4,' nomion :',a7,' a4,a4,a7')
+      write(out_niv,63) wlmin,wlmax
+ 63   format(1p,2e10.3,' wlmin, wlmax X-SSN')
+c This modified nma corresponds to explicit treatmt  of 'multiplets' (l)
+c By def, the large ns are only possible with grouped l's. 
+c nma2 still useful for HI HeII (PSto treatmt of large n's)
+      write(out_niv,42) nmi,nma,lmi,lma,nma2
+ 42   format(5i4,'  nmi,nma,lmi,lma,nma2 = nma lu')
+      write(out_niv,72) nmil1,nmal1,lmal1,nmil2,nmal2,lmal2
+ 72   format(6i4,'  nmil1,nmal1,lmal1,nmil2,nmal2,lmal2 lectures')
+      write(out_niv,70) ni_ref,li_ref,ns_ref,hydrostrict
+ 70   format(4i4,'  ni_ref,l=li_ref->ni_ref-1,ns_ref,hydrostrict=0-2')
+      write(out_niv,71) leakns_ref
+ 71   format(1p,d10.3,'  fact. leakns_ref')
+      write(out_niv,64) nmitab,nmatab,niregr,nsregr
+ 64   format(4i4,'  nmitab,nmatab,niregr,nsregr X-SSN')
+      write(out_niv,46) lmax_del1,lmax_del2,lmax_del3
+ 46   format(3i4,'  lmax_del1,lmax_del2,lmax_del3')
+      write(out_niv,43) 
+ 43   format(4x,'EN(n,l),corN(n,l)  Lab')
+c
+      do n=nmil1,nmal1
+      lmax=min0(lmal1,n-1)
+       write(out_niv,44) n,(EN(n,l),l=lmi,lmax)
+ 44   format(i3,(10f12.4))
+       write(out_niv,45) n,(corN(n,l),l=lmi,lmax)
+ 45   format(i3,(10f12.4)) !(i3,(10(4x,f8.4))) 11/13
+      enddo
+c (corN repeated to make easier comparison/transcription to cor)
+c *Q: slightly change format for more convenient transcription?
+      write(out_niv,49) 
+ 49   format(4x,'corN(n,l)  Lab')
+      do n=nmil1,nmal1
+      lmax=min0(lmal1,n-1)
+      write(out_niv,51) n,(corN(n,l),l=lmi,lmax)
+ 51   format(i3,6x,(10f12.4))  !(i3,6x,(10f8.4))
+      enddo
+c cor = correction to H-like effectively adopted
+      do n=nmil2,nmal2
+      lmax=min0(lmal2,n-1)
+       write(out_niv,48) n,lmi,lmax,(cor(n,l),l=lmi,lmax)
+      enddo
+ 48   format(3i3,(10f12.4))  !(3i3,(10f8.4))
+c**
+        IF(iprint.ne.0) THEN ! **ATT: iprint.ne.0 NOT UPDATED (obso?)
+      write(out_niv,83) 
+ 83   format(4x,'E(n,l),l=lmi,lmax')
+      do n=nmil2,nmal2
+      lmax=min0(lmal2,n-1)
+       write(out_niv,47) n,lmi,lmax,(E(n,l),l=lmi,lmax)
+      enddo
+ 47   format(3i3,(10f12.4))
+c
+      write(out_niv,73) 
+ 73   format('  ni,ns,lmin,lmax,   wl(ni,l,ns),l=lmin,lmax')
+      do ni=nmitab,nmatab
+      lmax=ni-1
+      lmin=0
+       do ns=ni+1,nma
+       write(out_niv,50) ni,ns,lmin,lmax,(wl(ni,l,ns),l=lmin,lmax)
+       enddo
+      enddo
+ 50   format(4i3,(11f10.3))
+        ENDIF !iprint end
+c**
+c  **********************
+c  Tabulation for X-SSN : 
+c  **********************
+c
+c*****  Read, interpolate, tabulate effective hydrogenic alpha's: alf (n,l, n->50 only)
+      Call ReadSto(Te,Ne)
+c**     Computation/tabulation of branching ratio's Br:
+      Call HBD
+c**
+c****   Emissivities (ni, ns) of PSto for H and He+. (Possibly 
+c   modified LATER for splitting of 1st lines, ie if n<nregr). 
+      IF(numion.eq.' 101') Then ! EXPLICIT
+c  H0: reading e1bx.d  (n, n->500)
+       Call hdatx
+c Interpolation in Te, Ne:
+         Call hlinex(ns_ref,ni_ref,Te,Ne,int_hydr_ref,1)
+       Do ni=nmitab,nmatab
+        Do ns=ni+1,nma2
+         Call hlinex(ns,ni,Te,Ne,va,1) !iopt=1 for lines
+         emhydr(ni,ns)=va/int_hydr_ref !usually 'vb'
+        Enddo
+       Enddo
+      ENDIF
+c
+      IF(numion.eq.' 202') Then ! EXPLICIT
+c  He+: reading e2bx.d  (n, n->500)
+       Call hepdatx
+c Interpolation in Te, Ne:
+         Call heplinex(ns_ref,ni_ref,Te,Ne,int_hydr_ref,1)
+       Do ni=nmitab,nmatab
+        Do ns=ni+1,nma2
+         Call heplinex(ns,ni,Te,Ne,va,1) !iopt=1 for lines
+         emhydr(ni,ns)=va/int_hydr_ref !usually 'vb'
+        Enddo
+       Enddo
+      ENDIF
+c
+c Reference H-like transition:
+c   k=1 and 2 (H like complet), if all l's considered
+       km=2
+      vb=0.
+      DO k=1,km
+       DO l=li_ref,ni_ref-1
+        vb=vb+Int_Hlike(iz,Mat,ni_ref,l,ns_ref,k,Te)
+       ENDDO
+      ENDDO
+      
+c  Emissivity and wavelength of H-like ref line: to normalize components,
+c   whose sum may slightly differ from emhydr (To be quantified?):
+      int_ref_Hli=vb
+c***
+c Parenthesis: Compare two interpolated emissivities of reference multiplet: 
+      print *,'*** int_hydr_ref,int_ref_Hli=vb',int_hydr_ref,int_ref_Hli
+c***
+c   wl of ref line:
+c   (Note: this lambda_ref is inaccurate if the reference is the sum of several 
+c   components, but only int(lambda_ref) will be displayed in practice for Write.
+c   Accurate lambda_ref given later)
+      lambda_ref=wl(ni_ref,ni_ref-1,ns_ref)
+c  Here, no corr needed for non-H-like wl and possible 'leakage' of upper lev:
+c   for Write:
+      int_ref=int_hydr_ref
+c Storage of Hbeta emissivity of HI for normalisations and choice of Irelmin's for all ions:
+      if(numion.eq.' 101'.and.ifre1.eq.0) then
+      int_ref_mod_H=int_hydr_ref
+      endif
+c
+c Minimum relative Intensity in each wavelength ranges:
+c
+      do iw=1,iwlim+1
+         Irelmin(iw)=Irelmin_H(iw)*
+     $   int_ref_mod_H/(int_ref*dmax1(Ionab,Ionab_min))
+      enddo
+c
+        if(li_ref.eq.0) li_ref=21  ! (nom(0) undefined)
+        nom2=' '
+        if(li_ref.ne.ni_ref-1) nom2=nom(ni_ref-1)
+c
+      write(out_niv,85) iwlim
+ 85   format(' iwlim ='i4,' then wlim(1->iwlim), Irelmin(1->iwlim+1)')
+      write(out_niv,87) (wlim(iw),iw=1,iwlim)
+ 87   format(5x,1p,13e10.3)
+      write(out_niv,86) (Irelmin(iw),iw=1,iwlim+1)
+ 86   format(1p,13e10.3)
+c
+      Write(out_niv,105) ni_ref,nom(li_ref),nom2,ns_ref,
+     $  wlhydrostr(ni_ref,ns_ref),int_ref_Hli
+ 105  Format(' X-SSN: Ref =',i2,2a1,'-',i2,' lambda H-like =',
+     $  1p,e12.6,' emissivity H-like =',e10.4,' erg.cm3.s-1')
+      Write(out_niv,106) lambda_ref,int_ref
+c P Storey for H, He+ with interpolation (Te, Ne):
+ 106  Format(' X-SSN: effective lambda reference =',
+     $  1p,e12.6,' effective emissivity =',e10.4,' erg.cm3.s-1')
+c
+           n1=nmitab
+           n2=nmatab
+         print *,'  Practical limits lower level: n1,n2,lmi',n1,n2,lmi
+c
+           nma50=MIN0(nma,50)
+c********  ********** ************
+       Do ni=n1,n2   !ni lower level ******* loop ni + external (normally ni < 25)
+c********  ********** ************
+        lmax=ni-1
+        lmin=0
+c*************************
+         Do ns=ni+1,nma50   !ns = upper level  ****** loop ns intermediary 1
+c  6/11/17   Compute/Tabulate all nl n'l' lines
+c*************************
+c  Auxil variable vf useful only for 'J' treatment of HI and HeII components:
+              vf=0.
+              k=1
+c*************** l associated to ni ***
+          DO l=lmax,lmin,-1  ! ******** loop l internal (lmin=0 acceptable)
+c***************
+              ve=Int_Hlike(iz,Mat,ni,l,ns,k,Te)
+             vb=ve/int_ref_Hli
+ccc Case hydrostrict.eq.1 or 2: all transitions, incl. k=2 ones
+           if(l.gt.0) then
+            k=2  !(convention: emis k=2 added to usual emis k=1)
+              ve=Int_Hlike(iz,Mat,ni,l,ns,k,Te)
+             vb=vb+ve/int_ref_Hli
+            k=1
+           endif
+c
+c HI, DI, HeII and 3HeII: wl, AND THEREFORE INTENSITES redistributed
+C              according to the J's (NOT the l's) of lower level ni
+cc            print *,'numion,ni,l,ns,vb,vg,vf',numion,ni,l,ns,vb,vg,vf
+c **Q: On utilise chaque fois le vb ant et le vb actu. Pourtant une fois sur 2
+c    le vb ant n'est-il pas associé à une raie de ns diff ? ******** Pb ? ***
+            vg=vb ! 1/15 logicS: 1st vf=0. 11/15 check: sum multiplets is conserved
+            vb=(l+1.)*(vf/(2.*l+3.)+vg/(2.*l+1.)) !11/17 compa Clegg+99: looks OK.
+            vf=vg                                 !Explain formula?
+c   Line emissivity relative to reference:
+            emi_rel(ni,l,ns)=vb
+          ENDDO ! ******** loop l internal
+c  Average wl of multiplet (useful in case of mult. grouping, see niregr nsregr):
+c        sum for given ns:
+           vi=0.
+            do l=lmin,lmax
+             vi=vi+emi_rel(ni,l,ns)
+            enddo
+           wl_average(ni,ns)=0.
+           DO l=lmin,lmax
+             wl_average(ni,ns)=wl_average(ni,ns)+
+     $         wl(ni,l,ns)*emi_rel(ni,l,ns)/vi
+           ENDDO
+         Enddo  !ns = upper level  ****** loop ns intermediary 1
+c********  ********** ************
+       Enddo    !ni = lower level ******* loop ni + external
+c********  ********** ************
+c
+c  Extrapolation beyond ns=50 in case nma > 50 (and nma < 501):
+c    adopt total multiplet intensity from Storey Hummer,
+c    adopt multiplet component ratios identical to those for ns = 50 (approx)
+       IF(nma.gt.50) then
+        Do ni=n1,n2
+         lmin=0
+         lmax=ni-1
+c    sum for ns = 50:
+           vi=0.
+            do l=lmin,lmax
+             vi=vi+emi_rel(ni,l,50)
+            enddo
+          Do ns=51,nma
+           DO l=lmin,lmax
+            emi_rel(ni,l,ns)=emhydr(ni,ns)*emi_rel(ni,l,50)/vi
+           ENDDO
+c  Average wl of mult (useful in case of multiplet grouping, see niregr, nsregr):
+           wl_average(ni,ns)=0.
+           DO l=lmin,lmax
+             wl_average(ni,ns)=wl_average(ni,ns)+
+     $         wl(ni,l,ns)*emi_rel(ni,l,50)/vi
+           ENDDO
+          Enddo
+        Enddo
+       ENDIF  ! end nma.gt.50
+c
+c  Replace previous approximate value:
+       lambda_ref=wl_average(ni_ref,ns_ref)
+c
+c   START ref line
+      Write(out_niv,210)
+ 210  Format(' Ref. for liste_modele.dat :')  ! now unuseful in practice
+      Write(out_niv,110) numion,ifre1_ref,nomion,vzero,int(lambda_ref),
+     $  ni_ref,nom(li_ref),nom2,ns_ref  !!!,int_ref
+ 110  Format(1x,A4,I1,'00000000',1x,A7,'        1.0   0.     1.000e+0',
+     $  '  1.                 0   1  ',f5.1,1x,I5,'++',
+     $  I2,2A1,'-',I2)   !!!,1p,e10.3,' erg.cm3.s-1')
+      Write(out_niv,211)
+ 211  Format(' Ref. for liste_phyat.dat :')
+        Write(out_niv,111) numion4,ifre1_ref,nomion,int_ref,
+     $  int(lambda_ref),ni_ref,nom(li_ref),nom2,ns_ref,Te,Ne
+ 111  Format('9',A4,I1,'00000000',1x,A7,'        1.0   0.   ',
+     $  1p,e10.3,'  1.               999  -1   1.00 ',I5,'++',
+     $  I2,2A1,'-',I2,1x,'(Te =',e9.2,' Ne =',e9.2,')')
+c
+        if(li_ref.eq.21) li_ref=0 !reset after writing
+c   END ref line
+c
+c  START WRITING FOR SYNTHESIS: Select and write lines
+c
+c line counter:
+         iraies=0
+c
+c********  ********** ************
+       Do ni=n1,n2   !ni lower level ******* loop ni + external (normally ni < 25)
+c********  ********** ************
+c
+        lmax=ni-1
+        lmin=0
+c
+c For Write:
+        if(ni.lt.10) then
+       write(nc1,'(I1)') ni
+        ni_alph=zero//nc1
+        else   !(assume ni < 100)
+       write(ni_alph,'(I2)') ni
+        endif
+c
+c****************  *********
+         Do ns=ni+1,nma  !ns = upper level  ****** loop ns intermediary 1
+c****************  *********
+c
+c For Write:
+c  
+c  *** 1st alternative: indregr=0 --> multiplet components ****
+        if(ns.lt.10) then
+       write(nc1,'(I1)') ns
+        ns_alph=zero//nc1
+         else   ! (assumes ns < 100)
+       write(ns_alph,'(I2)') ns
+        endif
+c  
+c  *** 2nd alternative: indregr=1 --> ns > 99 possible (H and He+) ****
+        if(ns.lt.10) then
+       write(nc1,'(I1)') ns
+        ns_alph3=zero//zero//nc1
+         elseif(ns.lt.100) then
+       write(nc2,'(I2)') ns
+        ns_alph3=zero//nc2
+         else   ! (assumes ns < 1000)
+       write(ns_alph3,'(I3)') ns
+        endif
+c
+c  Re-initialize line grouping index:
+       indregr=0
+         If(ni.ge.niregr.or.ns.ge.nsregr) Then 
+c  One average line only per (ni,ns) if ni > niregr-1 or ns > nsregr-1
+       indregr=1
+         Endif
+c
+c***###***
+        IF(indregr.eq.0) THEN  ! no grouping
+c***###***
+c******************
+c l associated to ni ***
+         DO l=lmax,lmin,-1  ! ******** loop l internal
+c******************
+c For Write:
+        if(l+1.lt.10) then
+       write(nc1,'(I1)') l+1
+       lp1_alph=zero//nc1
+        else   !(assume l+1 < 100)
+       write(lp1_alph,'(I2)') l+1
+        endif
+c
+c Lower lim of relative intensity depends on wl range:
+          iecr=0
+c
+          va=wl(ni,l,ns)
+          vb=emi_rel(ni,l,ns)
+c**********
+c  Lambda range:
+          IF(va.gt.wlmin.and.va.lt.wlmax) THEN
+c**********
+c
+         iw=1
+         if(va.le.wlim(iw).and.vb.ge.Irelmin(iw)) then
+          iecr=1
+         endif
+        do iw=2,iwlim
+         if(va.gt.wlim(iw-1).and.va.le.wlim(iw).and.
+     $              vb.ge.Irelmin(iw)) then
+          iecr=1
+         endif
+        enddo
+        if(va.gt.wlim(iwlim).and.vb.ge.Irelmin(iwlim+1)) then
+          iecr=1
+        endif
+c
+c*****##
+             IF(iecr.eq.1) THEN ! 1st iecr=1
+c*****##
+c counter of lines:
+               iraies=iraies+1
+c counter of effectively written ni's:
+               ini(ni)=1
+c
+c  HI, DI, HeII et 3HeII special impressions: notation J H_like:
+c
+        Write(out_niv,487) numion,ifre1,imult,ifre2,ni_alph,ns_alph,
+     $    lp1_alph,nomion,va,vb,numion,ifre1,imult,ifre2,ni,2*l+1,ns
+ 487    Format(1x,A4,3I1,3A2,1x,A7,f13.3,' 0.   ',1p,e10.3,'  1.     ',
+     $    A4,3I1,'000000  -1   1.00 ',I2,'(J=',I1,'/2)-',I2)
+c
+c*****##
+             ENDIF             ! end 1st iecr=1
+c*****##
+c************
+          ENDIF   ! lambda range
+c************
+c******************
+         ENDDO  ! l
+c******************
+c***###***
+        ELSE ! indregr.ne.0 (end indregr=0) no more "l"
+c***###***
+          iecr=0
+c
+          va=wl_average(ni,ns)
+          vb=emhydr(ni,ns)
+c**********
+c  Lambda range:
+          IF(va.gt.wlmin.and.va.lt.wlmax) THEN
+c**********
+         iw=1
+         if(va.le.wlim(iw).and.vb.ge.Irelmin(iw)) then
+          iecr=1
+         endif
+        do iw=2,iwlim
+         if(va.gt.wlim(iw-1).and.va.le.
+     $             wlim(iw).and.vb.ge.Irelmin(iw))then
+          iecr=1
+         endif
+        enddo
+        if(va.gt.wlim(iwlim).and.vb.ge.Irelmin(iwlim+1)) then
+          iecr=1
+        endif
+c***##
+             IF(iecr.eq.1) THEN ! 2nd iecr=1
+c***##
+               iraies=iraies+1
+               ini(ni)=1
+c
+                  if(ns.lt.100) then !      1st ifre2 suppressed here
+          Write(out_niv,179) numion,ifre1,imult,ni_alph,ns_alph3,
+     $    lp1_alph,nomion,va,vb,numion,ifre1,imult,ifre2,
+     $     ni,nom(lmax),nom(lmin_wr),mult,ns
+ 179      Format(1x,A4,2I1,A2,A3,A2,1x,A7,f13.3,' 0.   ',1p,e10.3,
+     $      '  1.     ',
+     $      A4,3I1,'000000  -1   1.00 ',I2,A1,'_',A1,I1,'-',I2)
+                  else  ! 99<ns<1000,       1st ifre2 suppressed here
+          Write(out_niv,180) numion,ifre1,imult,ni_alph,ns_alph3,
+     $    lp1_alph,nomion,va,vb,numion,ifre1,imult,ifre2,
+     $     ni,nom(lmax),nom(lmin_wr),mult,ns
+ 180      Format(1x,A4,2I1,A2,A3,A2,1x,A7,f13.3,' 0.   ',1p,e10.3,
+     $      '  1.     ',
+     $      A4,3I1,'000000  -1   1.00 ',I2,A1,'_',A1,I1,'-',I3)
+                  endif
+             ENDIF !iecr
+c**********
+          ENDIF ! lambda range
+c**********
+c***###***
+        ENDIF !  (end indregr.ne.0)
+c***###***
+c****************  *********
+         Enddo   ! ns = upper level
+c****************  *********
+c
+c********  ********** ************
+       Enddo   ! ni = lower level 
+c********  ********** ************
+c
+         Write(out_niv,75) iraies
+ 75      format('Number of X-SSN lines: iraies =',i5)
+c
+      CLOSE(out_niv)
+c
+        inmitab=0
+       do ni=nmitab,nmatab
+         if(ini(ni).ne.0.and.inmitab.eq.0) then
+        inmitab=ni
+         endif
+       enddo
+        inmatab=0
+       do ni=nmatab,nmitab,-1
+         if(ini(ni).ne.0.and.inmatab.eq.0) then
+        inmatab=ni
+         endif
+       enddo
+c Conversion to character (note: iz > 8 treated below)
+      write(inmitabc,'(I2)') inmitab
+      write(inmatabc,'(I2)') inmatab
+      write(iraiesc,'(I4)') iraies
+      write(Irelminc,'(I5)') int(Irelmin(4)*1.d5)
+      write(wlminc,'(I8)') int(wlmin)
+      write(wlmaxc,'(I8)') int(wlmax)
+          IF(imult.eq.0) THEN
+c Print correct if imult=0 is 1st in main programme for ions nmult>0
+      write(lambda_refc,'(I5)') int(lambda_ref)
+          ENDIF
+c
+      write(ni_refc,'(I2)') ,ni_ref
+      write(ns_refc,'(I2)') ,ns_ref
+      print *,'effective ni range:',inmitabc,inmatabc,
+     $ '  wl range:',wlminc,wlmaxc
+        if(li_ref.eq.0)li_ref=21
+      print *,'number of emission lines = ',iraiesc,' / ',
+     $ '   Irelmin =',Irelminc,'E-5',lambda_refc,' (',
+     $ ni_refc,nom(li_ref),nom(ni_ref-1),'  ',ns_refc,')'
+        if(li_ref.eq.21)li_ref=0
+c
+c  If requested, insert the result .res in PHYAT for SYNTHESIS:
+      if(iwr_phyat.ne.0) then
+         Call Write_Phyat(lambda_output,PHYAT)
+      endif
+c
+      RETURN
+c
+      END
+c
+c-----------------End HI_HeII-------------------------
