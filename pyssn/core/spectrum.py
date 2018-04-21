@@ -1253,13 +1253,13 @@ class spectrum(object):
                 line = None
                 for eachline in f:
                     s = self.fieldStrFromLine(eachline,'num')
-                    s = s.strip()
+                    #s = s.strip()
                     #if int(s) == line_num:
-                    if (s[:k] == line_num_str and s[k:].strip('0') == ''):
+                    if s[-k:] == line_num_str:
                         line = eachline
                         break
         return line
-	
+
     def replace_field(self, line, field, value):
         w = self.field_width[field]
         if len(value) > w:
