@@ -1,0 +1,15 @@
+Energy Stat_Weight Aij
+     cm-1     none 1/s      1/s      1/s      1/s      1/s
+      0.0000    2  0.00E+0  0.00E+0  0.00E+0  0.00E+0  0.00E+0
+  35514.6240    6  1.00E+1  0.00E+0  0.00E+0  0.00E+0  0.00E+0
+  50555.5670    4  4.00E+1  1.00E+0  0.00E+0  0.00E+0  0.00E+0
+  51486.0700    2  7.50E+8  0.00E+0  0.00E+0  0.00E+0  0.00E+0
+  60608.3620    4  1.20E+9  3.20E+6  1.00E+5  0.00E+0  0.00E+0
+*** Hg II       'Energy and transition probability data'
+*** SOURCE1	'Sansonetti, J. E. & Reader, J. 2001, Phys. Scr. 63, 219'
+*** NOTE1 	'Energy levels, E: 5d10.6s 2S, 5d9.6s2 2D, 5d10.6p 2P*' 
+*** SOURCE4	'*FAIRE s-p, d-p: Safronova, U. I. & Safronova, M. S. 2011**, Can. J. Phys. 89, 465: E1 M1 E2 forb Ca+, Sr+, Cd+, Ba+, and Hg+'
+*** NOTE2	'Transition Probabilities, Aij' 
+*** NOTE3	'DP: 2S-2D & 2D-2D arbitrary, no hint' 
+*** NOTE4	'Resonance 6s-6p optical depths' 
+*** GSCONFIG s1

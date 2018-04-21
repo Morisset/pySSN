@@ -1,0 +1,14 @@
+Energy Stat_Weight Aij
+     cm-1     none 1/s      1/s      1/s      1/s      1/s
+      0.0000    2  0.00E+0  0.00E+0  0.00E+0  0.00E+0  0.00E+0
+  44136.0800    2  1.05E+8  0.00E+0  0.00E+0  0.00E+0  0.00E+0
+  46618.5500    4  1.00E+8  0.00E+0  0.00E+0  0.00E+0  0.00E+0
+  69258.9100    6  0.00E+0  0.00E+0  1.60E+7  0.00E+0  0.00E+0
+  74893.6600    4  0.00E+0  1.00E+7  2.20E+6  0.00E+0  0.00E+0
+*** Cd II       'Energy and transition probability data'
+*** SOURCE1	'Sansonetti, J. E. & Martin, W. C. 2005, J. Phys. Chem. Ref. Data 34, 1559'
+*** NOTE1 	'Energy levels, E: 4d10.5s 2S, 4d10.5p 2P*, 4d9.5s2 2D' 
+*** SOURCE2	'Safronova, U. I. & Safronova, M. S. 2011, Can. J. Phys. 89, 465'
+*** NOTE2	'Transition Probabilities, Aij' 
+*** NOTE3	'Resonance 6s-6p optical depths' 
+*** GSCONFIG s1
