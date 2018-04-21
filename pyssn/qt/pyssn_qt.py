@@ -6,8 +6,6 @@ pySSN is available under the GNU licence providing you cite the developpers name
     Ch. Morisset (Instituto de Astronomia, Universidad Nacional Autonoma de Mexico)
 
     D. Pequignot (Meudon Observatory, France)
-    
-    M. Copetti (Universidade Federal de Santa Maria, Brazil)    
 
 Inspired by a demo code by: 
 Eli Bendersky (eliben@gmail.com)
@@ -29,7 +27,9 @@ from ..core.spectrum import spectrum
 from ..utils.misc import get_parser
 
 from collections import OrderedDict
+
 log_.level = 4
+
 #ToDo : 
 
 class NavigationToolbar( NavigationToolbar2QT ):
@@ -113,7 +113,8 @@ class AppForm(QtGui.QMainWindow):
         self.axes2 = None
         self.axes3 = None
         self.fig = None
-        self.init_file_name = None
+        self.init_file_name = init_filename
+        self.instr_prof_file = None
         self.call_on_draw = True
         self.cursor_on = False
         self.line_info_ref = 0
@@ -122,7 +123,7 @@ class AppForm(QtGui.QMainWindow):
         self.y2_plot_lims = None
         self.y3_plot_lims = None
         self.xscale = None
-        self.yscale = None
+        self.yscale = None        
         self.post_proc_file = post_proc_file
         self.do_save = True
         self.cont_par_changed = False
@@ -131,10 +132,13 @@ class AppForm(QtGui.QMainWindow):
         self.create_menu()
         self.create_main_frame()
         self.create_status_bar()
-        self.select_init(init_filename)
+        self.exec_init()
         self.cont_pars_dialog = None
+        self.cursor_w1 = None
+        self.cursor_w2 = None
         self.nearbyLines_dialog = None
         self.line_info_dialog = None
+        self.fig_prof = None
 
     def closeEvent(self, evnt):
         if self.cont_pars_dialog is not None:
@@ -215,7 +219,7 @@ class AppForm(QtGui.QMainWindow):
     def on_click(self, event):
         if self.cursor_on:
             do_print = not self.sp.get_conf('show_dialogs', True)
-            self.nearbyLines = self.sp.nearby_lines(event, do_print)
+            self.nearbyLines = self.sp.nearby_lines(event, do_print, sort='i_tot', reverse=True)
             if not do_print:
                 if self.nearbyLines is not None:
                     self.show_nearbyLines_dialog()
@@ -288,8 +292,10 @@ class AppForm(QtGui.QMainWindow):
         self.connect(self.y3lim_max_box, QtCore.SIGNAL('editingFinished()'), self.save_from_lim_boxes)
         self.connect(self.y3lim_max_box, QtCore.SIGNAL('returnPressed()'), self.save_from_lim_boxes_and_draw)
         
+        """
         self.select_init_button = QtGui.QPushButton("Init file")
         self.connect(self.select_init_button, QtCore.SIGNAL('clicked()'), self.select_init)
+        """
         
         self.run_button = QtGui.QPushButton("Run")
         self.connect(self.run_button, QtCore.SIGNAL('clicked()'), self.rerun)
@@ -374,7 +380,7 @@ class AppForm(QtGui.QMainWindow):
         self.connect(self.ion_cb, QtCore.SIGNAL('clicked()'), self.ion_cb_changed)
         
         self.line_info_box = QtGui.QLineEdit()
-        self.line_info_box.setFixedWidth(120)
+        self.line_info_box.setFixedWidth(130)
         self.connect(self.line_info_box, QtCore.SIGNAL('returnPressed()'), self.line_info)
 
         self.mpl_toolbar.addSeparator()
@@ -683,13 +689,34 @@ class AppForm(QtGui.QMainWindow):
                                               tip="Show header in list of lines")
 
         self.file_menu.addAction(self.show_header_action)
-        
+
+        self.open_cosmetic_file_action = self.create_action("Open cosmetic file",
+                                              slot=self.set_cosmetic_file, 
+                                              shortcut="", 
+                                              tip="Open the cosmetic file")
+
+        self.clean_cosmetic_file_action = self.create_action("Purge cosmetic file",
+                                              slot=self.clean_cosmetic_file, 
+                                              shortcut="", 
+                                              tip="Remove the unchanged lines from the cosmetic file")
+
+        self.empty_cosmetic_file_action = self.create_action("Empty cosmetic file",
+                                              slot=self.empty_cosmetic_file, 
+                                              shortcut="", 
+                                              tip="Remove all lines from the cosmetic file")
+
+        self.order_cosmetic_file_action = self.create_action("Order cosmetic file",
+                                              slot=self.order_cosmetic_file, 
+                                              shortcut="", 
+                                              tip="Order the cosmetic file by line number and remove duplicate lines")
+
         quit_action = self.create_action("&Quit", 
                                          slot=self.fileQuit, 
                                          shortcut="Ctrl+Q", 
                                          tip="Close the application")
 
-        self.add_actions(self.file_menu, (None, quit_action))
+        self.add_actions(self.file_menu, (None, self.open_cosmetic_file_action, self.clean_cosmetic_file_action, 
+                                          self.order_cosmetic_file_action, self.empty_cosmetic_file_action, None, quit_action))
 
         self.run_menu = self.menuBar().addMenu("Execute")
         
@@ -716,9 +743,19 @@ class AppForm(QtGui.QMainWindow):
         self.ask_postprocfile_action = self.create_action("Ask for post-process file name",
                                                checkable=True, 
                                                tip="Check to be asked for the post-process file name before executing post-process")
+        
+        open_profile_action = self.create_action("Instrumental profile",
+                                              shortcut="F7", 
+                                              slot=self.apply_instr_prof, 
+                                              tip="Open the instrumental profile file and run the synthesis")
+        
+        self.ask_instr_prof_file_action = self.create_action("Ask for instrumental profile file name",
+                                               checkable=True, 
+                                               tip="Check to be asked for the instrumetal profile file name before executing instrumental profile")
 
-        self.add_actions(self.run_menu, 
-            (update_action, run_action, None, draw_action, post_proc_action, self.ask_postprocfile_action))
+        self.add_actions(self.run_menu, (update_action, run_action, draw_action, None, 
+                                         post_proc_action, self.ask_postprocfile_action, None, 
+                                         open_profile_action, self.ask_instr_prof_file_action))
 
         self.line_menu = self.menuBar().addMenu('Lines')
         
@@ -783,10 +820,25 @@ class AppForm(QtGui.QMainWindow):
         self.selected_ions_action = self.create_action('Only selected ions', 
             shortcut='Alt+I', slot=self.selected_lines_clicked, checkable=True, 
             tip='Check to show the line ticks for selected ions only')
-        
-        self.differentiate_lines_action = self.create_action('Differentiate line sequences', 
-            shortcut='Alt+D', slot=self.differentiate_lines_clicked, checkable=True, 
-            tip='Check to differentiate line sequences of a same ion according to the reference lines')
+
+        self.add_actions(self.line_menu, 
+            (None, self.selected_intensities_action, self.selected_ions_action))         
+
+        self.diff_lines_list = ['ion, process, and reference line', 'ion and process', 'ion' ]
+        s = 'Differentiate lines by:\n'
+        for i in range(len(self.diff_lines_list)):
+            s = s + '    ' + str(i) + ' - ' + self.diff_lines_list[i] + '\n'
+        s = s + '\nSet with:\n' + '    diff_lines_by = <integer>'
+        self.diff_lines_ag = QtGui.QActionGroup(self, exclusive=True)
+
+        self.diff_lines_menu = self.line_menu.addMenu("Differentiate lines by")
+        self.diff_lines_menu.setToolTip(s)        
+
+        for i in range(len(self.diff_lines_list)):
+            a = self.diff_lines_ag.addAction(QtGui.QAction(self.diff_lines_list[i], self, checkable=True))
+            a.setShortcut('Alt+' + str(i+1))
+            self.diff_lines_menu.addAction(a)
+        self.diff_lines_ag.triggered.connect(self.diff_lines)
         
         self.editing_lines_action = self.create_action('Allow editing', 
             slot=self.editing_lines_clicked, checkable=True, 
@@ -795,10 +847,8 @@ class AppForm(QtGui.QMainWindow):
         self.update_lines_action = self.create_action('Update after editing', 
             shortcut='Alt+U', slot=self.update_lines_clicked, checkable=True, 
             tip='Check to update synthesis after editing line parameters in line info dialog')
-
-        self.add_actions(self.line_menu, 
-            (None, self.selected_intensities_action, self.selected_ions_action, self.differentiate_lines_action,
-             None, self.editing_lines_action, self.update_lines_action))
+             
+        self.add_actions(self.line_menu, (None, self.editing_lines_action, self.update_lines_action))
 
         self.cont_menu = self.menuBar().addMenu('Continuum')
 
@@ -807,7 +857,7 @@ class AppForm(QtGui.QMainWindow):
                                           slot=self.plot_cont_action_clicked, 
                                           checkable=True, 
                                           tip='Check to plot the different components of the continuum spectrum')
-
+        
         self.cont_action = self.create_action('Parameters',
                                           shortcut="Shift+Alt+C", 
                                           slot=self.cont_dialog, 
@@ -866,8 +916,7 @@ class AppForm(QtGui.QMainWindow):
             self.connect(action, QtCore.SIGNAL(signal), slot)
         if checkable:
             action.setCheckable(True)
-        return action
-          
+        return action          
   
     def isFloat(self, str_):
         try:
@@ -876,6 +925,72 @@ class AppForm(QtGui.QMainWindow):
         except ValueError:
             return False
 
+    def floatFixFormat(self, r, fix_fmt, align='>'):
+        """
+        floatFixFormat(1.23456789, '{:7.3f}')     = '  1.234'
+        floatFixFormat(-1.23456789, '{:7.3f}')    = ' -1.234'
+        floatFixFormat(123.456789, '{:7.3f}')     = ' 1.23e2'
+        floatFixFormat(-123.456789, '{:7.3f}')    = '-1.23e2'
+        floatFixFormat(1.23456789e+04, '{:7.3f}') = ' 1.23e4'
+        floatFixFormat(1.23456789e-04, '{:7.3f}') = ' 1.2e-4'
+        floatFixFormat(1.23456789e+34, '{:7.3f}') = ' 1.2e34'
+        floatFixFormat(99.999999, '{:7.3f}')      = ' 1.2e34'
+        """
+        if not ( 'f' in fix_fmt and self.isFloat(r) ):
+            return None
+        s = fix_fmt.strip('{')    
+        s = s.strip('}')    
+        s = s.strip(':')    
+        s = s.strip('f')
+        k = s.index('.')    
+        w = int(s[:k])
+        p = int(s[k+1:])
+        s0 = '{:{align}{w}.{p}f}'.format(float(abs(r)), w=w-1, p=p, align=align)
+        s = '{:0.{w}e}'.format(float(abs(r)), w=w)
+        if r < 0:
+            sgn = '-'
+        else:
+            sgn = ''
+        k = s.index('e')
+        mantissa = s[:k]
+        mantissa = mantissa[:p+2]
+        e = int(s[k+1:])
+        if p+e+2>w-3-len(str(e)) and len(s0) < w:
+            s = s0.strip()
+        else:
+            s = '{:0.{p}e}'.format(float(abs(r)), p=min(p,w-4-len(str(e))))
+            k = s.index('e')
+            mantissa = s[:k]
+            exponent = str(int(s[k+1:]))
+            s = mantissa + 'e' + exponent
+        s = '{:{align}{w}}'.format(sgn+s, w=w, align=align)
+        return s
+
+    def rightFormat(self, s, field):
+        if field == 'comment':
+            output = s.strip()
+            return output
+        try:
+            if field == 'profile':
+                r = int(s)
+            else:
+                r = float(s)
+            fmt = self.sp.field_format[field]
+            if 'f' in fmt:
+                s = self.floatFixFormat(r, fmt)
+            else:
+                s = fmt.format(r)
+            if len(s) == self.sp.field_width[field] and not np.isinf(r):
+                if field == 'vitesse' and (r < 0 or s.strip() == '0.00'):
+                    output = None
+                else:    
+                    output = s
+            else:
+                output = None
+        except:
+            output = None
+        return output
+            
     def ConvStrToValidTypes(self, str_):
         str_ = str_.strip(' ')
         str_ = str_.replace('Error in ','')
@@ -952,7 +1067,6 @@ class AppForm(QtGui.QMainWindow):
                 help_ = help_.replace('\xe2\x81\xbb\xc2\xb3', '-3')
                 help_ = help_.replace('\xce\xb1', 'alpha')
                 help_ = help_.replace('\xce\xbb/5000 \xe2\x84\xab', 'lambda/5000 A')
-                print help_
                 j = 0
                 found = False
                 while ( j < len(lines) ) and ( not found ):
@@ -991,7 +1105,10 @@ class AppForm(QtGui.QMainWindow):
 
         def get_window_size_and_position():
             if self.line_info_dialog is None:
-                self.line_info_dialog_width = 800
+                font = QtGui.QFont()
+                width = 800
+                width = QtGui.QFontMetrics(font).width('='*110)
+                self.line_info_dialog_width = width
                 self.line_info_dialog_height = 470
                 sG = QtGui.QApplication.desktop().screenGeometry()
                 self.line_info_dialog_x = sG.width()-self.line_info_dialog_width
@@ -1033,10 +1150,8 @@ class AppForm(QtGui.QMainWindow):
             row = item.row()
             col = item.column()
             s = item.text()
-            print 's=', s
             if col == 1:
                 ion = self.line_info_table.item(row, 1).text()
-                print 'ion=', ion
                 self.ion_box.setText(ion)
                 self.draw_ion()
             if not self.isFloat(s):
@@ -1090,16 +1205,16 @@ class AppForm(QtGui.QMainWindow):
             if self.sp.get_conf('allow_editing_lines', False):
                 if cat == 'sat':
                     if do_cosmetics:
-                        editableCols = ['l_shift', 'i_cor', 'profile', 'vitesse']
+                        editableCols = ['l_shift', 'i_cor', 'profile', 'vitesse', 'comment']
                     else:
                         editableCols = []
                 elif cat == 'subref':
                     if do_cosmetics:
-                        editableCols = ['i_cor']
+                        editableCols = ['i_cor', 'comment']
                     else:
                         editableCols = []
                 elif cat == 'ref':
-                    editableCols = ['l_shift', 'i_cor', 'i_rel', 'profile', 'vitesse']
+                    editableCols = ['l_shift', 'i_cor', 'i_rel', 'profile', 'vitesse', 'comment']
             for j in range(0,len(fieldItems)):
                 s = self.sp.fieldStrFromLine(line, fieldItems[j])
                 s = s.strip()
@@ -1133,6 +1248,8 @@ class AppForm(QtGui.QMainWindow):
                     if do_cosmetics:
                         curr_line = self.sp.read_line(self.sp.fic_cosmetik, int(line_num))
                     else:
+                        curr_line = None
+                    if self.sp.cosmetic_line_ok(curr_line) is not True:
                         curr_line = None
                     if curr_line == None:
                         curr_line = self.sp.read_line(self.sp.phyat_file, int(line_num))
@@ -1265,25 +1382,7 @@ class AppForm(QtGui.QMainWindow):
             self.line_info_table.resizeRowsToContents()
             self.line_info_table.blockSignals(False)
             return
-       
-        def rightFormat(s,col):
-            try:
-                if col == self.sp.fields.index('profile'):
-                    r = int(s)
-                else:
-                    r = float(s)
-                s = self.sp.field_format[fieldItems[col]].format(r)
-                if len(s) == self.sp.field_width[fieldItems[col]] and not np.isinf(r):
-                    if col == 8 and (r < 0 or s.strip() == '0.00'):
-                        output = None
-                    else:    
-                        output = s
-                else:
-                    output = None
-            except:
-                output = None
-            return output
-
+        
         def on_itemChanged():
             self.line_info_table.blockSignals(True)
             item = self.line_info_table.currentItem()
@@ -1292,8 +1391,8 @@ class AppForm(QtGui.QMainWindow):
                 return
             row = item.row()
             col = item.column()
-            s = item.text()
-            value = rightFormat(s,col)
+            s = str(item.text())
+            value = self.rightFormat(s, fieldItems[col])
             if value != None:
                 self.line_info_table.setItem(row, col, QtGui.QTableWidgetItem(value.strip()))
                 self.line_info_table.item(row, col).setBackgroundColor(self.editableCells_bg_color)
@@ -1324,16 +1423,19 @@ class AppForm(QtGui.QMainWindow):
             return line
        
         def save_change(row, col):
-
             line = get_line_from_table(row)
             if isRefLine(line):
                 filename = self.sp.fic_model
             else:
                 filename = self.sp.fic_cosmetik
             self.sp.replace_line(filename, line)
-            if self.sp.get_conf('update_after_editing_lines', False):
+            if col != self.sp.fields.index('comment') and \
+               self.sp.get_conf('update_after_editing_lines', False):
                 self.adjust()
-
+                self.nearbyLines = self.sp.get_nearby_lines(self.cursor_w1, self.cursor_w2, do_print=False)
+                if self.nearbyLines is not None and self.nearbyLines_dialog.isVisible():
+                    self.fill_nearbyLines_table()
+                
         def init_lines():
             self.line = None
             self.subrefline = None
@@ -1362,7 +1464,7 @@ class AppForm(QtGui.QMainWindow):
         self.line_info_dialog = QtGui.QDialog()
         self.line_info_dialog.resize(self.line_info_dialog_width,self.line_info_dialog_height)
         self.line_info_dialog.move(self.line_info_dialog_x,self.line_info_dialog_y)
-        self.line_info_table = QtGui.QTableWidget()   
+        self.line_info_table = QtGui.QTableWidget()
         self.line_info_table.setColumnCount(10)
         fieldItems = self.sp.fields
         fieldNames = [ self.sp.field_abbr[item] for item in fieldItems ]
@@ -1376,6 +1478,7 @@ class AppForm(QtGui.QMainWindow):
         self.line_info_table.horizontalHeaderItem(9).setTextAlignment(QtCore.Qt.AlignLeft)
         self.line_info_table.horizontalHeaderItem(9).setText('  comment')
         init_lines()
+
         do_cosmetics = self.sp.get_conf('do_cosmetik')
         save_initial_plot_pars()
         self.curr_line_num = self.line_info_box.text()
@@ -1403,12 +1506,38 @@ class AppForm(QtGui.QMainWindow):
         self.line_info_dialog.setWindowTitle('line info dialog')
         self.line_info_dialog.setWindowModality(QtCore.Qt.NonModal)
         self.line_info_dialog.show()
-            
-    def show_nearbyLines_dialog(self):
 
+    def fill_nearbyLines_table(self):
+        if self.nearbyLines is None or self.nearbyLines_table is None:
+            return
+        fieldItems = self.sp.fields   
+        self.nearbyLines_table.setRowCount(len(self.nearbyLines))         
+        for i in range(0,len(self.nearbyLines)):
+            for j in range(0,len(fieldItems)):
+                s = self.sp.field_format[fieldItems[j]].format(self.nearbyLines[i][j])
+                s = s.strip()
+                fmt = self.sp.field_format[fieldItems[j]]
+                if 'f' in fmt:
+                    s = self.rightFormat(str(s), self.sp.fields[j])
+                else:
+                    s = fmt.format(self.nearbyLines[i][j])
+                #s = str(s)
+                s = s.strip()
+                item = QtGui.QTableWidgetItem(s)
+                item.setFlags(item.flags() ^ QtCore.Qt.ItemIsEditable)
+                item.setBackgroundColor(self.readOnlyCells_bg_color)
+                self.nearbyLines_table.setItem(i,j,item)
+        self.nearbyLines_table.resizeColumnsToContents()
+        self.nearbyLines_table.resizeRowsToContents()
+                
+    def show_nearbyLines_dialog(self):
+            
         def get_window_size_and_position():
             if self.nearbyLines_dialog is None:
-                self.nearbyLines_dialog_width = 800
+                font = QtGui.QFont()
+                width = 800
+                width = QtGui.QFontMetrics(font).width('='*100)
+                self.nearbyLines_dialog_width = width
                 self.nearbyLines_dialog_height = 470
                 sG = QtGui.QApplication.desktop().screenGeometry()
                 self.nearbyLines_dialog_x = sG.width()-self.nearbyLines_dialog_width
@@ -1495,16 +1624,7 @@ class AppForm(QtGui.QMainWindow):
             u'     \u0394v = \u221A2 \u03C3\n' 
         self.nearbyLines_table.horizontalHeaderItem(8).setToolTip(s)
         self.nearbyLines_table.horizontalHeaderItem(9).setText('  comment')
-        for i in range(0,len(self.nearbyLines)):
-            for j in range(0,len(fieldItems)):
-                s = self.sp.field_format[fieldItems[j]].format(self.nearbyLines[i][j])
-                s = s.strip()
-                item = QtGui.QTableWidgetItem(s)
-                item.setFlags(item.flags() ^ QtCore.Qt.ItemIsEditable)
-                item.setBackgroundColor(self.readOnlyCells_bg_color)
-                self.nearbyLines_table.setItem(i,j,item)
-        self.nearbyLines_table.resizeColumnsToContents()
-        self.nearbyLines_table.resizeRowsToContents()
+        self.fill_nearbyLines_table()
         self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Help|QtGui.QDialogButtonBox.Apply|QtGui.QDialogButtonBox.Close)
         self.buttonBox.rejected.connect(self.nearbyLines_dialog.close)
         self.buttonBox.button(QtGui.QDialogButtonBox.Apply).clicked.connect(do_selection)
@@ -1519,6 +1639,8 @@ class AppForm(QtGui.QMainWindow):
         s = 'nearby line dialog: list of lines between {0:.2f} and {1:.2f} angstroms'.format(self.sp.cursor_w1, self.sp.cursor_w2)
         self.nearbyLines_dialog.setWindowTitle(s)
         self.nearbyLines_dialog.setWindowModality(QtCore.Qt.NonModal)
+        self.cursor_w1 = self.sp.cursor_w1
+        self.cursor_w2 = self.sp.cursor_w2
         self.nearbyLines_dialog.show()
 
     def cont_dialog(self):
@@ -1653,6 +1775,7 @@ class AppForm(QtGui.QMainWindow):
         """ Redraws        for w in [self.sp_min_box, self.ebv_box, self.resol_box]:
             hbox3.addWidget(w)
             hbox3.setAlignment(w, QtCore.Qt.AlignVCenter)
+ the figure
         """
         log_.debug('Entering on_drawn', calling=self.calling)
         if self.sp is None:
@@ -1675,7 +1798,7 @@ class AppForm(QtGui.QMainWindow):
         k = self.sp.get_conf('line_tick_ax')
         if self.show_line_ticks_action.isChecked() and ( k == 0 ):
             y1, y2 = self.get_line_tick_lim(self.sp.get_conf('line_tick_pos'))
-            self.sp.plot_line_ticks(self.axes, y1, y2)
+            self.sp.plot_line_ticks(self.axes, y1, y2, self.x_plot_lims[0], self.x_plot_lims[1])
 
         if self.sp.get_conf('cont_plot', False):
             self.sp.plot_conts(self.axes)
@@ -1775,11 +1898,11 @@ class AppForm(QtGui.QMainWindow):
             self.cut_cb.setChecked(False)
         self.make_axes()
 
-    def differentiate_lines_clicked(self):
-        if self.differentiate_lines_action.isChecked():
-            self.sp.set_conf('differentiate_lines', True) 
+    def diff_lines_by_process_clicked(self):
+        if self.diff_lines_by_process_action.isChecked():
+            self.sp.set_conf('diff_lines_by_process', True) 
         else:  
-            self.sp.set_conf('differentiate_lines', False) 
+            self.sp.set_conf('diff_lines_by_process', False) 
         self.make_axes()
 
     def editing_lines_clicked(self):
@@ -1797,21 +1920,23 @@ class AppForm(QtGui.QMainWindow):
     def cycle_forwards_ions(self):
         j = self.sp.get_conf('index_of_current_ion')
         selected_ions = self.sp.get_conf('selected_ions')   
-        if j in range(-1, len(selected_ions)-1):
+        if j in range(-1, len(self.sp.selected_ions_data)-1):
             j += 1
         else:
             j = -1
         self.sp.set_conf('index_of_current_ion', j)
+        self.set_refline_to_info_box(j)
         self.make_axes()
 
     def cycle_backwards_ions(self):
         j = self.sp.get_conf('index_of_current_ion')
         selected_ions = self.sp.get_conf('selected_ions')   
-        if j in range(0, len(selected_ions)):
+        if j in range(0, len(self.sp.selected_ions_data)):
             j -= 1
         else:
-            j = len(selected_ions)-1
+            j = len(self.sp.selected_ions_data)-1
         self.sp.set_conf('index_of_current_ion', j)
+        self.set_refline_to_info_box(j)
         self.make_axes()
           
     def make_axes(self):
@@ -1878,10 +2003,14 @@ class AppForm(QtGui.QMainWindow):
         self.y1_plot_lims = self.sp.get_conf('y1_plot_lims')
         if self.y1_plot_lims is None:
             mask = (self.sp.w_ori > self.x_plot_lims[0]) & (self.sp.w_ori < self.x_plot_lims[1]) 
+            r = 1.2
             if self.sp.sp_synth_lr is None:
-                self.y1_plot_lims = (np.min(self.sp.f), np.max(self.sp.f))
+                a = np.min(self.sp.f[mask])
+                b = np.max(self.sp.f[mask])
             else:
-                self.y1_plot_lims = (np.min(self.sp.sp_synth_lr[mask]), np.max(self.sp.sp_synth_lr[mask]))      
+                a = np.min(self.sp.sp_synth_lr[mask])
+                b = np.max(self.sp.sp_synth_lr[mask])
+            self.y1_plot_lims = ((a*(1+r)+b*(1-r))/2, (a*(1-r)+b*(1+r))/2)
         
         self.y2_plot_lims = self.sp.get_conf('y2_plot_lims')
         if self.y2_plot_lims is None:
@@ -1890,10 +2019,14 @@ class AppForm(QtGui.QMainWindow):
         self.y3_plot_lims = self.sp.get_conf('y3_plot_lims')
         if self.y3_plot_lims is None:
             mask = (self.sp.w_ori > self.x_plot_lims[0]) & (self.sp.w_ori < self.x_plot_lims[1])
-            if self.sp.cont is None:
+            r = 1.2
+            if self.sp.sp_synth_lr is None:
                 self.y3_plot_lims = (-1,1)
             else:
-                self.y3_plot_lims = (np.min((self.sp.f - self.sp.cont)[mask]), np.max((self.sp.f - self.sp.cont)[mask]))
+                a = np.min((self.sp.f - self.sp.sp_synth_lr)[mask])
+                b = np.max((self.sp.f - self.sp.sp_synth_lr)[mask])
+            self.y3_plot_lims = ((a*(1+r)+b*(1-r))/2, (a*(1-r)+b*(1+r))/2)
+
         log_.debug('Axes initialized. IDs {} {} {}'.format(id(self.axes), id(self.axes2), id(self.axes3)), calling=self.calling)
         self.print_axes()
 
@@ -1939,30 +2072,14 @@ class AppForm(QtGui.QMainWindow):
         log_.debug('Axes restored. IDs {} {} {}'.format(id(self.axes), id(self.axes2), id(self.axes3)), calling=self.calling)
         self.print_axes()
         
-        
     def print_axes(self):
         log_.debug('lims: {} {} {} {}'.format(self.x_plot_lims, self.y1_plot_lims, self.y2_plot_lims, self.y3_plot_lims), calling=self.calling)
         log_.debug('Axes IDs {} {} {}'.format(id(self.axes), id(self.axes2), id(self.axes3)), calling=self.calling)
         log_.debug(' IDs {} {} {}'.format(id(self.axes), id(self.axes2), id(self.axes3)), calling=self.calling)
 
-    
-    def select_init(self, init_file_name=None):
-        file_choices = "Python initialization files (*init.py) (*init.py);;Python files (*.py) (*.py);;All files (*) (*)"
-        title = 'Open pySSN initialization file'
-        if init_file_name is None:
-            msg = "An initialization file is needed! \n" \
-                  "It can be supplied with the line command \n" \
-                  "     pySSN -f init_file. \n\n" \
-                  "Click \"Ok\" to open a file dialog to select this file."
-            QtGui.QMessageBox.critical(self, 'pySSN', msg, QtGui.QMessageBox.Ok )  
-            self.init_file_name = str(QtGui.QFileDialog.getOpenFileName(self, title, '', file_choices))
-        else:
-            self.init_file_name = init_file_name
-        while self.init_file_name and not os.path.isfile(self.init_file_name):
-            msg = "Initialization file '{}' not found!".format(self.init_file_name)
-            QtGui.QMessageBox.critical(self, 'pySSN', msg, QtGui.QMessageBox.Ok )  
-            self.init_file_name = str(QtGui.QFileDialog.getOpenFileName(self, title, '', file_choices))
-        
+    def exec_init(self):
+        if self.init_file_name is None:
+            self.get_init_filename()
         if self.init_file_name:
             self.statusBar().showMessage('Running synthesis ...') 
             QtGui.QApplication.processEvents() 
@@ -1971,12 +2088,72 @@ class AppForm(QtGui.QMainWindow):
             self.on_draw()
             self.do_save = True
             self.restore_axes()
+            self.update_lim_boxes()
         else:
             log_.warn('A filename must be given', calling=self.calling)
             sys.exit('An initialization filename must be given')
 
+    def get_init_filename(self):
+        file_choices = "Python initialization files (*init.py) (*init.py);;Python files (*.py) (*.py);;All files (*) (*)"
+        title = 'Open pySSN initialization file'
+        init_file = str(QtGui.QFileDialog.getOpenFileName(self, title, '', file_choices))
+        if init_file and os.path.isfile(init_file):
+            self.init_file_name = init_file
+        else:
+            self.init_file_name = ''
+
+    def select_init(self):
+        old_name = self.init_file_name
+        self.get_init_filename()
+        if self.init_file_name:
+            self.exec_init()
+        else:
+            self.init_file_name = old_name
+               
+    def apply_instr_prof(self):
+        if self.instr_prof_file == None or self.ask_instr_prof_file_action.isChecked():
+            file_choices = "Python files (*.py) (*.py);;All files (*) (*)"
+            title = 'Open instrumental profile file'
+            self.instr_prof_file = str(QtGui.QFileDialog.getOpenFileName(self, title, '', file_choices))
+        if self.instr_prof_file:
+            try:
+                user_module = {}
+                execfile(self.instr_prof_file, user_module)
+                prof = user_module['prof']
+                self.sp.conf['prof'] = prof
+                log_.message('instrumental profile read from {}'.format(self.instr_prof_file), calling = self.calling)
+            except:
+                log_.warn('instrumental profile NOT read from {}'.format(self.instr_prof_file), calling = self.calling)
+                self.instr_prof_file = None
+        else:
+            self.instr_prof_file = None
+        if self.instr_prof_file is not None:
+            self.update_profile()
+            """
+            plt.close(self.fig)
+            self.fig = plt.figure()
+            plt.plot(self.sp.filter_) 
+            plt.draw()
+            plt.show()
+            self.canvas.draw()
+            """
+            plt.ion()
+            self.fc1 = FigureCanvas(self._fig)
+            if self.fig_prof is not None:
+                plt.close(self.fig_prof)
+            self.fig_prof = plt.figure()
+            self.fc1.figure = self.sp.filter_
+            self.fc1.draw()
+            #plt.plot(self.sp.filter_) 
+            #plt.ion()
+            #plt.draw()
+            #plot.ioff()
+            print plt.get_fignums()
+            #_prof.show()
             
     def isValidFilename(self, filename):
+        if filename is None:
+            return False
         try:
             open(filename,'r')
             return True
@@ -1985,38 +2162,316 @@ class AppForm(QtGui.QMainWindow):
                 open(filename, 'w')
                 return True
             except IOError:
-                return False
+                return False        
         
-    def set_cosmetic_file(self, cosmetic_file):
-        if cosmetic_file is not None and self.isValidFilename(cosmetic_file):
+    def test_cosmetic_file(self, cosmetic_file):
+        if self.isValidFilename(cosmetic_file):
             return
-        file_choices = "Line cosmetic files (*.dat) (*.dat);;All files (*) (*)"
-        title = 'Set the line cosmetic file'
-        msg = "A line cosmetic file is needed! \n"
-        msg = "Line cosmetic file '{}' not valid. \n" \
+        title = 'pySSN: cosmetic file'
+        msg = "Line cosmetic file not set or invalid. \n" \
               "It can be supplied in the initialization file with:\n" \
               "     fic_cosmetik = <cosmetic_file> . \n\n" \
-              "Click \"Ok\" to open a file dialog to select this file.".format(cosmetic_file)
-        QtGui.QMessageBox.critical(self, 'pySSN', msg, QtGui.QMessageBox.Ok )  
-        cosmetic_file = str(QtGui.QFileDialog.getSaveFileName(self, title, '', file_choices, options=QtGui.QFileDialog.DontConfirmOverwrite))
-        while cosmetic_file and not self.isValidFilename(cosmetic_file):
-            msg = "Line cosmetic file '{}' not valid!".format(cosmetic_file)
-            QtGui.QMessageBox.critical(self, 'pySSN', msg, QtGui.QMessageBox.Ok )  
-            cosmetic_file = str(QtGui.QFileDialog.getSaveFileName(self, title, '', file_choices))
-        if not cosmetic_file:
-            self.sp.set_conf('do_cosmetik', False)
-            msg = "Line cosmetics disable. \n"  \
-                  "do_cosmetik = False" 
-            QtGui.QMessageBox.warning(self, 'pySSN', msg, QtGui.QMessageBox.Ok )
+              "Click \"Ok\" to open a file dialog to select this file."
+        QtGui.QMessageBox.critical(self, title, msg, QtGui.QMessageBox.Ok )  
+        self.set_cosmetic_file()
+        if self.sp.fic_cosmetik:
+            self.save_par_in_file('fic_cosmetik', self.sp.fic_cosmetik, self.init_file_name, 'line cosmetic file')
         else:
+            self.sp.set_conf('do_cosmetik', False)
+            msg = "No cosmetic file selected.\n" \
+                  "Line cosmetics is disabled. " \
+                  "(do_cosmetik = False)\n\n"  \
+                  "Select 'File/Open cosmetic file\' in the menu-bar to activate cosmetics"
+            QtGui.QMessageBox.warning(self, 'pySSN: cosmetic file', msg, QtGui.QMessageBox.Ok )
+
+    def set_cosmetic_file(self):
+        file_choices = "Line cosmetic files (*cosm*.dat) (*cosm*.dat);;Data files (*.dat) (*.dat);;All files (*) (*)"
+        title = 'Set the line cosmetic file'
+        cosmetic_file = str(QtGui.QFileDialog.getSaveFileName(self, title, '', file_choices, options=QtGui.QFileDialog.DontConfirmOverwrite))
+        msg = "Line cosmetic file '{}' not valid!".format(cosmetic_file)
+        if cosmetic_file and not self.isValidFilename(cosmetic_file):
+            QtGui.QMessageBox.critical(self, 'pySSN', msg, QtGui.QMessageBox.Ok )  
+            cosmetic_file = None
+        if cosmetic_file:
+            self.sp.set_conf('do_cosmetik', True)
             dir_ = os.path.dirname(cosmetic_file)
             if dir_ == os.getcwd():
                 cosmetic_file = cosmetic_file.split('/')[-1]
             self.sp.set_conf('fic_cosmetik', cosmetic_file)
-            self.save_par_in_file('fic_cosmetik', cosmetic_file, self.init_file_name, 'line cosmetic file')
             self.sp.fic_cosmetik = cosmetic_file
-            self.start_spectrum()
-        
+            
+            if self.sp is not None:
+                self.set_status_text()
+            if self.axes is not None:
+                self.adjust()
+
+    def empty_cosmetic_file(self):
+        if self.sp.fic_cosmetik is None or self.sp.phyat_file is None:
+            return
+        title = 'pySSN: cosmetic file'
+        msg = 'All lines in the cosmetic file will be removed.\nConfirm?'
+        ret = QtGui.QMessageBox.question(self, title, msg, QtGui.QMessageBox.Ok, QtGui.QMessageBox.Cancel )
+        if ret == QtGui.QMessageBox.Ok:
+            f = open(self.sp.fic_cosmetik, 'w')
+            f.close()
+    
+    def order_lines(self, lines):
+        if lines is None:
+            return None
+        numbers = []
+        for line in lines:
+            line_num = int(self.sp.fieldStrFromLine(line,'num'))
+            numbers.append(line_num)
+        lines = [x for _,x in sorted(zip(numbers, lines))]
+        return lines
+    
+    def remove_duplicate_lines(self, lines):
+        if lines is None:
+            return None
+        numbers = []
+        output = []
+        for line in lines:
+            line_num = int(self.sp.fieldStrFromLine(line,'num'))
+            if line_num not in numbers:
+                numbers.append(line_num)
+                output.append(line)
+        return output
+    
+    def order_cosmetic_file(self):
+        if self.sp.fic_cosmetik is None or not os.path.isfile(self.sp.fic_cosmetik):
+            return
+        f = open(self.sp.fic_cosmetik, 'r')
+        cosmetic_lines = f.readlines()
+        f.close()
+        cosmetic_lines = self.order_lines(cosmetic_lines)
+        n0 = len(cosmetic_lines)
+        cosmetic_lines = self.remove_duplicate_lines(cosmetic_lines)
+        n1 = len(cosmetic_lines)
+        f = open(self.sp.fic_cosmetik, 'w')
+        f.writelines(cosmetic_lines)
+        f.close()
+        if n0 > n1:
+            s = ' and the duplicate lines removed'
+        else:
+            s = ''
+        msg = 'The cosmetic \'{0:}\' file was ordered{1:}.'.format(self.sp.fic_cosmetik, s)
+        self.statusBar().showMessage(msg, 4000) 
+    
+    def clean_cosmetic_file(self):
+
+        def ShowCleanMessage(UnchangedLineList):
+            nUL = len(UnchangedLineList)
+            if nUL == 1:
+                s1 = ''
+                s2 = 'was'
+                s3 = 'this line'
+            elif nUL > 1:
+                s1 = 's'
+                s2 = 'were'
+                s3 = 'these lines'
+            msgBox = QtGui.QMessageBox()
+            msgBox.setIcon(QtGui.QMessageBox.Question)
+            msgBox.title = 'pySSN: cosmetic file'
+            msg = '{0:} unchanged line{1:} in the cosmetic file {2:} found.'.format(nUL, s1, s2)
+            msgBox.setText(msg)
+            msgBox.setInformativeText('Do you want to delete {:}?\n'.format(s3))
+            detailedText = 'Unchanged line{:}:\n\n'.format(s1)
+            for i in UnchangedLineList:
+                detailedText = detailedText + str(i) + '\n'
+            msgBox.setDetailedText(detailedText)
+            DelButton = msgBox.addButton(self.tr("Delete"), QtGui.QMessageBox.ActionRole)
+            s = 'Delete from the cosmetic file all unchanged lines'
+            DelButton.setToolTip(s)
+            msgBox.addButton(QtGui.QMessageBox.Cancel)
+            answer = msgBox.exec_()
+            if msgBox.clickedButton() == DelButton:
+                answer = True
+            else:
+                answer = False
+            return answer
+
+        if self.sp.fic_cosmetik is None or self.sp.phyat_file is None:
+            return
+        if not self.sp.get_conf('clean_cosmetic_file'):
+            return
+        if not os.path.isfile(self.sp.fic_cosmetik):
+            return
+        f = open(self.sp.fic_cosmetik, 'r')
+        cosmetic_lines = f.readlines()
+        f.close()
+        UnchangedLineList = []
+        ChangedLines = []
+        for i in range(len(cosmetic_lines)):
+            line_c = cosmetic_lines[i].rstrip()
+            line_num = int(self.sp.fieldStrFromLine(line_c,'num'))
+            if self.sp.cosmetic_line_unchanged(line_c):
+                UnchangedLineList.append(line_num)
+            else:
+                ChangedLines.append(line_c + '\n')
+                
+        if len(UnchangedLineList) > 0:
+            ret = ShowCleanMessage(UnchangedLineList)
+            if ret == True:
+                f = open(self.sp.fic_cosmetik, 'w')
+                f.writelines(ChangedLines)
+                f.close()
+        else:
+            msg = 'No unchanged line in the cosmetic file {:}'.format(self.sp.fic_cosmetik)
+            self.statusBar().showMessage(msg, 4000) 
+                
+            
+    def match_cosmetic_phyat_files(self):
+    
+        def ShowErrorMessage():
+            msg = 'The wavelength or intensity in the cosmetic file does not match that in the atomic database.\n\n' \
+                  'Do you want to try to automatically correct the cosmetic file?'
+            msgBox = QtGui.QMessageBox()
+            msgBox.setText("Error in cosmetic file for line: " + str(line_num))
+            msgBox.setInformativeText(msg)
+            msgBox.addButton(QtGui.QMessageBox.Yes)
+            msgBox.addButton(QtGui.QMessageBox.YesToAll)
+            msgBox.addButton(QtGui.QMessageBox.No)
+            msgBox.addButton(QtGui.QMessageBox.NoToAll)
+            msgBox.setDefaultButton(QtGui.QMessageBox.Yes)
+            answer = msgBox.exec_()
+            return answer
+    
+        def ShowFinalMessage(nErr, nCor, nUnCor, nNfd, UnCorList, NotFound):
+            msgBox = QtGui.QMessageBox()
+            msgBox.setText('pySSN: error in cosmetic file')
+            if nCor > 0:
+                s0 = 'Rerun the synthesis to take into account the changes.\n\n'
+            else:
+                s0 = ''
+            if nUnCor > 0:
+                s1 = 'The cosmetic data for lines that still have problems will be ignored. ' \
+                     'Do you want to delete them from the cosmetic file?'   
+            else:
+                s1 = ''
+            msg = 'Number of lines with problems: {0:}\n' \
+                  'Number of corrected lines: {1:}\n' \
+                  'Number of uncorrected lines: {2:}\n' \
+                  'Number of lines not found in the atomic database: {3:}\n\n' \
+                  '{4:}{5:}'.format(nErr, nCor, nUnCor, nNfd, s0, s1)
+            msgBox.setInformativeText(msg)
+            if nNfd > 0:
+                detailedText = 'Lines not found:\n\n'
+                for i in NotFound:
+                    detailedText = detailedText + i + '\n'
+                detailedText =  detailedText + '\n'
+            else:
+                 detailedText = ''     
+            if nUnCor > 0:
+                detailedText = detailedText + 'Lines not corrected:\n\n'
+                for i in UnCorList:
+                    detailedText = detailedText + i + '\n'
+            msgBox.setDetailedText(detailedText)
+            DelAllButton = msgBox.addButton(self.tr("Delete all"), QtGui.QMessageBox.ActionRole)
+            DelNotFndButton = msgBox.addButton(self.tr("delete not found"), QtGui.QMessageBox.ActionRole)
+            DelUncorButton = msgBox.addButton(self.tr("delete uncorrected"), QtGui.QMessageBox.ActionRole)
+            s = 'Delete from the cosmetic file all lines that still have problems'
+            DelAllButton.setToolTip(s)
+            s = 'Delete from the cosmetic file the lines not found in the atomic database'
+            DelNotFndButton.setToolTip(s)
+            s = 'Delete from the cosmetic file the uncorrected lines'
+            DelUncorButton.setToolTip(s)
+            msgBox.addButton(QtGui.QMessageBox.Cancel)
+            msgBox.setMaximumHeight(16777215)
+            msgBox.setMinimumHeight(800)
+            # It does not expand! Why?
+            msgBox.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+            msgBox.setSizeGripEnabled(True)
+            if nUnCor == 0:
+                DelUncorButton.setEnabled(False)
+                DelAllButton.setEnabled(False)
+            if nNfd == 0:
+                DelNotFndButton.setEnabled(False)
+                DelAllButton.setEnabled(False)
+            answer = msgBox.exec_()
+            if msgBox.clickedButton() == DelAllButton:
+                answer = ['DelNotFnd', 'DelUncor']
+            elif msgBox.clickedButton() == DelNotFndButton:
+                answer = ['DelNotFnd']
+            elif msgBox.clickedButton() == DelUncorButton:
+                answer = ['DelUncor']
+            else:
+                answer = []    
+            return answer
+
+        if self.sp.fic_cosmetik is None:
+            return
+        if os.path.isfile(self.sp.fic_cosmetik):
+            ret = None
+            f = open(self.sp.fic_cosmetik, 'r')
+            cosmetic_lines = f.readlines()
+            f.close()
+            ErrorList = []
+            CorrectedList = []
+            UnCorList = []
+            NotFound =[]
+            k = self.sp.field_pos['id']
+            keys = [ 'lambda', 'l_shift', 'i_rel', 'i_cor' ]
+            for i in range(len(cosmetic_lines)):
+                line_c = cosmetic_lines[i].rstrip()
+                line_num = int(self.sp.fieldStrFromLine(line_c,'num'))
+                cosmeticLineOk = self.sp.cosmetic_line_ok(line_c)
+                if cosmeticLineOk == None:
+                    NotFound.append(line_c[:k])
+                    ErrorList.append(line_c[:k])
+                elif cosmeticLineOk == False:
+                    ErrorList.append(line_c[:k])
+                    if ret != QtGui.QMessageBox.YesToAll and ret != QtGui.QMessageBox.NoToAll:
+                            ret = ShowErrorMessage()
+                    if ret == QtGui.QMessageBox.Yes or ret == QtGui.QMessageBox.YesToAll:
+                        CorrectedList.append(line_c[:k])
+                        line = self.sp.read_line(self.sp.phyat_file, line_num)
+                        line = line.rstrip()
+                        v0 = {i: float(self.sp.fieldStrFromLine(line, i)) for i in keys}
+                        v1 = {i: float(self.sp.fieldStrFromLine(line_c, i)) for i in keys}
+                        l_shift = v1['lambda'] + v1['l_shift'] - v0['lambda']
+                        i_cor =  v1['i_cor'] * v1['i_rel'] / v0['i_rel']
+                        l_shift_str = self.rightFormat(str(l_shift), 'l_shift')
+                        i_cor_str = self.rightFormat(str(i_cor), 'i_cor')
+                        line = self.sp.replace_field(line, 'l_shift', l_shift_str)
+                        line = self.sp.replace_field(line, 'i_cor', i_cor_str)
+                        log_.warn('(corrected) ' + line + '\n', calling=self.calling)
+                        self.sp.replace_line(self.sp.fic_cosmetik, line)
+                    else:
+                        UnCorList.append(line_c[:k])
+                        log_.warn('Not corrected.\n', calling=self.calling)
+            nErr = len(ErrorList)
+            nCor = len(CorrectedList)
+            nUnCor = len(UnCorList)
+            nNfd = len(NotFound)
+            if nErr > 0:
+                answer = ShowFinalMessage(nErr, nCor, nUnCor, nNfd, UnCorList, NotFound)
+
+                if  'DelNotFnd' in answer:
+                    for i in NotFound:
+                        self.sp.remove_line(self.sp.fic_cosmetik, int(i))
+                if  'DelUncor' in answer:
+                    for i in UnCorList:
+                        self.sp.remove_line(self.sp.fic_cosmetik, int(i))
+    def set_status_text(self):
+    
+        if self.sp is None:
+            return
+            
+        if self.sp.phyat_file == 'NO_phyat.dat':
+            self.status_text.setText('pySSN, v {}. init file: {}, No synthesis'.format(__version__, 
+                     self.sp.config_file.split('/')[-1]))
+        elif self.sp.get_conf('do_cosmetik'):
+            self.status_text.setText('pySSN, v {}. init file: {}, at. data: {}, model: {}, cosmetic: {}'.format(__version__, 
+                     self.sp.config_file.split('/')[-1], 
+                     self.sp.phyat_file.split('/')[-1],
+                     self.sp.get_conf('fic_modele').split('/')[-1],
+                     self.sp.get_conf('fic_cosmetik').split('/')[-1]))
+        else:
+            self.status_text.setText('pySSN, v {}. init file: {}, at. data: {}, model: {}, No cosmetic'.format(__version__, 
+                     self.sp.config_file.split('/')[-1], 
+                     self.sp.phyat_file.split('/')[-1],
+                     self.sp.get_conf('fic_modele').split('/')[-1]))
+                    
     def start_spectrum(self):
         init_file = self.init_file_name.split('/')[-1]
         dir_ = self.init_file_name.split(init_file)[0]
@@ -2024,23 +2479,28 @@ class AppForm(QtGui.QMainWindow):
             dir_ = './'
         self.directory = dir_
         self.sp = spectrum(config_file=self.init_file_name)
-        if self.sp.phyat_file == 'NO_phyat.dat':
-            self.status_text.setText('pySSN, v {}. init file: {}, No synthesis'.format(__version__, 
-                     self.sp.config_file.split('/')[-1]))
-        else:
-            self.status_text.setText('pySSN, v {}. init file: {}, at. data: {}, model: {}, cosmetic: {}'.format(__version__, 
-                     self.sp.config_file.split('/')[-1], 
-                     self.sp.phyat_file.split('/')[-1],
-                     self.sp.get_conf('fic_modele').split('/')[-1],
-                     self.sp.get_conf('fic_cosmetik').split('/')[-1]))
+            
+        if self.sp.get_conf('fic_cosmetik') == '':
+            self.sp.set_conf('do_cosmetik', False)
 
-        if self.sp.get_conf('do_cosmetik'):
-            self.set_cosmetic_file(self.sp.fic_cosmetik)
+        if self.sp.get_conf('do_synth') and self.sp.get_conf('do_cosmetik'):
+            self.test_cosmetic_file(self.sp.fic_cosmetik)
+            self.match_cosmetic_phyat_files()
+            if self.sp.get_conf('clean_cosmetic_file'):
+                self.clean_cosmetic_file()
+            if self.sp.get_conf('order_cosmetic_file'):
+                self.order_cosmetic_file()
+            
+        self.set_status_text()
+        self.instr_prof_file = self.sp.get_conf('fic_instr_prof', None)
+        if self.instr_prof_file is not None:
+            self.instr_prof_file = self.instr_prof_file.split('/')[-1]
+            
         self.axes = None
         self.sp.ax2_fontsize = 6
         self.sp_norm_box.setText('{}'.format(self.sp.get_conf('sp_norm')))   
         self.obj_velo_box.setText('{}'.format(self.sp.get_conf('obj_velo')))   
-        self.ebv_box.setText('{}'.format(self.sp.get_conf('e_bv')))   
+        self.ebv_box.setText('{}'.format(self.sp.get_conf('e_bv', 0)))   
         self.resol_box.setText('{}'.format(self.sp.get_conf('resol')))   
         self.cut2_box.setText('{}'.format(self.sp.get_conf('cut_plot2')))
         self.magenta_box.setText('{}'.format(self.sp.plot_magenta))
@@ -2050,7 +2510,28 @@ class AppForm(QtGui.QMainWindow):
         self.sp_min_box.setText('{}'.format(self.sp.get_conf('limit_sp')[0]))
         self.sp_max_box.setText('{}'.format(self.sp.get_conf('limit_sp')[1]))
 
+        """
+        if self.sp.get_conf('x_plot_lims') == None:
+            self.sp.set_conf('x_plot_lims', self.sp.get_conf('limit_sp'))
+        if self.sp.get_conf('y1_plot_lims') == None:
+            self.sp.set_conf('y1_plot_lims', [0,1000])
+        if self.sp.get_conf('y3_plot_lims') == None:
+            self.sp.set_conf('y3_plot_lims', [-100,100])
+        
+        self.xlim_min_box.setText('{}'.format(self.sp.get_conf('x_plot_lims')[0]))
+        self.xlim_max_box.setText('{}'.format(self.sp.get_conf('x_plot_lims')[1]))
+        self.y1lim_min_box.setText('{}'.format(self.sp.get_conf('y1_plot_lims')[0]))
+        self.y1lim_max_box.setText('{}'.format(self.sp.get_conf('y1_plot_lims')[1]))
+        self.y3lim_min_box.setText('{}'.format(self.sp.get_conf('y3_plot_lims')[0]))
+        self.y3lim_max_box.setText('{}'.format(self.sp.get_conf('y3_plot_lims')[1]))
+        """
+
         self.init_axes()
+        """
+        log_.debug('x_plot_lims={}'.format(self.x_plot_lims), calling='start_spectrum')
+        log_.debug('y1_plot_lims={}'.format(self.y1_plot_lims), calling='start_spectrum')
+        log_.debug('y3_plot_lims={}'.format(self.y3_plot_lims), calling='start_spectrum')
+        """
         self.xlim_min_box.setText('{}'.format(self.x_plot_lims[0]))
         self.xlim_max_box.setText('{}'.format(self.x_plot_lims[1]))
         self.y1lim_min_box.setText('{}'.format(self.y1_plot_lims[0]))
@@ -2066,7 +2547,8 @@ class AppForm(QtGui.QMainWindow):
         self.ion_cb.setChecked(self.sp.get_conf('show_selected_ions_only', False))
         self.selected_intensities_action.setChecked(self.sp.get_conf('show_selected_intensities_only', False))
         self.cut_cb.setChecked(self.sp.get_conf('show_selected_intensities_only', False))
-        self.differentiate_lines_action.setChecked(self.sp.get_conf('differentiate_lines', False))
+        self.diff_lines_ag.actions()[self.sp.get_conf('diff_lines_by', 0)].setChecked(True)
+        self.line_tick_ax_ag.actions()[self.sp.get_conf('line_tick_ax', 0)].setChecked(True)
         self.editing_lines_action.setChecked(self.sp.get_conf('allow_editing_lines', False))
         self.update_lines_action.setChecked(self.sp.get_conf('update_after_editing_lines', False))
         self.plot_cont_action.setChecked(self.sp.get_conf('cont_plot', False))
@@ -2161,10 +2643,11 @@ class AppForm(QtGui.QMainWindow):
         self.sp_norm()
         self.obj_velo()
         self.ebv()
-        N_diff = self.sp.adjust()
-        if N_diff > 0:
+        ndiff = self.sp.adjust()
+        if ndiff > 0:
             self.on_draw()
-        self.statusBar().showMessage('Update finished.', 4000) 
+        self.statusBar().showMessage('Update finished.', 4000)
+        return ndiff 
 
     def apply_post_proc(self):
         if self.post_proc_file is None or self.ask_postprocfile_action.isChecked():
@@ -2178,7 +2661,6 @@ class AppForm(QtGui.QMainWindow):
                 self.post_proc_file = path
             else:
                 return
-        
         try:
             user_module = {}
             execfile(self.post_proc_file, user_module)
@@ -2242,12 +2724,25 @@ class AppForm(QtGui.QMainWindow):
                     for ion in ion_list[::-1]:
                         sList.insert(k, ion)
                 sList.remove(item)
+            else:
+                if self.sp.true_ion(item) == item:
+                    sList = sList + self.sp.get_all_ions_from_ion(item)
+        sList = list(set(sList))
         self.sp.set_conf('selected_ions', sList)
         self.ion_box.setText(s)
+        
+    def set_refline_to_info_box(self,j):
+        if self.sp.get_conf('diff_lines_by') == 0: 
+            if j == -1:
+                j = 0
+            s = str(self.sp.selected_ions_data[j][2][0])
+            self.line_info_box.setText(s)
         
     def draw_ion(self):
         self.set_ion()
         self.sp.set_conf('index_of_current_ion', -1)
+        self.sp.set_selected_ions_data()
+        self.set_refline_to_info_box(-1)
         self.on_draw()
         
     def line_info(self):
@@ -2255,6 +2750,8 @@ class AppForm(QtGui.QMainWindow):
             return
         msg = ''
         s = self.line_info_box.text()
+        if s == '':
+            return
         w = self.sp.field_width['num'] - 1
         s = s[-w:]
         if s[0] == '0':
@@ -2271,7 +2768,9 @@ class AppForm(QtGui.QMainWindow):
                 if line is None:
                     msg = 'No line associated to this number.'
         if msg == '':
-            self.line_info_ref = new_ref
+            s = self.sp.fieldStrFromLine(line,'num').strip()
+            self.line_info_box.setText(s) 
+            self.line_info_ref = int(s)
             if self.sp.get_conf('show_dialogs', True):
                 self.show_line_info_dialog()
             else:
@@ -2309,12 +2808,22 @@ class AppForm(QtGui.QMainWindow):
             self.sp.plot_cyan = new_ref
             self.sp.label_cyan = ref_txt
             self.on_draw()
-
+        
+    def diff_lines(self):
+        self.sp.set_conf('index_of_current_ion', -1)
+        self.set_plot_ax2()
+        if self.sp.get_conf('diff_lines_by') == 0: 
+            s = str(self.sp.selected_ions_data[0][2][0])
+            self.line_info_box.setText(s)
+        
     def set_plot_ax2(self):
+        self.sp.set_selected_ions_data()
         k = self.line_tick_ax_list.index(self.line_tick_ax_ag.checkedAction().text())
         self.sp.set_conf('line_tick_ax',k)
         k = self.line_tick_pos_list.index(self.line_tick_pos_ag.checkedAction().text())
         self.sp.set_conf('line_tick_pos',k)
+        k = self.diff_lines_list.index(self.diff_lines_ag.checkedAction().text())
+        self.sp.set_conf('diff_lines_by',k)
         if self.show_line_ticks_action.isChecked():
             self.make_axes()
         
@@ -2324,14 +2833,49 @@ class AppForm(QtGui.QMainWindow):
         log_.level = verbosity
         
     def update_lim_boxes(self):
-        xformat = '{:.0f}'
-        yformat = '{:.0f}'
-        self.xlim_min_box.setText(xformat.format(self.x_plot_lims[0]))
-        self.xlim_max_box.setText(xformat.format(self.x_plot_lims[1]))
-        self.y1lim_min_box.setText(yformat.format(self.y1_plot_lims[0]))
-        self.y1lim_max_box.setText(yformat.format(self.y1_plot_lims[1]))
-        self.y3lim_min_box.setText(yformat.format(self.y3_plot_lims[0]))
-        self.y3lim_max_box.setText(yformat.format(self.y3_plot_lims[1]))
+        xformat = '{:.1f}'
+        yformat = '{1:.{0}f}'
+        min_diff = 2
+        if abs(self.x_plot_lims[1] - self.x_plot_lims[0]) < min_diff:
+            m = (self.x_plot_lims[0] + self.x_plot_lims[1])/2
+            x_lims = (m - min_diff/2,m + min_diff/2)
+        else:
+            x_lims = self.x_plot_lims
+        min_diff = 0.2
+        if abs(self.y1_plot_lims[1] - self.y1_plot_lims[0]) < min_diff:
+            m = (self.y1_plot_lims[0] + self.y1_plot_lims[1])/2
+            y1_lims = (m - min_diff/2,m + min_diff/2)
+        else:
+            y1_lims = self.y1_plot_lims
+        min_diff = 0.2
+        if abs(self.y3_plot_lims[1] - self.y3_plot_lims[0]) < min_diff:
+            m = (self.y3_plot_lims[0] + self.y3_plot_lims[1])/2
+            y3_lims = (m - min_diff/2,m + min_diff/2)
+        else:
+            y3_lims = self.y3_plot_lims
+        if self.x_plot_lims[0] != float(self.xlim_min_box.text()):
+            self.xlim_min_box.setText(xformat.format(x_lims[0]))
+        if self.x_plot_lims[1] != float(self.xlim_max_box.text()):
+            self.xlim_max_box.setText(xformat.format(x_lims[1]))
+        delta = abs(y1_lims[1]-y1_lims[0])
+        if delta < 2:
+            precision = 2
+        else:
+            precision = 1
+        if self.y1_plot_lims[0] != float(self.y1lim_min_box.text()):
+            self.y1lim_min_box.setText(yformat.format(precision, y1_lims[0]))
+        if self.y1_plot_lims[1] != float(self.y1lim_max_box.text()):
+            self.y1lim_max_box.setText(yformat.format(precision, y1_lims[1]))
+        delta = abs(y3_lims[1]-y3_lims[0])
+        if delta < 2:
+            precision = 2
+        else:
+            precision = 1
+        if self.y3_plot_lims[0] != float(self.y3lim_min_box.text()):
+            self.y3lim_min_box.setText(yformat.format(precision, y3_lims[0]))
+        if self.y3_plot_lims[1] != float(self.y3lim_max_box.text()):
+            self.y3lim_max_box.setText(yformat.format(precision, y3_lims[1]))
+        self.save_from_lim_boxes_and_draw()
 
     def save_from_lim_boxes(self):
         self.x_plot_lims = (float(self.xlim_min_box.text()), float(self.xlim_max_box.text()))
