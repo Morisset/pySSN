@@ -2137,13 +2137,18 @@ class AppForm(QtGui.QMainWindow):
             plt.show()
             self.canvas.draw()
             """
+            
+            """
+            # The Following gives an error self._fig not defined... 
             plt.ion()
-            self.fc1 = FigureCanvas(self.fig)
+            self.fc1 = FigureCanvas(self._fig)
             if self.fig_prof is not None:
                 plt.close(self.fig_prof)
             self.fig_prof = plt.figure()
             self.fc1.figure = self.sp.filter_
             self.fc1.draw()
+            """
+
             #plt.plot(self.sp.filter_) 
             #plt.ion()
             #plt.draw()
