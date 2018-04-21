@@ -331,7 +331,7 @@ class spectrum(object):
         if not os.path.isfile(self.fic_profs):
             log_.error('File not found {}'.format(self.fic_profs), calling=self.calling)
         emis_profiles = {}
-        emis_profiles['1'] = {'T4': 0.0, 'vel':0.0, 'params': [['G', '1.00', '0.0', '20.0']]}
+        emis_profiles['1'] = {'T4': 1e4, 'vel':0.0, 'params': [['G', '1.00', '0.0', '20.0']]}
         prof_params = None
         with open(self.fic_profs) as f:
             for l in f:
