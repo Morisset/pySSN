@@ -2138,7 +2138,7 @@ class AppForm(QtGui.QMainWindow):
             self.canvas.draw()
             """
             plt.ion()
-            self.fc1 = FigureCanvas(self._fig)
+            self.fc1 = FigureCanvas(self.fig)
             if self.fig_prof is not None:
                 plt.close(self.fig_prof)
             self.fig_prof = plt.figure()
