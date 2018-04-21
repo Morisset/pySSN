@@ -1258,6 +1258,7 @@ class spectrum(object):
                     if s[-k:] == line_num_str:
                         line = eachline
                         break
+        log_.debug('Reading {}'.format(filename), calling=self.calling)
         return line
 
     def replace_field(self, line, field, value):
