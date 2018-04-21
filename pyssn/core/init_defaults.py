@@ -64,6 +64,10 @@ wave_unit = 'Angstrom'
 # of the atomic database is hard-coded 
 fic_modele = 'liste_modele.dat'
 fic_cosmetik = 'liste_cosmetik.dat'
+fic_cosmetik = None
+
+# File containing the definition of the instrumental profile
+fic_instr_prof = None
 
 # To take into account 'fic_cosmetik' data
 do_cosmetik = True
@@ -119,7 +123,7 @@ cont_edens = 1e3
 # Wavelength of the reference line for the reddening.
 lambda_ref_rougi = 4861.3
 red_corr_law = 'S79 H83 CCM89'
-e_bv = 0.0
+
 # definition of the structure for the limits of the plots
 x_plot_lims = None
 y1_plot_lims = None
@@ -152,8 +156,8 @@ show_selected_ions_only = True
 # Show line ticks for selected ions only
 show_selected_intensities_only = True
 
-# Differentiate line sequences of a same ion according to the reference
-differentiate_lines = True
+# Differentiate line sequences: 0 - by reference line, 1 - by process, 2 - by ion
+diff_lines_by = 0
 
 # Allow editing line parameters in line info dialog
 allow_editing_lines = True
@@ -217,4 +221,12 @@ line_saved_filename = 'lines.dat'
 
 plot_filename = 'plot.pdf'
 
+plot_filename = 'plot.pdf'
+
 show_dialogs = True
+
+# Order the cosmetic_file by line number and remove duplicate lines.
+order_cosmetic_file = False
+
+# Remove from cosmetic file the unchanged lines
+clean_cosmetic_file = False
