@@ -1,6 +1,8 @@
 *.pyc
 *.svn-base
 *.*~
+*.exe
+*.tgz
 **/.settings
 **/.ipynb_checkpoints/**
 **/.svn/**
@@ -11,6 +13,8 @@ dist/
 .directory
 **/.DS_Store
 **docs/*.dat
-data/d1
-data/d2
-data/d3
+**data/d1
+**data/d2
+**data/d3
+**pySSN.egg-info/*
+**/fortran/data/*
