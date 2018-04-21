@@ -323,10 +323,15 @@ class spectrum(object):
                 prof = user_module['prof']
                 self.conf['prof'] = prof
                 log_.message('instrumental profile read from {}'.format(self.instr_prof_file))
-            except:
-                log_.warn('instrumental profile NOT read from {}'.format(self.instr_prof_file), 
+            except UnicodeEncodeError:
+                log_.warn('instrumental profile NOT read from {}. Check it contains only ASCII characters.'.format(self.instr_prof_file), 
                               calling = self.calling)
                 self.instr_prof_file = None
+            except:
+                log_.warn('instrumental profile NOT read from {}.'.format(self.instr_prof_file), 
+                              calling = self.calling)
+                self.instr_prof_file = None
+                
 
         if not os.path.isfile(self.fic_profs):
             log_.error('File not found {}'.format(self.fic_profs), calling=self.calling)
