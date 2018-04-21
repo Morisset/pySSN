@@ -4,9 +4,8 @@ pySSN is available under the GNU licence providing you cite the developpers name
     Ch. Morisset (Instituto de Astronomia, Universidad Nacional Autonoma de Mexico)
 
     D. Pequignot (Meudon Observatory, France)
-    
-    M. Copetti (Universidade Federal de Santa Maria, Brazil)
 """
+import time
 import os
 import numpy as np
 import matplotlib.pyplot as plt
@@ -26,7 +25,6 @@ from ..core.profiles import profil_instr
 """
 ToDo:
 1) Define the special lines in a table or dictionnary where ref, color, style are set up.
-2) avoid reduced tick values for lambdas when zooming.
 """
 
 
@@ -92,8 +90,10 @@ class spectrum(object):
         It reads the atomic data, model and cosmetik files. It reads the observation. It computes the reddening
         correction, the 
         """
-        
+                
         self.cursor = None
+        
+        self.selected_ions_data = None
         
         self.fields = [ 'num', 'id', 'lambda', 'l_shift', 'i_rel', 'i_cor', 'ref', 'profile', 'vitesse', 'comment' ]
 
@@ -232,6 +232,7 @@ class spectrum(object):
         self.ax2 = None
         self.ax3 = None
         self.cursor_width = 0.02
+        self.cursor_w0 = None
         self.cursor_w1 = None
         self.cursor_w2 = None
         self.firstClick = True
@@ -308,12 +309,25 @@ class spectrum(object):
     def do_profile_dict(self, return_res=False):
         
         self.fic_profs = self.get_conf('fic_profile', None)
+        self.instr_prof_file = self.get_conf('fic_instr_prof', None)
         
         if self.fic_profs is None:
             self.fic_profs = execution_path('./')+'../data/default_profiles.dat'
         else:
             self.fic_profs = self.directory + self.fic_profs
-        
+
+        if self.instr_prof_file is not None:
+            try:
+                user_module = {}
+                execfile(self.instr_prof_file, user_module)
+                prof = user_module['prof']
+                self.conf['prof'] = prof
+                log_.message('instrumental profile read from {}'.format(self.instr_prof_file))
+            except:
+                log_.warn('instrumental profile NOT read from {}'.format(self.instr_prof_file), 
+                              calling = self.calling)
+                self.instr_prof_file = None
+
         if not os.path.isfile(self.fic_profs):
             log_.error('File not found {}'.format(self.fic_profs), calling=self.calling)
         emis_profiles = {}
@@ -452,7 +466,6 @@ class spectrum(object):
         
         self.set_conf('do_calcul_aire_ref', False)
         self.set_conf('raie_ref ', {"vitesse" : 25.0, "lambda" : 4861.0, "profile" : 1})     # depuis 25/10/01
-        
             
     def get_conf(self, key=None, undefined=None, message=None):
         """
@@ -527,9 +540,11 @@ class spectrum(object):
         return model_arr
         
     def read_cosmetik(self, cosmetik_file, do_cosmetik):
+        cosmetik_arr = []
+        if cosmetik_file is None:
+            return cosmetik_arr
         if not os.path.isabs(cosmetik_file):
             cosmetik_file = '{0}'.format(self.directory + cosmetik_file)
-        cosmetik_arr = []
         if do_cosmetik:
             try:
                 cosmetik_arr = read_data(cosmetik_file)
@@ -907,7 +922,9 @@ class spectrum(object):
         log_.message('number of lines with i_rel > 1e-50: {0}'.format(tt.sum()), calling=self.calling)
         return liste_out[tt]
 
-    def make_synth(self, liste_raies, sp_theo):
+    def make_synth_test(self, liste_raies):
+
+        sp_theo = self.sp_theo.copy()
         
         if bool(self.conf['do_calcul_aire_ref']):
             self.aire_ref = 1.0
@@ -923,7 +940,45 @@ class spectrum(object):
             if np.isfinite(aire) and (aire != 0.):
                 max_sp = np.max(sp_tmp)
                 if (np.abs(sp_tmp[0]/max_sp) > 1e-3) or (np.abs(sp_tmp[-1]/max_sp) > 1e-3):
-                    log_.warn('Area of {0} {1} could be wrong'.format(raie['id'], raie['lambda']), 
+                    log_.message('Area of {0} {1} could be wrong'.format(raie['id'], raie['lambda']), 
+                                      calling = self.calling)
+                intens_pic = raie['i_rel'] * raie['i_cor'] * self.aire_ref / aire
+
+                if raie['ref'] == 0:
+                    tab_tmp = (sp_theo['raie_ref'].num == raie['num'])
+                else:
+                    tab_tmp = (sp_theo['raie_ref'].num == raie['ref'])
+                this_line = intens_pic * sp_tmp
+                if not no_red_corr(raie):
+                    this_line /= self.red_corr
+                if not is_absorb(raie):
+                    sp_synth += this_line
+                sp_theo['spectr'][tab_tmp] +=  this_line
+                sp_theo['correc'][tab_tmp] = 1.0
+        tt = (sp_theo['correc'] != 0.)
+        for key in ('correc', 'raie_ref', 'spectr'):
+            sp_theo[key] = sp_theo[key][tt]
+        
+        log_.message('Number of theoretical spectra: {0}'.format(len(sp_theo['correc'])), calling=self.calling)
+        return sp_theo, sp_synth
+
+    def make_synth(self, liste_raies, sp_theo):
+
+        if bool(self.conf['do_calcul_aire_ref']):
+            self.aire_ref = 1.0
+                   
+        sp_synth = np.zeros_like(self.w)
+        sp_theo['spectr'] *= 0.0 
+        sp_theo['correc'] *= 0.0
+        
+        for raie in liste_raies:
+            #sp_tmp = self.profil_emis(self.w, raie, self.conf['lambda_shift'])
+            sp_tmp = self.get_profile(raie)
+            aire = np.trapz(sp_tmp, self.w)
+            if np.isfinite(aire) and (aire != 0.):
+                max_sp = np.max(sp_tmp)
+                if (np.abs(sp_tmp[0]/max_sp) > 1e-3) or (np.abs(sp_tmp[-1]/max_sp) > 1e-3):
+                    log_.message('Area of {0} {1} could be wrong'.format(raie['id'], raie['lambda']), 
                                       calling = self.calling)
                 intens_pic = raie['i_rel'] * raie['i_cor'] * self.aire_ref / aire
 
@@ -1028,13 +1083,13 @@ class spectrum(object):
         return cont_lr, sp_synth_lr 
                 
     def adjust(self):
+        spectr0 = self.sp_theo['spectr'].copy()
         new_model_arr = self.read_model(self.fic_model)        
         new_cosmetik_arr = self.read_cosmetik(self.fic_cosmetik, self.do_cosmetik)
         new_sp_theo, new_liste_totale, new_liste_raies = self.append_lists(self.phyat_arr, new_model_arr, new_cosmetik_arr)
         mask_diff = np.zeros(len(new_liste_raies), dtype=bool)
         for key in ('lambda', 'l_shift', 'i_rel', 'i_cor', 'vitesse', 'profile'):
             mask_diff = mask_diff | (new_liste_raies[key] != self.liste_raies[key])
-        
         log_.debug('{} differences in lines from files'.format(mask_diff.sum()),
                            calling=self.calling + ' adjust')
         ref_diff = self.compare_profiles()
@@ -1043,10 +1098,8 @@ class spectrum(object):
         for im, l in enumerate(new_liste_raies.profile):
             if np.str(l) in ref_diff:
                 mask_diff[im] = True
-        
-        if mask_diff.sum() > 0:
+        if mask_diff.sum() > 0 and len(mask_diff) == len(self.liste_raies):
             old_sp_theo = self.sp_theo.copy()
-            
             if len(new_sp_theo) != len(old_sp_theo):
                 log_.error('The new list has different number of elements', 
                                  calling = self.calling+'.adjust')
@@ -1056,12 +1109,14 @@ class spectrum(object):
                 self.do_profile_dict()
             liste_new_diff = new_liste_raies[mask_diff]
             new_sp_theo, new_sp_synth = self.make_synth(liste_new_diff, new_sp_theo)
+            
             if log_.level >= 3:
                 print('Old values:')
                 self.print_line(liste_old_diff)
                 print('New values:')
                 self.print_line(liste_new_diff)
             do_abs = False
+            self.sp_theo['spectr'] = spectr0
             for i_change in np.arange(len(new_sp_theo['raie_ref'])):
                 to_change = (self.sp_theo['raie_ref']['num'] == new_sp_theo['raie_ref'][i_change]['num'])
                 new_sp_theo['correc'][i_change] = self.sp_theo['correc'][to_change].copy()
@@ -1077,14 +1132,13 @@ class spectrum(object):
                     self.sp_synth += (new_sp_theo['correc'][i_change] * new_sp_theo['spectr'][i_change] -
                                       old_sp_theo['correc'][i_change] * old_sp_theo['spectr'][i_change]) 
                 log_.message('change line {0}'.format(new_sp_theo['raie_ref'][i_change]['num']),
-                                   calling=self.calling + ' adjust')            
+                                   calling=self.calling + ' adjust')         
             if do_abs:
                 self.sp_abs = self.make_sp_abs(self.sp_theo)
             self.liste_raies = new_liste_raies
             self.sp_synth_tot = self.convol_synth(self.cont, self.sp_synth)
             self.cont_lr, self.sp_synth_lr = self.rebin_on_obs()
         log_.message('{} differences'.format(mask_diff.sum()), calling=self.calling + ' adjust')
-
         return mask_diff.sum()
         
         #self.update_plot2()
@@ -1149,17 +1203,93 @@ class spectrum(object):
                     satellites.append(eachline)
         return satellites
 
+    def cosmetic_line_unchanged(self, line_c):
+        if line_c == None:
+            return None
+        line_num = int(self.fieldStrFromLine(line_c,'num'))
+        line = self.read_line(self.phyat_file, line_num)
+        if line == None:
+            log_.warn('Error in cosmetic file: line {0:} does not exist in the atomic database\n'.format(str(line_num)), calling=self.calling)
+            return None
+        else:    
+            line = line.rstrip()
+            keys = ['l_shift', 'i_cor', 'i_rel', 'profile', 'vitesse']
+            v0 = {i: float(self.fieldStrFromLine(line, i)) for i in keys}
+            v1 = {i: float(self.fieldStrFromLine(line_c, i)) for i in keys}
+            if v0 == v1:
+                return True
+            else:
+                return False
+
+    def cosmetic_line_ok(self, line_c):
+        if line_c == None:
+            return None
+        line_num = int(self.fieldStrFromLine(line_c,'num'))
+        line = self.read_line(self.phyat_file, line_num)
+        if line == None:
+            log_.warn('Error in cosmetic file: line {0:} does not exist in the atomic database\n'.format(str(line_num)), calling=self.calling)
+            return None
+        else:    
+            line = line.rstrip()
+            keys = [ 'lambda', 'i_rel' ]
+            v0 = {i: float(self.fieldStrFromLine(line, i)) for i in keys}
+            v1 = {i: float(self.fieldStrFromLine(line_c, i)) for i in keys}
+            if v0['i_rel'] != v1['i_rel'] or v0['lambda'] != v1['lambda']:
+                log_.warn('Error in cosmetic file for line {}\n'.format(str(line_num)), calling=self.calling)
+                log_.warn('(cosmetic)   ' + line_c, calling=self.calling)
+                log_.warn('(database)   ' + line, calling=self.calling)
+                return False
+            else:
+                return True
+
     def read_line(self, filename, line_num):
+        line = None
+        line_num_str = str(line_num)
+        k = len(line_num_str)
         if not os.path.isfile(filename):
             return None
         else:
             with open(filename, 'r') as f:
                 line = None
                 for eachline in f:
-                    if int(self.fieldStrFromLine(eachline,'num')) == line_num:
+                    s = self.fieldStrFromLine(eachline,'num')
+                    s = s.strip()
+                    #if int(s) == line_num:
+                    if (s[:k] == line_num_str and s[k:].strip('0') == ''):
                         line = eachline
                         break
         return line
+	
+    def replace_field(self, line, field, value):
+        w = self.field_width[field]
+        if len(value) > w:
+            return None
+        elif len(value) < w:
+            a = self.field_align[field]
+            value = '{:{a}{w}}'.format(value)
+        j = self.field_pos[field]
+        k = j + w
+        line = line[:j] + value + line[k:]
+        return line
+
+    def remove_line(self, filename, line_num):
+        line = self.read_line(filename, line_num)
+        if line == None:
+            return False
+        if not os.path.isfile(filename):
+            return False
+        else:
+            f = open(filename, 'r')
+            lines = f.readlines()
+            f.close()
+            i = lines.index(line)
+            if i >= 0:
+                del lines[i]
+                with open(filename, 'w') as f:
+                    f.writelines(lines)
+                return True
+            else:
+                return False        
 
     def replace_line(self, filename, line):
         line_num = int(self.fieldStrFromLine(line,'num'))
@@ -1222,16 +1352,6 @@ class spectrum(object):
         if print_header:
             print('-'*45)
 
-    def get_color_and_linestyle_dic(self, thelist):
-        colors = self.get_conf('color_selected_ions')
-        linestyles = [ 'solid', 'dashed', 'dashdot', 'dotted' ]
-        color_dic = {}
-        ls_dic = {}
-        for item in thelist:
-            color_dic[item] = colors[thelist.index(item)%len(colors)]
-            ls_dic[item] = linestyles[(thelist.index(item)/len(colors))%len(linestyles)]
-        return color_dic, ls_dic
-
     def get_ref_list(self, ions):
         ref_list = []
         for ion in ions:
@@ -1242,11 +1362,134 @@ class spectrum(object):
                 ref_list.append(self.sp_theo['raie_ref'][i][0])
         return ref_list
 
+    def get_element_and_int_ion(self, ion):
+        
+        def roman_to_int(s):
+            x = {'C': 100, 'L': 50, 'X': 10, 'V': 5, 'I': 1}
+            s = s.strip()
+            if len(s) == 0:
+                n = -1
+            elif len(s) == 1:
+                if s == 'I':
+                    n = 1
+                elif s == 'V':
+                    n = 5
+                elif s == 'X':
+                    n = 10
+            else:
+                n = sum([x[i] if x[i] >= x[j] else -x[i] for i, j in zip(s, s[1:])]) + x[j]
+            return n
+        
+        ion = self.true_ion(ion)
+        k = ion.find('_')
+        element = ion[:k]
+        int_ion = roman_to_int(ion[k+1:])
+        return element, int_ion
+
+    def set_selected_ions_data(self):
+
+        pos_label = 0
+        pos_ion = 1
+        pos_ref = 2
+        pos_i_ion = 3
+        pos_color = 4
+        pos_linestyle =5
+        
+        selected_ions = self.get_conf('selected_ions')
+        colors = self.get_conf('color_selected_ions')
+        linestyles = [ 'solid', 'dashed', 'dashdot', 'dotted' ]
+        label_list = []
+        ref_list = []
+        for ion in selected_ions:
+            i_ion = np.where(self.sp_theo['raie_ref']['id'] == ion.ljust(9))[0]
+
+            if len(i_ion) == 0:
+                i_ion_raies = np.where(self.liste_raies['id'] == ion.ljust(9))[0]
+                if len(i_ion_raies) > 0:
+                    ref_list = self.liste_raies[i_ion_raies]['ref']     
+                    ref_list = list(set(ref_list))
+                    i_ion = []
+                    for i in ref_list:
+                        i_ion = i_ion + list(np.where(self.sp_theo['raie_ref']['num'] == i)[0])
+                    i_ion = list(set(i_ion))
+
+            if self.get_conf('diff_lines_by') == 1:
+                ref_list = []
+                for i in range(0, len(i_ion)):
+                    ref_line = self.sp_theo['raie_ref'][i_ion[i]]['num']
+                    ref_list.append(ref_line)
+                k = len(label_list)
+                color = colors[k%len(colors)]
+                linestyle = linestyles[(k/len(colors))%len(linestyles)]
+                label_list.append([ion, [ion], ref_list, list(i_ion), color, linestyle])
+            else:
+                for i in range(0, len(i_ion)):
+                    k = len(label_list)
+                    color = colors[k%len(colors)]
+                    linestyle = linestyles[(k/len(colors))%len(linestyles)]
+                    if len(i_ion) == 1:
+                        label = ion
+                    else:
+                        label = ion + '-' + str(i)
+                    ref_line = self.sp_theo['raie_ref'][i_ion[i]]['num']
+                    refline_str = str(ref_line).strip('0')
+                    #refline_str = str(ref_line)[:-6]
+                    label = label + ' (' + refline_str + ')'
+                    label_list.append([label, [ion], [ref_line], list(i_ion[i:i+1]), color, linestyle])
+                
+        # sorting
+        for i in range(0,len(label_list)-1):
+            label1 = label_list[i][pos_label]
+            true_ion1 = self.true_ion(label1)
+            element1, int_ion1 = self.get_element_and_int_ion(true_ion1)
+            for j in range(i+1, len(label_list)):
+                label2 = label_list[j][pos_label]
+                true_ion2 = self.true_ion(label2)
+                element2, int_ion2 = self.get_element_and_int_ion(true_ion2)
+                if (element2 < element1) or ((element2 == element1) and (int_ion2 < int_ion1)) or ((true_ion2 == true_ion1) and (label2 < label1)): 
+                    prov = label_list[i]
+                    label_list[i] = label_list[j]
+                    label_list[j] = prov
+                    label1 = label2
+                    true_ion1 = true_ion2
+                    element1 = element2
+                    int_ion1 = int_ion2
+
+        if self.get_conf('diff_lines_by') == 2:
+            i = 0
+            while i < len(label_list)-1:
+                ion = label_list[i][pos_ion]
+                j = i+1
+                while j < len(label_list):
+                    ion2 = label_list[j][pos_ion]
+                    if self.true_ion(ion2[0]) == self.true_ion(ion[0]):
+                        ion = list(set(ion + ion2))
+                        ref_list = list(set(label_list[i][pos_ref] + label_list[j][pos_ref]))
+                        i_ion = list(set(label_list[i][pos_i_ion] + label_list[j][pos_i_ion]))
+                        label_list.pop(j)
+                        label_list[i][pos_ion] = ion
+                        label_list[i][pos_ref] = ref_list
+                        label_list[i][pos_i_ion] = i_ion
+                    else:
+                        j += 1
+                i += 1
+
+            for i in range(len(label_list)):
+                ion_list = label_list[i][pos_ion]
+                ion_list.sort()
+                ion = ion_list[0]
+                for j in range(1, len(ion_list)):
+                    ion = ion + '+' + ion_list[j]
+                label_list[i][pos_label] = ion
+        self.selected_ions_data = label_list
+        return
+
     def get_refline_lists(self, ions):
         ref_code_list = []
         ref_index_list = []
         ref_label_list = []
         for ion in ions:
+            ion = self.true_ion(ion)
             i_ion = np.where(self.sp_theo['raie_ref']['id'] == ion.ljust(9))[0]
             if len(i_ion) == 0:
                 ref_code_list.append(-1)
@@ -1265,6 +1508,7 @@ class spectrum(object):
     def get_ref_index_list(self, ions):
         ref_index_list = []
         for ion in ions:
+            ion = self.true_ion(ion)
             i_ion = np.where(self.sp_theo['raie_ref']['id'] == ion.ljust(9))[0]
             for i in i_ion:
                 ref_index_list.append(i)
@@ -1283,6 +1527,21 @@ class spectrum(object):
             if code_str == str(line[0]):
                 s = line['id']
         return s
+    
+    def true_ion(self, ion):
+        while len(ion) > 0 and ion[-1] not in [ 'I', 'V', 'X' ]:
+            ion = ion[:-1]  
+        return ion
+                
+    def get_all_ions_from_ion(self, ion):
+        ion = self.true_ion(ion)
+        ion_list = [ion]
+        k = len(ion)
+        for line in self.liste_raies:
+            s = str(line['id'])
+            if len(s) > k and s[:k] == ion and s[k] not in [ 'I', 'V', 'X' ]:
+                ion_list.append(s.strip())
+        return list(set(ion_list))
         
     def get_ions_from_element(self, elem):
         ion_list = []
@@ -1343,7 +1602,8 @@ class spectrum(object):
                 wl = line['lambda'] + line['l_shift'] + self.conf['lambda_shift']
                 i_rel = line['i_rel']
                 i_tot = line['i_rel'] * line['i_cor']
-                if (abs(i_rel) > cut) and ( not self.get_conf('show_selected_ions_only') or line['ref'] in ref_list):
+                #if (abs(i_rel) > cut) and ( not self.get_conf('show_selected_ions_only') or line['ref'] in ref_list):
+                if (abs(i_tot) > cut) and ( not self.get_conf('show_selected_ions_only') or line['ref'] in ref_list):
                     s = ''
                     n = len(field_print)
                     for item in field_print:
@@ -1455,10 +1715,9 @@ class spectrum(object):
             ax.step(self.w, self.sp_synth, c='green')
 
         selected_ions = self.get_conf('selected_ions')
+        self.set_selected_ions_data()
+        label_list = self.selected_ions_data
         if selected_ions != [] and self.get_conf('plot_lines_of_selected_ions'):
-            ref_list = self.get_ref_list(selected_ions)
-            ion_color_dic, ion_ls_dic = self.get_color_and_linestyle_dic(selected_ions)
-            ref_color_dic, ref_ls_dic = self.get_color_and_linestyle_dic(ref_list)
             j = self.get_conf('index_of_current_ion')
             if j in range(0, len(selected_ions)):
                 ions = []
@@ -1466,92 +1725,57 @@ class spectrum(object):
             else:
                 ions = selected_ions
 
-            if self.get_conf('differentiate_lines'):
-                ref_code_list, ref_index_list, labels = self.get_refline_lists(ions)       
-                for i in range(0,len(ref_index_list)):
-                    refline = ref_code_list[i]
-                    refindex = [ref_index_list[i]]
-                    color = ref_color_dic[refline]
-                    linestyle = ref_ls_dic[refline]
-                    ax.step(self.w, self.cont+self.sp_theo['spectr'][refindex][0], c=color, label=labels[i], ls=linestyle )[0]
-            else:
-                for ion in ions:
-                    color = ion_color_dic[ion]
-                    linestyle = ion_ls_dic[ion]
-                    i_ion = np.where(self.sp_theo['raie_ref']['id'] == ion.ljust(9))[0]
-                    if len(i_ion) == 0:
-                        ax.step(self.w, self.cont, c=color, label=ion.replace('_',' ') + ' (no lines)', ls=linestyle )[0]
-                    elif len(i_ion) == 1:
-                        ax.step(self.w, self.cont+self.sp_theo['spectr'][i_ion][0], c=color, label=ion.replace('_',' '), ls=linestyle )[0]
-                    elif len(i_ion) > 1:
-                        for i in range(0,len(i_ion)):
-                            if i == 0:
-                                y = self.sp_theo['spectr'][i_ion][i:i+1][0]
-                            else:
-                                y = y + self.sp_theo['spectr'][i_ion][i:i+1][0]
-                    ax.step(self.w, self.cont+y, c=color, label=ion.replace('_',' '), linestyle=linestyle )[0]
+            if j in range(0, len(label_list)):
+                label_list = label_list[j:j+1]
+
+            for item in label_list:
+                label = item[0].replace('_',' ')
+                i_ion = item[3]
+                color = item[4]
+                linestyle = item[5]
+                y = 0
+                for i in range(0,len(i_ion)):
+                    y = y + self.sp_theo['spectr'][i_ion][i]
+                ax.step(self.w, self.cont+y, c=color, label=label, linestyle=linestyle )[0]
 
         ax.legend(loc=self.legend_loc)
         log_.debug('ax1 drawn on ax ID {}'.format(id(ax)), calling=self.calling)
     
-    def plot_line_ticks(self, ax, y1, y2):
-        
+    def plot_line_ticks(self, ax, y1, y2, wmin=0., wmax=20000.):
+
         if self.sp_synth_lr is None:
             return
         lcolor = self.get_conf('line_tick_color')
-        selected_ions = self.get_conf('selected_ions')            
-        ref_list = self.get_ref_list(selected_ions)
-        ion_color_dic, ion_ls_dic = self.get_color_and_linestyle_dic(selected_ions)
-        ref_color_dic, ref_ls_dic = self.get_color_and_linestyle_dic(ref_list)
-
+        label_list = self.selected_ions_data
         j = self.get_conf('index_of_current_ion')
-        if j in range(0, len(selected_ions)):
-            ions = []
-            ions.append( selected_ions[j] )
-            ref_list = self.get_ref_list(ions)
-        else:
-            ions = selected_ions
+        if j in range(0, len(label_list)):
+            label_list = label_list[j:j+1]
 
         for line in self.liste_raies:
             wl = line['lambda'] + line['l_shift'] + self.conf['lambda_shift']
-            i_rel = line['i_rel']            
-            if (abs(i_rel) > self.get_conf('cut_plot2')) or ( not self.get_conf('show_selected_intensities_only')): 
-                if self.get_conf('differentiate_lines'):
-                    refline = line['ref']
-                    if refline in ref_list:    
-                        color = ref_color_dic[refline]
-                        linestyle = ref_ls_dic[refline]
+            i_rel = line['i_rel']
+            i_tot = line['i_rel'] * line['i_cor']
+            if (wmin < wl) and (wl < wmax) and ((abs(i_tot) > self.get_conf('cut_plot2')) or ( not self.get_conf('show_selected_intensities_only'))): 
+                if not self.get_conf('show_selected_ions_only'):
+                    ax.axvline( wl, ymin=y1, ymax=y2, color = lcolor, linestyle = 'solid' )
+                refline = line['ref']
+                ion = line['id'].strip()
+                for item in label_list:
+                    ion_list = item[1]
+                    ref_list = item[2]
+                    color = item[4]
+                    linestyle = item[5]
+                    if refline in ref_list and ion in ion_list:
                         ax.axvline( wl, ymin=y1, ymax=y2, color = color, linestyle = linestyle, linewidth = 1.5 )
-                    else:
-                        if not self.get_conf('show_selected_ions_only'):
-                            ax.axvline( wl, ymin=y1, ymax=y2, color = lcolor, linestyle = 'solid' )
-                else:
-                    ion = line['id'].strip()
-                    if ion in ions:
-                        color = ion_color_dic[ion]
-                        linestyle = ion_ls_dic[ion]
-                        ax.axvline( wl, ymin=y1, ymax=y2, color = color, linestyle = linestyle, linewidth = 1.5 )
-                    else:
-                        if not self.get_conf('show_selected_ions_only'):
-                            ax.axvline( wl, ymin=y1, ymax=y2, color = lcolor, linestyle = 'solid' )
         
         # To add ticks to the legend of the figure when the spectrum of the selected ions are not plotted
         if not self.get_conf('plot_lines_of_selected_ions'):
-            if self.get_conf('differentiate_lines'):
-                ref_code_list, ref_index_list, labels = self.get_refline_lists(ions)       
-                for refline in ref_code_list:
-                    color = ref_color_dic[refline]
-                    linestyle = ref_ls_dic[refline]
-                    i = ref_code_list.index(refline)
-                    ion = labels[i].replace('_',' ')
-                    ax.step( [0,0], [0,100], color = color, linestyle = linestyle, label = ion )
-            else:
-                for ion in ions:
-                    color = ion_color_dic[ion]
-                    linestyle = ion_ls_dic[ion]
-                    ax.step( [0,0], [0,100], color = color, linestyle = linestyle, label = ion.replace('_',' ') )
-            ax.legend(loc=self.legend_loc)                      
-
+            for item in label_list:
+                label = item[0].replace('_',' ')
+                color = item[4]
+                linestyle = item[5]
+                ax.step( [0,0], [0,100], color = color, linestyle = linestyle, label = label )
+            ax.legend(loc=self.legend_loc)
         log_.debug('Lines drawn on ax ID {}'.format(id(ax)), calling=self.calling)
 
     def plot_ax3(self, ax):     
@@ -1834,8 +2058,31 @@ class spectrum(object):
         if self._cid is not None:
             self.fig1.canvas.mpl_disconnect(self._cid)
             log_.message('Cursor OFF', calling=self.calling)
+
+    def get_nearby_lines(self, w1, w2, do_print=True, sort='i_tot', reverse=True):
+        if w1 == None or w2 == None:
+            return  None
+        w = (w1 + w2)/2
+        w_lim = abs(w2 - w1)/2
+        tt = (np.abs(self.liste_raies['lambda'] + self.liste_raies['l_shift'] + self.conf['lambda_shift'] - w) < w_lim)
+        nearby_lines = self.liste_raies[tt]
+        i_tot = nearby_lines['i_rel']*nearby_lines['i_cor']
+        if sort == 'i_tot':
+            sorts = np.argsort(i_tot)
+        else:
+            sorts = np.argsort(nearby_lines[sort])
+        if reverse:
+            sorts = sorts[::-1]
+        nearby_lines = np.array(nearby_lines)[sorts]
+        if tt.sum() > 0:
+            if do_print:
+                print('\n{0:-^45}'.format(' CURSOR on {0:.3f} '.format(w)))
+                self.print_line(self.liste_raies[tt])
+                print('-'*45)
+        return nearby_lines
+
                     
-    def nearby_lines(self, event, do_print=True, sort='i_rel', reverse=True):
+    def nearby_lines(self, event, do_print=True, sort='i_tot', reverse=True):
         
         nearby_lines = None
         w = event.xdata
@@ -1849,9 +2096,10 @@ class spectrum(object):
         try:
             if event.button in (1,3):
                 if self.firstClick:
-                    self.cursor_w1 = w
+                    self.cursor_w0 = w
                     self.firstClick = False
                 else:
+                    self.cursor_w1 = self.cursor_w0
                     self.cursor_w2 = w
                     self.firstClick = True
                     w = (self.cursor_w1+self.cursor_w2)/2
@@ -1860,17 +2108,7 @@ class spectrum(object):
                         w_lim = abs(self.cursor_w2-w)
                     self.cursor_w1 = w - w_lim
                     self.cursor_w2 = w + w_lim
-                    tt = (np.abs(self.liste_raies['lambda'] + self.liste_raies['l_shift'] + self.conf['lambda_shift'] - w) < w_lim)
-                    nearby_lines = self.liste_raies[tt]
-                    sorts = np.argsort(nearby_lines[sort])
-                    if reverse:
-                        sorts = sorts[::-1]
-                    nearby_lines = np.array(nearby_lines)[sorts]
-                    if tt.sum() > 0:
-                        if do_print:
-                            print('\n{0:-^45}'.format(' CURSOR on {0:.3f} '.format(w)))
-                            self.print_line(self.liste_raies[tt])
-                            print('-'*45)
+                    nearby_lines = self.get_nearby_lines(self.cursor_w1, self.cursor_w2, do_print=do_print)
                     return nearby_lines
                     
         except AttributeError:
