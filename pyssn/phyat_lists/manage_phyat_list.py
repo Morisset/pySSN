@@ -568,13 +568,17 @@ def phyat2model(phyat_file, model_file, ion_frac_file, norm_hbeta=1e4, abund_fil
     Hbeta_num = 90101000000000
     Ibeta = list_phyat[list_phyat['num'] == Hbeta_num]['i_rel'][0]
     norm = Ibeta / norm_hbeta * ion_frac_dic['H1']
-    
+    num_tab = []
     
     with open(model_file, 'w') as f:
         for line in list_phyat:
             if line['ref'] == 999:
                 num = line['num']
                 new_num = int(str(num)[1::])
+                if new_num in num_tab:
+                    raise ValueError('Duplicate reference number {}'.format(new_num))
+                else:
+                    num_tab.append(new_num)
                 Z = int(str(num)[1:3])
                 spec = int(str(num)[3:5])
                 type_ = int(str(num)[5:6])
