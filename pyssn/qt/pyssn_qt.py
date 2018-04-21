@@ -6,6 +6,8 @@ pySSN is available under the GNU licence providing you cite the developpers name
     Ch. Morisset (Instituto de Astronomia, Universidad Nacional Autonoma de Mexico)
 
     D. Pequignot (Meudon Observatory, France)
+    
+    M. Copetti (Universidade Federal de Santa Maria, Brazil)    
 
 Inspired by a demo code by: 
 Eli Bendersky (eliben@gmail.com)
@@ -119,6 +121,8 @@ class AppForm(QtGui.QMainWindow):
         self.y1_plot_lims = None
         self.y2_plot_lims = None
         self.y3_plot_lims = None
+        self.xscale = None
+        self.yscale = None
         self.post_proc_file = post_proc_file
         self.do_save = True
         self.cont_par_changed = False
@@ -1649,7 +1653,6 @@ class AppForm(QtGui.QMainWindow):
         """ Redraws        for w in [self.sp_min_box, self.ebv_box, self.resol_box]:
             hbox3.addWidget(w)
             hbox3.setAlignment(w, QtCore.Qt.AlignVCenter)
- the figure
         """
         log_.debug('Entering on_drawn', calling=self.calling)
         if self.sp is None:
@@ -1898,6 +1901,8 @@ class AppForm(QtGui.QMainWindow):
         if self.axes is not None:
             self.x_plot_lims = self.axes.get_xlim()
             self.y1_plot_lims = self.axes.get_ylim()
+            self.xscale = self.axes.get_xscale()
+            self.yscale = self.axes.get_yscale()
         if self.axes2 is not None:
             self.y2_plot_lims = self.axes2.get_ylim()
         if self.axes3 is not None:
@@ -1924,9 +1929,16 @@ class AppForm(QtGui.QMainWindow):
         if self.y3_plot_lims is not None:
             if self.axes3 is not None:
                 self.axes3.set_ylim(self.y3_plot_lims)
+        if self.xscale is not None:
+            self.axes.set_xscale(self.xscale)
+            log_.debug('X scale set to {}'.format(self.xscale))
+        if self.yscale is not None:
+            self.axes.set_yscale(self.yscale)
+            log_.debug('Y scale set to {}'.format(self.yscale))
         
         log_.debug('Axes restored. IDs {} {} {}'.format(id(self.axes), id(self.axes2), id(self.axes3)), calling=self.calling)
         self.print_axes()
+        
         
     def print_axes(self):
         log_.debug('lims: {} {} {} {}'.format(self.x_plot_lims, self.y1_plot_lims, self.y2_plot_lims, self.y3_plot_lims), calling=self.calling)
@@ -2039,9 +2051,6 @@ class AppForm(QtGui.QMainWindow):
         self.sp_max_box.setText('{}'.format(self.sp.get_conf('limit_sp')[1]))
 
         self.init_axes()
-        log_.debug('x_plot_lims={}'.format(self.x_plot_lims), calling='start_spectrum')
-        log_.debug('y1_plot_lims={}'.format(self.y1_plot_lims), calling='start_spectrum')
-        log_.debug('y3_plot_lims={}'.format(self.y3_plot_lims), calling='start_spectrum')
         self.xlim_min_box.setText('{}'.format(self.x_plot_lims[0]))
         self.xlim_max_box.setText('{}'.format(self.x_plot_lims[1]))
         self.y1lim_min_box.setText('{}'.format(self.y1_plot_lims[0]))
@@ -2169,6 +2178,7 @@ class AppForm(QtGui.QMainWindow):
                 self.post_proc_file = path
             else:
                 return
+        
         try:
             user_module = {}
             execfile(self.post_proc_file, user_module)
@@ -2181,6 +2191,7 @@ class AppForm(QtGui.QMainWindow):
         if self.post_proc is not None:
             try:
                 self.post_proc(self.fig)
+                self.canvas.draw()
             except:
                 log_.warn('Error in {}'.format(self.post_proc_file), 
                           calling = self.calling)
