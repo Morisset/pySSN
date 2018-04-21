@@ -4,6 +4,8 @@ pySSN is available under the GNU licence providing you cite the developpers name
     Ch. Morisset (Instituto de Astronomia, Universidad Nacional Autonoma de Mexico)
 
     D. Pequignot (Meudon Observatory, France)
+    
+    M. Copetti (Universidade Federal de Santa Maria, Brazil)
 """
 import os
 import numpy as np
