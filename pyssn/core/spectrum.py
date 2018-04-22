@@ -52,7 +52,7 @@ def save_data(filename, array_to_save, NF=True):
 
 def read_data(filename, NF=True):
     #dtype = 'i8, a1, a9, f, f, f, f, a1, i8, i4, f, a25'
-    dtype = 'i8, a1, a9, f, f, f, f, a1, i8, i4, f, a100'
+    dtype = 'i8, a1, a9, float64, float64, float64, float64, a1, i8, i4, float64, a100'
     if NF:
         #delimiter = [14, 1, 9, 11, 6, 10, 7, 1, 14, 4, 7, 25]
         delimiter = [14, 1, 9, 11, 6, 10, 7, 1, 14, 4, 7, 100]
@@ -1249,8 +1249,8 @@ class spectrum(object):
         else:    
             line = line.rstrip()
             keys = [ 'lambda', 'i_rel' ]
-            v0 = {i: float(self.fieldStrFromLine(line, i)) for i in keys}
-            v1 = {i: float(self.fieldStrFromLine(line_c, i)) for i in keys}
+            v0 = {i: np.float(self.fieldStrFromLine(line, i)) for i in keys}
+            v1 = {i: np.float(self.fieldStrFromLine(line_c, i)) for i in keys}
             if v0['i_rel'] != v1['i_rel'] or v0['lambda'] != v1['lambda']:
                 log_.warn('Error in cosmetic file for line {}\n'.format(str(line_num)), calling=self.calling)
                 log_.warn('(cosmetic)   ' + line_c, calling=self.calling)
@@ -1268,10 +1268,13 @@ class spectrum(object):
             log_.warn('Error in cosmetic file: line {0:} does not exist in the atomic database\n'.format(str(line_num)), calling=self.calling)
             return None
         else:
-            line_c_i_rel = self.fieldStrFromLine(line_c, 'i_rel')
-            line_c_lambda = self.fieldStrFromLine(line_c, 'lambda')
+            line_c_i_rel = np.float(self.fieldStrFromLine(line_c, 'i_rel'))
+            line_c_lambda = np.float(self.fieldStrFromLine(line_c, 'lambda'))
             if line['i_rel'] != line_c_i_rel or line['lambda'] != line_c_lambda:
                 log_.warn('Error in cosmetic file for line {}\n'.format(str(line_num)), calling=self.calling)
+                log_.warn('(cosmetic) {}'.format(line_c), calling=self.calling)
+                log_.warn('(database) {}'.format(line), calling=self.calling)
+                log_.warn('lambda rel error {}'.format((line['lambda'] / line_c_lambda)/line_c_lambda), calling=self.calling)
                 return False
             else:
                 return True
