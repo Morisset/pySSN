@@ -2740,9 +2740,13 @@ class AppForm(QtGui.QMainWindow):
         if self.sp.get_conf('diff_lines_by') == 0: 
             if j == -1:
                 j = 0
-            s = str(self.sp.selected_ions_data[j][2][0])
-            self.line_info_box.setText(s)
-        
+            try:
+                s = str(self.sp.selected_ions_data[j][2][0])
+                self.line_info_box.setText(s)
+            except:
+                log_.warn('out of range self.sp.selected_ions_data[j][2][0] where j = {} and shape = {}'.format(j, self.sp.selected_ions_data.shape), 
+                           calling=self.calling)
+                
     def draw_ion(self):
         self.set_ion()
         self.sp.set_conf('index_of_current_ion', -1)
