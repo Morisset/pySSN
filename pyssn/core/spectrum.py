@@ -1230,7 +1230,6 @@ class spectrum(object):
             log_.warn('Error in cosmetic file: line {0:} does not exist in the atomic database\n'.format(str(line_num)), calling=self.calling)
             return None
         else:    
-            line = line.rstrip()
             keys = ['l_shift', 'i_cor', 'i_rel', 'profile', 'vitesse']
             v0 = {i: float(line[i]) for i in keys}
             v1 = {i: float(self.fieldStrFromLine(line_c, i)) for i in keys}
