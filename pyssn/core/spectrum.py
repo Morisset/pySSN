@@ -1203,7 +1203,7 @@ class spectrum(object):
                     satellites.append(eachline)
         return satellites
 
-    def cosmetic_line_unchanged(self, line_c):
+    def cosmetic_line_unchanged_old(self, line_c):
         if line_c == None:
             return None
         line_num = int(self.fieldStrFromLine(line_c,'num'))
@@ -1221,7 +1221,25 @@ class spectrum(object):
             else:
                 return False
 
-    def cosmetic_line_ok(self, line_c):
+    def cosmetic_line_unchanged(self, line_c):
+        if line_c == None:
+            return None
+        line_num = int(self.fieldStrFromLine(line_c,'num'))
+        line = self.get_line(self.phyat_arr, line_num)
+        if line == None:
+            log_.warn('Error in cosmetic file: line {0:} does not exist in the atomic database\n'.format(str(line_num)), calling=self.calling)
+            return None
+        else:    
+            line = line.rstrip()
+            keys = ['l_shift', 'i_cor', 'i_rel', 'profile', 'vitesse']
+            v0 = {i: float(line[i]) for i in keys}
+            v1 = {i: float(self.fieldStrFromLine(line_c, i)) for i in keys}
+            if v0 == v1:
+                return True
+            else:
+                return False
+
+    def cosmetic_line_ok_old(self, line_c):
         if line_c == None:
             return None
         line_num = int(self.fieldStrFromLine(line_c,'num'))
@@ -1242,6 +1260,23 @@ class spectrum(object):
             else:
                 return True
 
+    def cosmetic_line_ok(self, line_c):
+        if line_c == None:
+            return None
+        line_num = int(self.fieldStrFromLine(line_c,'num'))
+        line = self.get_line(self.phyat_arr, line_num)
+        if line == None:
+            log_.warn('Error in cosmetic file: line {0:} does not exist in the atomic database\n'.format(str(line_num)), calling=self.calling)
+            return None
+        else:
+            line_c_i_rel = self.fieldStrFromLine(line_c, 'i_rel')
+            line_c_lambda = self.fieldStrFromLine(line_c, 'lambda')
+            if line['i_rel'] != line_c_i_rel or line['lambda'] != line_c_lambda:
+                log_.warn('Error in cosmetic file for line {}\n'.format(str(line_num)), calling=self.calling)
+                return False
+            else:
+                return True
+
     def read_line(self, filename, line_num):
         line = None
         line_num_str = str(line_num)
@@ -1258,7 +1293,15 @@ class spectrum(object):
                     if s[-k:] == line_num_str:
                         line = eachline
                         break
-        log_.debug('Reading {}'.format(filename), calling=self.calling)
+        log_.debug('Reading line {} from {}'.format(line_num, filename), calling=self.calling+'.read_line')
+        return line
+    
+    def get_line(self, arr, line_num):
+        mask = arr['num'] == int(line_num)
+        if mask.sum() == 1:
+            line = arr[mask][0]
+        else:
+            line = None
         return line
 
     def replace_field(self, line, field, value):
