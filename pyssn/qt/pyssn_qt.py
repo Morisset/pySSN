@@ -2744,7 +2744,7 @@ class AppForm(QtGui.QMainWindow):
                 s = str(self.sp.selected_ions_data[j][2][0])
                 self.line_info_box.setText(s)
             except:
-                log_.warn('out of range self.sp.selected_ions_data[j][2][0] where j = {} and shape = {}'.format(j, self.sp.selected_ions_data.shape), 
+                log_.warn('out of range self.sp.selected_ions_data[j][2][0] where j = {} and selected_ion_data = {}'.format(j, self.sp.selected_ions_data), 
                            calling=self.calling)
                 
     def draw_ion(self):
