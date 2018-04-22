@@ -4,12 +4,15 @@
 
 import os
 import sys
+import shutil
 import subprocess
+import time
 import argparse
 from .manage_phyat_list import make_phyat_list, make_ionrec_file, merge_files, phyat2model
 from .entries import execution_path
 from ..fortran.runit import run_XSSN
 import pyneb as pn
+from pyneb.utils.misc import roman_to_int, parseAtom
 
 def config_pyneb():
     pn.atomicData.addDataFilePath(os.path.join(os.path.dirname(sys._getframe(1).f_code.co_filename), '../pyneb_data/'))
@@ -665,6 +668,7 @@ def make_all_lists():
     parser.add_argument("-I", "--ion_frac_file", help="Ionic fractions file")
     parser.add_argument("-P", "--phy_cond_file", help="Physical conditions file")
     parser.add_argument("-C", "--outputcond_file", help="Output conditions file")
+    parser.add_argument("-N", "--ion_only", help="Only change ion", default=None)
     parser.add_argument("-O", "--phyat_file", help="Output phyat file")
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose")
     
@@ -672,14 +676,35 @@ def make_all_lists():
     make_all_lists_args(args)
     
 def make_all_lists_args(args):
-    make_ionrec_file(abund_file=args.abund_file, ion_frac_file=args.ion_frac_file, out_file=execution_path('ions_rec.dat', extra='../fortran/'))
+    
+    if args.ion_only is None:
+        shutil.copyfile(execution_path('liste_phyat_rec_base.dat', extra='../fortran/'), 
+                 execution_path('liste_phyat_rec.dat', extra='../fortran/'))
+    else:
+        shutil.copyfile(args.phyat_file, 
+                 execution_path('liste_phyat_rec.dat', extra='../fortran/'))
+        
+    make_ionrec_file(abund_file=args.abund_file, ion_frac_file=args.ion_frac_file, 
+                     ion_only = args.ion_only, out_file=execution_path('ions_rec.dat', extra='../fortran/'))
     print('ionrec file done')
     run_XSSN(outputcond_file = args.outputcond_file)
     print('XSSN run')
+    if args.ion_only is not None:
+        time.sleep(2) # !!! Without this, the new file is not copied
+        shutil.copyfile(execution_path('liste_phyat_rec.dat', extra='../fortran/'), 
+                 args.phyat_file)
     
     config_pyneb()
     print('PyNeb configured')
-    make_phyat_list(filename=execution_path('liste_phyat_coll.dat'), atoms=None, cut=1e-4, E_cut=20,
+    if args.ion_only is None:
+        atoms = None
+    else:
+        if ',' in args.ion_only:
+            atoms = ['{}{}'.format(ii.strip().split('_')[0],roman_to_int(ii.strip().split('_')[1])) for ii in args.ion_only.split(',')]
+        else:
+            atoms = [args.ion_only]
+    print('ATOMS', atoms)
+    make_phyat_list(filename=execution_path('liste_phyat_coll.dat'), atoms=atoms, cut=1e-4, E_cut=20,
           verbose=False, notry=False, NLevels=50, 
           ref_lines_dic=ref_lines_dic,
           NLevels_dic=NLevels_dic,

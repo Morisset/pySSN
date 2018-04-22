@@ -708,10 +708,18 @@ def get_atoms_by_conf(extra_file=None, atoms=None):
         
 def make_ionrec_file(phy_cond_file = 'phy_cond.dat', abund_file='asplund_2009.dat', ion_frac_file='50_-2_R_ionfrac.dat',
                      Teff=None, MB=None, logU=None,
+                     ion_only=None,
                      out_file='ions_rec.dat', ion=None, 
                      iwr_phyat=1, vzero=13., 
                      liste_phyat_rec_name='liste_phyat_rec.dat', 
                      outputcond_name='outputcond.dat', IP_cut = 300.):
+    
+    if ion_only is not None:
+        if ',' in ion_only:
+            ion_only = [ii.strip() for ii in ion_only.split(',')]
+        else:
+            ion_only = [ion_only]
+        ion_only.append('H_I')
     
     if Teff is not None and logU is not None and MB is not None:
         ion_frac_file = '{}_{}_{}_ionfrac.dat'.format(Teff, logU, MB)
@@ -762,7 +770,7 @@ def make_ionrec_file(phy_cond_file = 'phy_cond.dat', abund_file='asplund_2009.da
     
     with open(out_file, 'w') as f:
         f.write("""   {} iwr_phyat I4 ; =0 --> .res, =1 --> .res and WILL CHANGE liste_phyat
-{:6.2f} vzero km/s E6.  CAUTION: CHECK OUTPUT .res  BEFORE USING OPTION iwr_phyat=1
+{:6.2f} vzero km/s E6.  
 {:30s}A30 
 {:30s}A30 
 0=no,1=yes y/n Te     Ne      Ionab 
@@ -771,27 +779,30 @@ def make_ionrec_file(phy_cond_file = 'phy_cond.dat', abund_file='asplund_2009.da
             for z in np.arange(Z[elem]):
                 ion_str = '{}{}'.format(elem, z+1)
                 ion_roman = '{}{}'.format(elem, int_to_roman(int(z+1)))
-                thisIP = IP[elem][z]
-                if thisIP < IP_cut:
-                    ion_abund = 10**(ab_dic[elem]-12) * ion_frac_dic[ion_str]
-                    if ion is None:
-                        yn_code = 1
-                    else:
-                        if ion_str == ion:
+                ion_roman_ = '{}_{}'.format(elem, int_to_roman(int(z+1)))
+                if ion_only is None or ion_roman_ in ion_only:
+                    print('Doing ion {}'.format(ion_roman_)) 
+                    thisIP = IP[elem][z]
+                    if thisIP < IP_cut:
+                        ion_abund = 10**(ab_dic[elem]-12) * ion_frac_dic[ion_str]
+                        if ion is None:
                             yn_code = 1
                         else:
-                            yn_code = 0
-                    if ion_str in dic_temp_ion:
-                        temp = dic_temp_ion[ion_str]
-                        dens = dic_dens_ion[ion_str]
-                    else:
-                        for temp_dens in tab_temp_dens:
-                            if temp_dens['IP'] > thisIP:
-                                temp = temp_dens['temp']
-                                dens = temp_dens['dens']
-                                break
-                    f.write('{:7s} {:1} {:8.2e} {:8.2e} {:8.2e}\n'.format(ion_roman, yn_code, temp, dens, ion_abund))
-
+                            if ion_str == ion:
+                                yn_code = 1
+                            else:
+                                yn_code = 0
+                        if ion_str in dic_temp_ion:
+                            temp = dic_temp_ion[ion_str]
+                            dens = dic_dens_ion[ion_str]
+                        else:
+                            for temp_dens in tab_temp_dens:
+                                if temp_dens['IP'] > thisIP:
+                                    temp = temp_dens['temp']
+                                    dens = temp_dens['dens']
+                                    break
+                        f.write('{:7s} {:1} {:8.2e} {:8.2e} {:8.2e}\n'.format(ion_roman, yn_code, temp, dens, ion_abund))
+                    
 def get_models_3MdB():
     import pandas as pd
     import pymysql
