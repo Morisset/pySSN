@@ -163,10 +163,25 @@ def read_HITRAN_stick(file_):
     return data
 
 def vactoair(wl, wl_inf=2000., wl_sup=20000.):
+    """
+    Allen
+    wl in Angstrom
+    """
     mask = ( wl >= wl_inf ) & ( wl < wl_sup )
-    fact = 1. + 2.735182e-4 + 131.4182/wl**2 + 2.76249e8/(wl**4.)
+    sigma2 = (1.e4/wl)**2.
+    fact = 1. + 6.4328e-5 + 2.94981e-2 / (146. - sigma2) + 2.5540e-4 / (41. - sigma2)   
     return wl / (mask * fact + (1 - mask))
 
+def airtovac(wl, wl_inf=2000., wl_sup=20000.):
+    """
+    Allen
+    wl in Angstrom
+    """
+    mask = ( wl >= wl_inf ) & ( wl < wl_sup )
+    sigma2 = (1.e4/wl)**2.
+    fact = 1. + 6.4328e-5 + 2.94981e-2 / (146. - sigma2) + 2.5540e-4 / (41. - sigma2)   
+    return wl * (mask * fact + (1 - mask))
+    
 def make_abs_from_hitran(file_in, file_out, ID_ref, ID_start, label, fac_tau, cut=1e-4, wl_min=1200, wl_max=14000):
     """
     generate a liste_phyat formated file from an hitran data file.
