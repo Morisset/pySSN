@@ -12,14 +12,16 @@ from scipy.interpolate import interp1d
 class CST(object):
     BOLTZMANN = 1.3806488e-16 # erg/K - NIST 2010
     CLIGHT = 2.99792458e10 # cm/s - NIST 2010
-    HPLANCK = 6.62606957e-27 # erg s - NIST 2010
+#    HPLANCK = 6.62606957e-27 # erg s - NIST 2010
+    HPLANCK = 6.62607004e-27 # erg s - NIST 2014
     EMASS = 9.10938291e-28 # g - NIST 2010
     ECHARGE = 1.602176565e-19 # Electron charge in Coulomb - NIST 2010
     PI = 3.141592653589793238462643
     BOLTZMANN_ANGK = (BOLTZMANN) / (HPLANCK * CLIGHT * 1.e8) # Boltzmann constant in (Ang * Kelvin) ** -1
-    RYD = 109737.31568539 # Rydberg constant in cm^-1 - NIST 2010 
+    RYD = 109737.31568508 # Rydberg constant in cm^-1 - NIST 2014     
     RYD_EV = HPLANCK * CLIGHT * RYD * 1.e-7 / ECHARGE # infinite mass Rydberg in eV
     RYD_ANG = 1.e8 / RYD # infinite mass Rydberg in A
+    RYD_erg =  2.179872325e-11 # HPLANCK * CLIGHT * RYD
     KCOLLRATE = pow((2 * PI / BOLTZMANN), 0.5) * pow(HPLANCK / (2 * PI), 2) / pow(EMASS, 1.5) # constant of collisional rate equation
     BOLTZMANN_eVK = 8.617343e-5 # Boltzmann constant in eV/K
     ERG_S_EV = 1.6021765e-12
@@ -68,7 +70,7 @@ def make_cont_Ercolano(T_in, case, lam):
         return None
     
     BE_E_Ry = D[:,1]
-    BE_E_erg = BE_E_Ry * CST.ERG_S_EV * 13.6058
+    BE_E_erg = BE_E_Ry * CST.RYD_erg
     BE_E_Thr = BE_E_erg[D[:,0] == 1]
     Delta_E = np.zeros(n_lam)
     for i in np.arange(n_lam):
