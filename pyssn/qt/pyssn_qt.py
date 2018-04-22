@@ -2023,8 +2023,8 @@ class AppForm(QtGui.QMainWindow):
             if self.sp.sp_synth_lr is None:
                 self.y3_plot_lims = (-1,1)
             else:
-                a = np.min((self.sp.f - self.sp.sp_synth_lr)[mask])
-                b = np.max((self.sp.f - self.sp.sp_synth_lr)[mask])
+                a = np.min((self.sp.f_ori - self.sp.sp_synth_lr)[mask])
+                b = np.max((self.sp.f_ori - self.sp.sp_synth_lr)[mask])
             self.y3_plot_lims = ((a*(1+r)+b*(1-r))/2, (a*(1-r)+b*(1+r))/2)
 
         log_.debug('Axes initialized. IDs {} {} {}'.format(id(self.axes), id(self.axes2), id(self.axes3)), calling=self.calling)
