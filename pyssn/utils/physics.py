@@ -4,7 +4,7 @@ Created on 17/01/2014
 @author: morisset
 '''
 import numpy as np
-from scipy.io.idl import readsav
+import pickle
 import pyssn
 from pyssn.utils.misc import execution_path
 from scipy.interpolate import interp1d
@@ -48,17 +48,18 @@ def make_cont_Ercolano(T_in, case, lam):
     """
     n_lam = len(lam)
     hnu =  CST.CLIGHT * 1e8 / lam * CST.HPLANCK  #!phy.c_ang_sec/lam*!phy.h
-    BE =  readsav(execution_path('../data/coeff_ercolano.xdr'))
+    with open(execution_path('../data/coeff_ercolano.pickle'), 'rb') as handle:
+        BE = pickle.load(handle)
     
     if case == 'H':
-        tab_T = 10**BE['TH']
-        D = BE['DH']
+        tab_T = 10**BE['th']
+        D = BE['dh']
     elif case == 'He1':
-        tab_T = 10**BE['THe1']
-        D = BE['DHe1']
+        tab_T = 10**BE['the1']
+        D = BE['dhe1']
     elif case == 'He2':
-        tab_T = 10**BE['THe2']
-        D = BE['DHe2']
+        tab_T = 10**BE['the2']
+        D = BE['dhe2']
     else:
         pyssn.log_.error('Invalid case {0}'.format(case), calling='make_cont_Ercolano')
         return None
