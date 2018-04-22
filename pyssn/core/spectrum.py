@@ -19,7 +19,7 @@ if config.INSTALLED['PyNeb']:
 
 from ..utils.physics import CST, Planck, make_cont_Ercolano, gff
 from ..utils.misc import execution_path, change_size, convol, rebin, is_absorb, no_red_corr, gauss, carre, lorentz, convolgauss 
-from ..utils.misc import vactoair, clean_label,  get_parser, read_data, my_execfile as execfile
+from ..utils.misc import vactoair, airtovac, clean_label,  get_parser, read_data, my_execfile as execfile
 from ..core.profiles import profil_instr
 
 """
@@ -703,7 +703,7 @@ class spectrum(object):
             alfa = 1e-13 * 0.668 * (self.conf["cont_hi_t"]/1e4)**(-0.507) / \
                 (1. + 1.221*(self.conf["cont_hi_t"]/1e4)**(0.653)) * 1.000 
             emis_Hi = alfa * CST.HPLANCK * CST.CLIGHT * 1e8 / 4861.3 # erg/s.cm3
-            H_cont = self.conf["cont_hi_i"] * make_cont_Ercolano(self.conf["cont_hi_t"],'H',self.w) / emis_Hi 
+            H_cont = self.conf["cont_hi_i"] * make_cont_Ercolano(self.conf["cont_hi_t"],'H',airtovac(self.w)) / emis_Hi 
             H_cont[~np.isfinite(H_cont)] = 0.
             self.conts['H'] = H_cont
         else:
@@ -713,7 +713,7 @@ class spectrum(object):
             alfa = 1e-13 * 0.331 * (self.conf["cont_hei_t"]/1e4)**(-0.615) / \
                 (1. + 0.910*(self.conf["cont_hei_t"]/1e4)**(0.780)) * 0.7986
             emis_Hei = alfa * CST.HPLANCK * CST.CLIGHT * 1e8 / 4471.5
-            He1_cont = self.conf["cont_hei_i"] * make_cont_Ercolano(self.conf["cont_hei_t"],'He1',self.w) / emis_Hei 
+            He1_cont = self.conf["cont_hei_i"] * make_cont_Ercolano(self.conf["cont_hei_t"],'He1',airtovac(self.w)) / emis_Hei 
             He1_cont[~np.isfinite(He1_cont)] = 0.
             self.conts['He1'] = He1_cont
         else:
@@ -723,7 +723,7 @@ class spectrum(object):
             alfa = 2. * 1e-13 * 1.549 * (self.conf["cont_heii_t"]/1e4/4.)**(-0.693) / \
                 (1. + 2.884*(self.conf["cont_heii_t"]/1e4/4.)**(0.609))*1.000
             emis_Heii = alfa * CST.HPLANCK * CST.CLIGHT * 1e8 / 4685.8
-            He2_cont = self.conf["cont_heii_i"] * make_cont_Ercolano(self.conf["cont_heii_t"],'He2',self.w) / emis_Heii 
+            He2_cont = self.conf["cont_heii_i"] * make_cont_Ercolano(self.conf["cont_heii_t"],'He2',airtovac(self.w)) / emis_Heii 
             He2_cont[~np.isfinite(He2_cont)] = 0.
             self.conts['He2'] = He2_cont
         else:
@@ -1013,7 +1013,6 @@ class spectrum(object):
             sp_tau += self.sp_theo['spectr'][i_abs] * self.sp_theo['correc'][i_abs]
         
         sp_abs = np.exp(sp_tau)
-        
         
         if self.get_conf('fic_atm') is not None:
             if type(self.get_conf('fic_atm')) not in (list, tuple):
