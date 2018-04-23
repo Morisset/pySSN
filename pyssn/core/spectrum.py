@@ -434,6 +434,8 @@ class spectrum(object):
         execfile(execution_path('./')+'init_defaults.py', self.conf)
         
         if self.config_file is not None:
+            if not os.path.exists(self.directory + self.config_file):
+                log_.error('File {} not found'.format(self.directory + self.config_file))
             try:
                 execfile(self.directory + self.config_file, self.conf)
                 log_.message('configuration read from {0}'.format(self.config_file), 
@@ -562,6 +564,8 @@ class spectrum(object):
         else:
             if self.conf['spectr_obs'].split('.')[-1] == 'fits':
                 from astropy.io import fits
+                if not os.path.exists(self.conf['spectr_obs']):
+                    log_.error('File {} not found'.format(self.conf['spectr_obs']))
                 try:
                     self.f, header = fits.getdata(self.conf['spectr_obs'], header=True)
                     dispersion_start = header['CRVAL1'] - (header['CRPIX1'] - 1) * header['CDELT1']
@@ -641,6 +645,8 @@ class spectrum(object):
         self.n_lambda = len(self.f)
         self.tab_pix = change_size(self.tab_pix, resol)
         self.lambda_pix = (np.max(self.w) - np.min(self.w)) / self.n_lambda
+        log_.debug('n_lambda = {}, tab_pix = {}, lambda_pix = {}'.format(self.n_lambda, self.tab_pix, self.lambda_pix), 
+                   calling = self.calling)
         
     def renorm(self, new_norm):
         self.f /= self.get_conf('sp_norm', undefined = 1.)
