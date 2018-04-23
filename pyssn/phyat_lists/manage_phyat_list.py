@@ -624,7 +624,11 @@ def merge_files(fs, f_out):
                 shutil.copyfileobj(fd, wfd, 1024*1024*10)
 
 def substitute_into_file(f1, f2):
+    """
+    This function takes entries from f1 (main line and the following satellites) and substitute them in the f2 file.
+    No new main line will be added.
     
+    """
     #shutil.copyfile(f2, f2+'.bak2')
     
     with open(f1, 'r') as f:
