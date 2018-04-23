@@ -365,11 +365,11 @@ c
 c
 c *** MgI TBD
 c
-      if(nomion.eq.'MgII   ') then
-      Call XSSN_Hlike(Te,Ne,'MgII_2_P4.lab','MgII_2_P4.res',PHYAT) ! first
-      Call XSSN_Hlike(Te,Ne,'MgII_2_P2.lab','MgII_2_P2.res',PHYAT)
-        indice=1
-      endif
+c      if(nomion.eq.'MgII   ') then
+c      Call XSSN_Hlike(Te,Ne,'MgII_2_P4.lab','MgII_2_P4.res',PHYAT) ! first
+c      Call XSSN_Hlike(Te,Ne,'MgII_2_P2.lab','MgII_2_P2.res',PHYAT)
+c        indice=1
+c      endif
 c
 c *** MgIII, IV, V, VI, VII TBD
 c
