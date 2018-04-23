@@ -657,8 +657,9 @@ class spectrum(object):
 
     def init_red_corr(self):
         self.E_BV = self.get_conf('e_bv', 0.)
+        self.R_V = self.get_conf('r_v', 3.1)
         if self.E_BV > 0:
-            RC = pn.RedCorr(E_BV = self.E_BV, law=self.get_conf('red_corr_law', message='error'))
+            RC = pn.RedCorr(E_BV = self.E_BV, law=self.get_conf('red_corr_law', message='error'), R_V=self.R_V)
             self.red_corr = RC.getCorr(self.w, self.get_conf('lambda_ref_rougi', message='error'))
             log_.message('Reddening correction set to {0}'.format(self.E_BV), calling=self.calling)
         else:
