@@ -678,7 +678,7 @@ def make_all_lists():
 def make_all_lists_args(args):
     
     if args.ion_only is None:
-        shutil.copyfile(execution_path('liste_phyat_rec_base.dat', extra='../fortran/'), 
+        shutil.copyfile(execution_path('liste_phyat_rec_basic.dat', extra='../fortran/'), 
                  execution_path('liste_phyat_rec.dat', extra='../fortran/'))
     else:
         shutil.copyfile(args.phyat_file,args.phyat_file+'.bak')
