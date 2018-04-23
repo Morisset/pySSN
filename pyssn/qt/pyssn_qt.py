@@ -1821,6 +1821,7 @@ class AppForm(QtGui.QMainWindow):
             self.axes2.set_xlabel(r'Wavelength ($\AA$)')
         else:
             self.axes.set_xlabel(r'Wavelength ($\AA$)')
+        self.axes.set_ylabel(r'F$_\lambda$')
         
         self.restore_axes()
         # self.update_lim_boxes()
