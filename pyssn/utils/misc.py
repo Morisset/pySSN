@@ -269,5 +269,5 @@ def split_atom(atom_str):
     return iso, elem, ion
     
     
-    
+
     

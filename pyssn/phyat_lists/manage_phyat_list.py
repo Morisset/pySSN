@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from pyneb.utils.physics import Z, IP, gsFromAtom, Z_inv
 from pyneb.utils.misc import int_to_roman, parseAtom
 import os
+import shutil
 import time
 from pyssn.utils.misc import split_atom, read_data, execution_path
 
@@ -617,11 +618,46 @@ def merge_files(fs, f_out):
     """
     example: merge_files(('liste_phyat_rec.dat', 'liste_phyat_coll.dat', 'liste_phyat_others.dat'), 'liste_phyat_test1.dat')
     """
-    import shutil
     with open(f_out,'wb') as wfd:
         for f in fs:
             with open(f,'rb') as fd:
                 shutil.copyfileobj(fd, wfd, 1024*1024*10)
+
+def substitute_into_file(f1, f2):
+    
+    #shutil.copyfile(f2, f2+'.bak2')
+    
+    with open(f1, 'r') as f:
+        lines1 = f.readlines()
+    with open(f2, 'r') as f:
+        lines2 = f.readlines()
+        
+    ids2 = [l[0:14] for l in lines2 if l[0] == '9']
+    
+    dic1 = {}
+    for l in lines1:
+        if l[0] == '9':
+            this_id = l[0:14]
+            dic1[this_id] = [l]
+        else:
+            dic1[this_id].append(l)
+    dic2 = {}
+    for l in lines2:
+        if l[0] == '9':
+            this_id = l[0:14]
+            dic2[this_id] = [l]
+        else:
+            dic2[this_id].append(l)
+
+    with open(f2, 'w') as f:
+        for id in ids2:
+            if id in dic1:
+                for l in dic1[id]:
+                    f.write(l)
+            else:
+                for l in dic2[id]:
+                    f.write(l)
+
           
 def make_conf_plots():
     
@@ -837,3 +873,5 @@ import pyssn
 pyssn.make_phyat_list('liste_phyat_4_3.dat', tem1=1e4, den1=1e3, cut=1e-4)
 
 """
+    
+    

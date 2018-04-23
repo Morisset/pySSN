@@ -8,7 +8,7 @@ import shutil
 import subprocess
 import time
 import argparse
-from .manage_phyat_list import make_phyat_list, make_ionrec_file, merge_files, phyat2model
+from .manage_phyat_list import make_phyat_list, make_ionrec_file, merge_files, substitute_into_file, phyat2model
 from .entries import execution_path
 from ..fortran.runit import run_XSSN
 import pyneb as pn
@@ -681,6 +681,8 @@ def make_all_lists_args(args):
         shutil.copyfile(execution_path('liste_phyat_rec_base.dat', extra='../fortran/'), 
                  execution_path('liste_phyat_rec.dat', extra='../fortran/'))
     else:
+        shutil.copyfile(args.phyat_file,args.phyat_file+'.bak')
+        
         shutil.copyfile(args.phyat_file, 
                  execution_path('liste_phyat_rec.dat', extra='../fortran/'))
         
@@ -703,7 +705,6 @@ def make_all_lists_args(args):
             atoms = ['{}{}'.format(ii.strip().split('_')[0],roman_to_int(ii.strip().split('_')[1])) for ii in args.ion_only.split(',')]
         else:
             atoms = [args.ion_only]
-    print('ATOMS', atoms)
     make_phyat_list(filename=execution_path('liste_phyat_coll.dat'), atoms=atoms, cut=1e-4, E_cut=20,
           verbose=False, notry=False, NLevels=50, 
           ref_lines_dic=ref_lines_dic,
@@ -714,10 +715,13 @@ def make_all_lists_args(args):
           phy_cond_file = args.phy_cond_file,
           extra_file=extra_file)
     print('phyat col done')
-    
-    merge_files((execution_path('liste_phyat_rec.dat', extra='../fortran/'), execution_path('liste_phyat_coll.dat'), 
-                 execution_path('liste_phyat_others.dat')), args.phyat_file)
-    print('Files merged')
+    if args.ion_only is None:
+        merge_files((execution_path('liste_phyat_rec.dat', extra='../fortran/'), execution_path('liste_phyat_coll.dat'), 
+                     execution_path('liste_phyat_others.dat')), args.phyat_file)
+        print('Files merged')
+    else:
+        substitute_into_file(execution_path('liste_phyat_coll.dat'), args.phyat_file)
+        print('Files updated')
     
 def make_list_model():
     parser = argparse.ArgumentParser()
