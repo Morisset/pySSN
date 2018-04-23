@@ -1,15 +1,16 @@
- Mg II doubl      (4x,d12.3,7x,d4.0,8x,d12.3,4x,i2,4x,d5.0) 4d 5d splittes
+ Mg II doubl 2P3/2 (4x,d12.3,7x,d4.0,8x,d12.3,4x,i2,4x,d5.0) np splittes
  ryd  109734.838 charge  2. chi_ion   121267.61 Mat  24.  NIST=121267.61
-  mult   2 nmult   2 imult   0 cmult 1.0000 ifre1   0 ifre2   0 (3(6x,i4),6x,d7.4,2(6x,i4))
-   3  2   4  2               (i4,i3  nimult,limult,j=1,nmult)
- numin   3 numax  50  (6x,i4,6x,i4) lim table Br: 50 du a alfeff actu
- numion '1202' numion4 '1202' nomion 'Mg_II  '  (9x,a4,11x,a4,10x,a7)
+  mult   2 nmult  16 imult   0 cmult 0.6667 ifre1   0 ifre2   0 (3(6x,i4),6x,d7.4,2(6x,i4))
+   3  0   3  1   4  0   4  1   5  0   5  1   6  0   6  1
+   7  0   7  1   8  0   8  1   9  0   9  1  10  0  10  1       (i4,i3  nimult,limult,j=1,nmult; 8+8)
+ numin   4 numax  50  (6x,i4,6x,i4) lim table Br: 50; **numin=4: more or less equiv Case B
+ numion '1202' numion4 '1202' nomion 'Mg_II  '    (9x,a4,11x,a4,10x,a7)
    3   2   4   0  ni_ref lmi_ref ns_ref hydrostrict=0/1  trans ref (X-SSN)
  1.000d-0 leakns_ref
    3  40   0 100  nmi nma lmi lma (nma<100, extrapol H-like strict 51-99)
    3  11   6   3  23   9 nmil1,nmal1,lmal1,nmil2,nmal2,lmal2 lectures
    3  10  10  50  nmitab nmatab (ni wl) niregr nsregr (l regroupes si ni>niregr-1)
-   4   4     lmax_del1,lmax_del2  l=1: np 2P3/2 slmt***
+   9   9     lmax_del1,lmax_del2  l=1: np 2P3/2                 split 2D neglected:
         0.00    35760.88    71490.54                     3 l=0,2  2:90.19+91.06
     69804.95    80650.02    93310.80    93799.70               4 l=0,3 2:10.59+11.11
     92790.51    97468.92   103419.82   103689.90   103705.66         5 l=0,4 2:19.70+20.00
@@ -23,9 +24,9 @@
    115764.99   116195.1    116838.46   116875.25   116877.54   116878.04
    116878.13                                                              10
                                                    117639.51             
-                                                                          11 l=0,6
+                                                                          11 l=0,10
 -72496.6-36735.7-1006.03   3 l=0,2        extr l=1: -683.11*((n-0.466)/9.534)**-2.97463
--24028.9-13183.9 -522.10  -34.20    4 l=0,3  extr l=0: (l=0)/(l=1)=1.5535+1.76337/n**1.36467
+-24028.9-13183.9 -523.10  -34.20    4 l=0,3  extr l=0: (l=0)/(l=1)=1.5535+1.76337/n**1.36467
 -10919.5-6241.12 -290.22  -20.14   -4.38   5 l=0,4
 -5878.10-3445.13 -174.76  -12.51   -2.80   -0.88   6 l=0,5
 -3525.33-2101.67 -112.56   -8.19   -1.87   -0.60   -0.21   7 l=0,6
@@ -46,3 +47,4 @@
   -95.6   -60.52   -0.30   -0.02   -0.01   -0.00   -0.00   -0.00   -0.00   -0.00           22 l=0,9
   -83.4   -52.88   -0.20   -0.02   -0.01   -0.00   -0.00   -0.00   -0.00   -0.00           23 l=0,9
 *********************************************
+    3  1   4  1   5  1   6  1   7  1   8  1   9  1  10  1  (i4,i3  nimult,limult,j=1,nmult; 10+10)

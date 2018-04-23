@@ -1,7 +1,8 @@
  C III tripl D2F3  (4x,d12.3,7x,d4.0,8x,d12.3,4x,i2,4x,d5.0) 4d 5d 4f 5f splittes
  ryd  109732.303 charge  3. chi_ion    386241.0 Mat  12.  **NIST=386241.
   mult   3 nmult   9 imult   2 cmult 0.1700 ifre1   0 ifre2   0 (3(6x,i4),6x,d7.4,2(6x,i4))
-   3  1   3  2   4  1   4  2   4  3   5  1   5  2   5  3   6  3   (i4,i3  nimult,limult,j=1,nmult)
+   3  1   3  2   4  1   4  2   4  3   5  1   5  2   5  3
+   6  3                                                   (i4,i3  nimult,limult,j=1,nmult)
  numin   3 numax  50  (6x,i4,6x,i4) lim table Br: 50 du a alfeff actu
  numion ' 603' numion4 '0603' nomion 'C_III  '  (9x,a4,11x,a4,10x,a7)
    4   3   5   0  ni_ref lmi_ref ns_ref hydrostrict=0/1  trans ref (X-SSN)

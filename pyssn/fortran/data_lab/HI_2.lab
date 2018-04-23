@@ -1,8 +1,8 @@
  H I doublet                (4x,d12.3,7x,d4.0,8x,d12.3,4x,i2,4x,d5.0) 
  ryd 109677.5834 charge  1. chi_ion 109678.7717 Mat   1. ! .6158?.6155CleggSto?.6228?.5838 (NIST=8.7717??) prev.7920
   mult   2 nmult   0 imult   0 cmult 1.0000 ifre1   0 ifre2   0 (3(6x,i4),6x,d7.4,2(6x,i4))
-   0  0               (i4,i3  nimult,limult,j=1,nmult)
- numin   3 numax  50 (6x,i4,6x,i4) lim table Br: 50 due to aqctual alfeff's
+    0  0               (i4,i3  nimult,limult,j=1,nmult)
+ numin   3 numax  50 (6x,i4,6x,i4) lim table Br: 50;  **numin=3: equiv Case B
  numion ' 101' numion4 '0101' nomion 'H_I    '  (9x,a4,11x,a4,10x,a7)
    2   0   4   2  ni_ref li_ref ns_ref hydrostrict=0-2  ref trans (X-SSN) (hydrost=2 HI,HeII: nma->500) (4i4)
  1.000d-0 leakns_ref (d9.3)

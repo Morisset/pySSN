@@ -9,7 +9,7 @@
    3  40   1   3  nmi nma lmi lma (nma<100, extrapol H-like strict 51-99)
    3  10   3   3  14   9 nmil1,nmal1,lmal1,nmil2,nmal2,lmal2 lectures
    3   7  13  50  nmitab nmatab (ni wl) niregr nsregr (l regroupes si ni>niregr-1)
-   3   3     lmax_del1,lmax_del2     triplet   NIST + P.Quinet98 (ghik)
+   9   9     lmax_del1,lmax_del2     triplet   NIST + P.Quinet98 (ghik)
    561752.82   561273.62                                              3 l=1,2
    582830.11   582630.95   582644.04                                  4 l=1,3 
    592634.91   592514.43   592521.11                                  5 l=1,3 

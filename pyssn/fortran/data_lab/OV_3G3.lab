@@ -1,7 +1,8 @@
  O V triplet G3  (4x,d12.3,7x,d4.0,8x,d12.3,4x,i2,4x,d5.0) **6g et 7g non degen
  ryd  109733.552 charge  5. chi_ion     918657. Mat  16.
   mult   3 nmult   9 imult   2 cmult 0.1944 ifre1   0 ifre2   0 (3(6x,i4),6x,d7.4,2(6x,i4))
-   4  3   5  2   5  3   5  4   6  1   6  2   6  3   6  4   7  3   7  4    (i4,i3  nimult,limult,j=1,nmult)
+   4  3   5  2   5  3   5  4   6  1   6  2   6  3   6  4   7  3
+   7  4                                                        (i4,i3  nimult,limult,j=1,nmult)
  numin   3 numax  50  (6x,i4,6x,i4) lim table Br: 50 du a alfeff actu
  numion ' 805' numion4 '0805' nomion 'O_V    '  (9x,a4,11x,a4,10x,a7)
    6   5   7   0  ni_ref lmi_ref ns_ref hydrostrict=0/1  trans ref (X-SSN)
