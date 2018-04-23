@@ -1297,7 +1297,9 @@ class spectrum(object):
                     s = self.fieldStrFromLine(eachline,'num')
                     #s = s.strip()
                     #if int(s) == line_num:
-                    if s[-k:] == line_num_str:
+                    s = str(int(s))
+                    if (int(s) == line_num) or (s[:k] == line_num_str and s[k:].strip('0') == ''):
+                    #if s[-k:] == line_num_str:
                         line = eachline
                         break
         log_.debug('Reading line {} from {}'.format(line_num, filename), calling=self.calling+'.read_line')
