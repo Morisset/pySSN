@@ -691,8 +691,8 @@ def make_all_lists_args(args):
     print('ionrec file done')
     run_XSSN(outputcond_file = args.outputcond_file)
     print('XSSN run')
+    time.sleep(2) # !!! Without this, the new file is not copied
     if args.ion_only is not None:
-        time.sleep(2) # !!! Without this, the new file is not copied
         shutil.copyfile(execution_path('liste_phyat_rec.dat', extra='../fortran/'), 
                  args.phyat_file)
     
