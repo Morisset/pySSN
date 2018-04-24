@@ -17,7 +17,7 @@ def make_link2data(datadir):
             raise 
         pass
     if not os.path.exists(link_name+'/d1'):
-        print('!!! The link does not seems to contain d1 subdirectory.')
+        print('!!! The link does not seem to contain d1 subdirectory.')
     else:
         print('Link OK')
 
