@@ -427,7 +427,7 @@ def make_phyat_list(filename, cut=1e-4, E_cut=20, cut_inter=1e-5,
                 Aij_zero_dic[k] = Aij_zero_dic_def[k]
     
     Del_ion_def = ['Ne7', 'Na8', 'Mg9', 'Al10', 'Ar7', 'Ca9', 'Ca14', 'Ti16', 'Cr18', 'Zn28', 'Mg11', 'Al12', 'Si13', 'P14', 'S15',
-           'Zn27', 'Zn29', 'Ni27', 'Fe25', 'Ca19', 'Fe15', 'Ni17', 'Fe22', 'Si6']
+           'Zn27', 'Zn29', 'Ni27', 'Fe25', 'Ca19', 'Fe15', 'Ni17', 'Fe22']
     if Del_ion is None:
         Del_ion = Del_ion_def
     else:

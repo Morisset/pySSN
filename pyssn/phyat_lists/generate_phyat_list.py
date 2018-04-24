@@ -19,44 +19,93 @@ def config_pyneb():
                                   
     # ***********************
     #
-    # 3s1 mg2: -->s6 ok
+    # 1s2.2s1     li1, c4: -->o6 ok
+    pn.atomicData.setDataFile('li_i_atom_DP.dat')
+    pn.atomicData.setDataFile('li_i_coll_DP.dat')
     #
-    # 3s2 mg1 si3: lk mg1, p4, cl_6(?) (out: 7 9 !) TBD**
+    # 3p6.3s1     mg2: -->s6 ok, lk na1
+    pn.atomicData.setDataFile('na_i_atom_DP.dat')
+    pn.atomicData.setDataFile('na_i_coll_DP.dat')
     #
-    #
-    # 4s1 ca2  done incl. ca2 TBD**
+    # 3p6.3s2     mg1 si3: lk mg1, p4, cl_6(?) TBD**
+    pn.atomicData.setDataFile('mg_i_atom_DP.dat')
+    pn.atomicData.setDataFile('mg_i_coll_DP.dat')
+    # 3pn.atomicData.setDataFile('p_iv_atom_DP.dat')
+    # 3pn.atomicData.setDataFile('p_iv_coll_DP.dat')
+    # 3p6.4s1      ca2  done incl. ca2 TBD**
     #pn.atomicData.setDataFile('k_i_atom_DP.dat')
     #pn.atomicData.setDataFile('k_i_coll_DP.dat')
     pn.atomicData.setDataFile('ca_ii_atom_DP.dat')
     pn.atomicData.setDataFile('ca_ii_coll_DP.dat')
     #
-    # 4s2 ca1: TBD**
+    # 3p6.4s2      ca1: TBD**
     #pn.atomicData.setDataFile('ca_i_atom_DP.dat')
     #pn.atomicData.setDataFile('ca_i_coll_DP.dat')
     #
-    # 5s1 sr2: TBD** 
+    # 3d10.4s1     zn2: 3lev perm TBD**
+    #pn.atomicData.setDataFile('zn_ii_atom_DP.dat')
+    #pn.atomicData.setDataFile('zn_ii_coll_DP.dat')
+    #pn.atomicData.setDataFile('ga_iii_atom_DP.dat')
+    #pn.atomicData.setDataFile('ga_iii_coll_DP.dat')
+    #pn.atomicData.setDataFile('ge_iv_atom_DP.dat')
+    #pn.atomicData.setDataFile('ge_iv_coll_DP.dat')
+    #
+    # 3d10.4s2     zn1 ga2: 4lev interc TBD**
+    #pn.atomicData.setDataFile('zn_i_atom_DP.dat')
+    #pn.atomicData.setDataFile('zn_i_coll_DP.dat')
+    #pn.atomicData.setDataFile('ga_ii_atom_DP.dat')
+    #pn.atomicData.setDataFile('ga_ii_coll_DP.dat')
+    #pn.atomicData.setDataFile('ge_iii_atom_DP.dat')
+    #pn.atomicData.setDataFile('ge_iii_coll_DP.dat')
+    #
+    # 3d10.4p6.5s1 sr2: 5lev TBD** 
     # pn.atomicData.setDataFile('rb_i_atom_DP.dat')
     # pn.atomicData.setDataFile('rb_i_coll_DP.dat')
-    #pn.atomicData.setDataFile('sr_ii_atom_DP.dat')
-    #pn.atomicData.setDataFile('sr_ii_coll_DP.dat')
+    pn.atomicData.setDataFile('sr_ii_atom_DP.dat')
+    pn.atomicData.setDataFile('sr_ii_coll_DP.dat')
     #
-    # 5s2 sr1: TBD**
+    # 3d10.4p6.5s2 sr1: TBD**
     #pn.atomicData.setDataFile('sr_i_atom_DP.dat')
     #pn.atomicData.setDataFile('sr_i_coll_DP.dat')
     #
-    # 5p6.6s1 ba2
-    # (GS of La III = 5d elsewhere)
-    # * ba_ii located after Fe_II ? chge GSCONFIG fe2 ?
+    # 3d10.4p6.4d10.5s1 cd2  see coll TBD**, in_iii..: 3lev
+    pn.atomicData.setDataFile('cd_ii_atom_DP.dat')
+    pn.atomicData.setDataFile('cd_ii_coll_DP.dat')
+    # pn.atomicData.setDataFile('in_iii_atom_DP.dat')
+    # pn.atomicData.setDataFile('in_iii_coll_DP.dat')
+    # pn.atomicData.setDataFile('in_iv_atom_DP.dat')
+    # pn.atomicData.setDataFile('in_iv_coll_DP.dat')
+    #
+    # 3d10.4p6.4d10.5s2 cd1, in_ii TBD**
+    # pn.atomicData.setDataFile('cd_i_atom_DP.dat')
+    # pn.atomicData.setDataFile('cd_i_coll_DP.dat')
+    # pn.atomicData.setDataFile('in_ii_atom_DP.dat')
+    # pn.atomicData.setDataFile('in_ii_coll_DP.dat')
+    # pn.atomicData.setDataFile('sn_iii_atom_DP.dat')
+    # pn.atomicData.setDataFile('sn_iii_coll_DP.dat')
+    #
+    # 4d10.5p6.6s1 ba2
+    # (GS of la_iii = 5d elsewhere)
+    # 
     pn.atomicData.setDataFile('cs_i_atom_DP.dat')
     pn.atomicData.setDataFile('cs_i_coll_DP.dat')
     pn.atomicData.setDataFile('ba_ii_atom_DP.dat')
     pn.atomicData.setDataFile('ba_ii_coll_DP.dat')
     #
-    # 6s2 ba1 (see again after doing ca1 and sr1)
+    # 4d10.5p6.6s2 ba1 (see again after doing ca1 and sr1)
     pn.atomicData.setDataFile('ba_i_atom_DP.dat')
     pn.atomicData.setDataFile('ba_i_coll_DP.dat')
     #
-    # 2p1 ne6: lk 5 7 9 17 19 : done
+    # 4f14.5d10.6s1 hg2  see coll TBD**
+    pn.atomicData.setDataFile('hg_ii_atom_DP.dat')
+    pn.atomicData.setDataFile('hg_ii_coll_DP.dat')
+    #
+    # 4f14.5d10.6s2 hg1  TBD**
+    # pn.atomicData.setDataFile('hg_i_atom_DP.dat')
+    # pn.atomicData.setDataFile('hg_i_coll_DP.dat')
+    #
+    # ---------------------
+    # 2p1 ne6: lk F5 7 9 17 19 : done
     #
     pn.atomicData.setDataFile('f_v_atom_DP.dat')
     pn.atomicData.setDataFile('f_v_coll_DP.dat')
@@ -69,16 +118,18 @@ def config_pyneb():
     pn.atomicData.setDataFile('v_xix_atom_DP.dat')
     pn.atomicData.setDataFile('v_xix_coll_DP.dat')
     #
-    # 2p2 ne5 fe21: lk 4 16 18
+    # 2p2 ne5 fe21: lk F4 16 18
     #
     #
     # 2p3 ne4 fe20: lk F3 Mg6? 15 17 19 20 !
     #
     #
-    # 2p4 ne3 fe19: lk 2 7 14 16
+    # 2p4 ne3 fe19: lk F2 7 14 16
+    # pn.atomicData.setDataFile('f_ii_atom_DP.dat')
+    # pn.atomicData.setDataFile('f_ii_coll_DP.dat')
     #
     #
-    # 2p5 ne2, ar10, fe18: lk 1 34 6 10 11 13 15
+    # 2p5 ne2, ar10, fe18: lk F1 3 4 6 10 11 13 15
     #
     #
     # 3p1 si2, ar6, fe14: lk 1 3 567 9 10 11 12 13 15 17 18(?) done incl. fe
@@ -122,7 +173,6 @@ def config_pyneb():
     #
     # 3p2 ar5, fe13: lk 1 2 789 10 11 12 14 16 17 TBD**
     #
-    # *** 13 12 11 a remettre 
     # 3p5 ar2, fe10: lk 1 34567 11 13 14 ~ done incl. fe, xcpt zn_xiv bof & Omeg(cl_i)
     #
     pn.atomicData.setDataFile('cl_i_atom_DP.dat')
@@ -378,6 +428,7 @@ def config_pyneb():
     pn.atomicData.setDataFile('bi_ii_atom_DP.dat')
     pn.atomicData.setDataFile('bi_ii_coll_DP.dat')
     # 
+    # ----------------------
     # 3d1: fe_viii lk all but fe. done incl. fe
     #
     pn.atomicData.setDataFile('sc_iii_atom_DP.dat')
@@ -402,7 +453,7 @@ def config_pyneb():
     pn.atomicData.setDataFile('zn_xii_coll_DP.dat')
     #
     # 3d2: fe_vii lk all but fe. done
-    #  ***28/7/17 sc_ii abst ? co_viii corr ressayer ?
+    #
     pn.atomicData.setDataFile('sc_ii_atom_DP.dat')
     pn.atomicData.setDataFile('sc_ii_coll_DP.dat')
     pn.atomicData.setDataFile('ti_iii_atom_DP.dat')
@@ -457,9 +508,9 @@ def config_pyneb():
     pn.atomicData.setDataFile('ni_vii_coll_DP.dat')
     #
     # 3d5: fe_iv lk all but fe. done incl. fe
-    #  **cr_ii in the making ?
-    # pn.atomicData.setDataFile('cr_ii_atom_DP.dat')
-    # pn.atomicData.setDataFile('cr_ii_coll_DP.dat')
+    #  **cr_ii in the making : 6 lev provi**
+    pn.atomicData.setDataFile('cr_ii_atom_DP.dat')
+    pn.atomicData.setDataFile('cr_ii_coll_DP.dat')
     pn.atomicData.setDataFile('mn_iii_atom_DP.dat')
     pn.atomicData.setDataFile('mn_iii_coll_DP.dat')
     pn.atomicData.setDataFile('fe_iv_atom_DP.dat')
@@ -474,6 +525,8 @@ def config_pyneb():
     #  **? zn_vii abst
     pn.atomicData.setDataFile('mn_ii_atom_DP.dat')
     pn.atomicData.setDataFile('mn_ii_coll_DP.dat')
+    # pn.atomicData.setDataFile('fe_iii_atom_DP.dat')
+    # pn.atomicData.setDataFile('fe_iii_coll_DP.dat')
     # pn.atomicData.setDataFile('fe_iii_atom_....dat')
     # pn.atomicData.setDataFile('fe_iii_coll_....dat')
     pn.atomicData.setDataFile('co_iv_atom_DP.dat')
@@ -487,25 +540,22 @@ def config_pyneb():
     #
     # 3d7: (fe_ii) ni_iv  lk all but fe. done xcpt ga_vii ge_viii
     #  ** fe_ii elsewhere (4s)
-    #  ** ni_iv cu_v abst ? 
     # pn.atomicData.setDataFile('fe_ii_atom_....dat')
     # pn.atomicData.setDataFile('fe_ii_coll_....dat')
     pn.atomicData.setDataFile('co_iii_atom_DP.dat')
     pn.atomicData.setDataFile('co_iii_coll_DP.dat')
     pn.atomicData.setDataFile('ni_iv_atom_DP.dat')
     pn.atomicData.setDataFile('ni_iv_coll_DP.dat')
-    #pn.atomicData.setDataFile('cu_v_atom_DP.dat')
-    #pn.atomicData.setDataFile('cu_v_coll_DP.dat')
+    pn.atomicData.setDataFile('cu_v_atom_DP.dat')
+    pn.atomicData.setDataFile('cu_v_coll_DP.dat')
     pn.atomicData.setDataFile('zn_vi_atom_DP.dat')
     pn.atomicData.setDataFile('zn_vi_coll_DP.dat')
     # pn.atomicData.setDataFile('ga_vii_atom_DP.dat')
-    pn.atomicData.setDataFile('ga_vii_coll_DP.dat')
+    # pn.atomicData.setDataFile('ga_vii_coll_DP.dat')
     # pn.atomicData.setDataFile('ge_viii_atom_DP.dat')
-    pn.atomicData.setDataFile('ge_viii_coll_DP.dat')
+    # pn.atomicData.setDataFile('ge_viii_coll_DP.dat')
     #
-    # 3d8: (fe_i) ni_iii  lk all but ni. done incl. ni, xcpt ga_vi ge_vii
-    # ** co_ii abst ?
-    # ** a finir : ga_vi ge_vii
+    # 3d8: (fe_i) ni_iii  lk all but ni. done incl. ni, xcpt ga_vi ge_vii in the making
     pn.atomicData.setDataFile('co_ii_atom_DP.dat')
     pn.atomicData.setDataFile('co_ii_coll_DP.dat')
     pn.atomicData.setDataFile('ni_iii_atom_DP.dat')
@@ -520,7 +570,7 @@ def config_pyneb():
     # pn.atomicData.setDataFile('ge_vii_coll_DP.dat')
     #
     # 3d9: ni_ii, zn_iv  lk all but ni. done incl. ni
-    # ** ni_ii abst (seul non 2 niv ?),  sr_xii corrige a verif
+    #
     pn.atomicData.setDataFile('ni_ii_atom_DP.dat') 
     pn.atomicData.setDataFile('ni_ii_coll_DP.dat')
     pn.atomicData.setDataFile('cu_iii_atom_DP.dat')
@@ -559,17 +609,19 @@ def config_pyneb():
     #
     # 4d8: xe_xi
     #
-    # pn.atomicData.setDataFile('rh_ii_atom_DP.dat')
-    # pn.atomicData.setDataFile('rh_ii_coll_DP.dat')
-    # pn.atomicData.setDataFile('pd_iii_atom_DP.dat')
-    # pn.atomicData.setDataFile('pd_iii_coll_DP.dat')
-    # pn.atomicData.setDataFile('ag_iv_atom_DP.dat')
-    # pn.atomicData.setDataFile('ag_iv_coll_DP.dat')
-    """
+    pn.atomicData.setDataFile('xe_xi_atom_DP.dat')
+    pn.atomicData.setDataFile('xe_xi_coll_DP.dat')
+"""
+    pn.atomicData.setDataFile('rh_ii_atom_DP.dat')
+    pn.atomicData.setDataFile('rh_ii_coll_DP.dat')
+    pn.atomicData.setDataFile('pd_iii_atom_DP.dat')
+    pn.atomicData.setDataFile('pd_iii_coll_DP.dat')
+    pn.atomicData.setDataFile('ag_iv_atom_DP.dat')
+    pn.atomicData.setDataFile('ag_iv_coll_DP.dat')
     pn.atomicData.setDataFile('cd_v_atom_DP.dat')
-    pn.atomicData.setDataFile('cd_v_coll_DP.dat')
+    pn.atomicData.setDataFile('cd_v_coll_DP.dat') ADD!
     pn.atomicData.setDataFile('in_vi_atom_DP.dat')
-    pn.atomicData.setDataFile('in_vi_coll_DP.dat')
+    pn.atomicData.setDataFile('in_vi_coll_DP.dat') ADD!
     pn.atomicData.setDataFile('sn_vii_atom_DP.dat')
     pn.atomicData.setDataFile('sn_vii_coll_DP.dat')
     pn.atomicData.setDataFile('sb_viii_atom_DP.dat')
@@ -583,8 +635,8 @@ def config_pyneb():
     pn.atomicData.setDataFile('cs_xii_atom_DP.dat')
     pn.atomicData.setDataFile('cs_xii_coll_DP.dat')
     pn.atomicData.setDataFile('ba_xiii_atom_DP.dat')
-    pn.atomicData.setDataFile('ba_xiii_coll_DP.dat')
-    """
+    pn.atomicData.setDataFile('ba_xiii_coll_DP.dat') ADD!
+"""
     #
     # 4d9: xe_x
     #
@@ -611,7 +663,8 @@ def config_pyneb():
     pn.atomicData.setDataFile('ba_xii_atom_DP.dat')
     pn.atomicData.setDataFile('ba_xii_coll_DP.dat')
     #
-    # 5p6.4f ce_iv (sf la_iii: 5d1)
+    # ----------------------
+    # 5p6.4f1 ce_iv (sf la_iii: 5d1)
     #
     pn.atomicData.setDataFile('la_iii_atom_DP.dat')
     pn.atomicData.setDataFile('la_iii_coll_DP.dat')
@@ -619,8 +672,10 @@ def config_pyneb():
     pn.atomicData.setDataFile('ce_iv_coll_DP.dat')
     pn.atomicData.setDataFile('pr_v_atom_DP.dat')
     pn.atomicData.setDataFile('pr_v_coll_DP.dat')
-    pn.atomicData.setDataFile('nd_vi_atom_DP.dat')
-    pn.atomicData.setDataFile('nd_vi_coll_DP.dat')
+    # GS nd_vi 4f2.5s2.5p5, no term known. Removed:
+    #
+    # 5p6.4f2 ce_iii    **TBD
+    # ...
     # 
 
 
