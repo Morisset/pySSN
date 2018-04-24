@@ -27,9 +27,9 @@
  6 7    0.00   0.00   0.00   0.00   0.00
  6 8    0.00   0.00   0.00   0.00   0.00
  7 8    0.00   0.00   0.00   0.00   0.00
-*** Li I        'Effective collision strengths data'
-*** ATOM 'lithium'
-*** SPECTRUM 1
+*** Be II        'Effective collision strengths data'
+*** ATOM 'beryllium'
+*** SPECTRUM 2
 *** N_LEVELS 8
 *** T_UNIT	'K' 
 *** SOURCE1	'***TBD, id NaI arb' 
