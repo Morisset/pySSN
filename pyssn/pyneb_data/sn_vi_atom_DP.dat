@@ -1,7 +1,7 @@
 Energy Stat_Weight Aij 
      cm-1       none  1/s      1/s    
      0.000000    6  0.000e+0  0.00e+0
-     *8715.000    4  1.000e+1  0.00e+0
+     8715.000    4  1.000e+1  0.00e+0
 *** Sn VI       'Energy and transition probability data'
 *** N_LEVELS 2
 *** SOURCE1	'Joshi, Y. N. & Van Kleef, Th. A. M. 1977, Can. J. Phys. 55, 714 ** Erratum: 55, 1124 (1977) ***VOIR'

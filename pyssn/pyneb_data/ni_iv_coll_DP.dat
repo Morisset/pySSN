@@ -109,7 +109,7 @@
 *** SPECTRUM 4
 *** N_LEVELS 15
 *** T_UNIT	'log(K)'
-*** SOURCE1	'VOIR Melendez+ 2005A&A...436.1123M PAS AU CDS VIzier... Demander ?!! *Storey, P. J. & Sochi, T. 2016, MNRAS 459, 2565' 
+*** SOURCE1	'*SEE Melendez+ 2005A&A...436.1123M not in CDS VIzier...! *Storey, P. J. & Sochi, T. 2016, MNRAS 459, 2565' 
 *** NOTE1 	'Effective Collision Strengths Omega' 
 *** SOURCE2	'DP: Omega taken identical to Co III from SS16' 
 *** GSCONFIG d7

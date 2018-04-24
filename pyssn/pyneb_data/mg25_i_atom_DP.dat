@@ -1,0 +1,16 @@
+Energy Stat_Weight Aij
+     cm-1     none   1/s       1/s       1/s       1/s       1/s
+      0.0000    1  0.000E+0  0.000E+0  0.000E+0  0.000E+0  0.000E+0
+  21850.4050    1  5.000E-4  0.000E+0  0.000E+0  0.000E+0  0.000E+0
+  21870.4640    3  1.971E+2  1.450E-7  0.000E+0  0.000E+0  0.000E+0
+  21911.1780    5  6.400E-4  4.10E-12  9.100E-7  0.000E+0  0.000E+0
+  35051.2640    3  5.079E+8  0.000E+0  0.000E+0  0.000E+0  0.000E+0
+*** Mg I        'Energies E and transition probabilities Aij data'
+*** N_LEVELS 5
+*** SOURCE1	'Martin, W. C. & Zalubas, R. 1980, J. Phys. Chem. Ref. Data 9, 1'
+*** NOTE1 	'Energy levels, E: 3s2 1S, 3s3p 3P* 1P*' 
+*** SOURCE2	'Andersson, M. et al. 2010, J. Phys. B 43, 095001'
+*** SOURCE3	'Garstang, R.H. 1962, J. Opt. Soc. Am. 52, 845'
+*** NOTE2	'Transition Probabilities, Aij' 
+*** NOTE3	'1S0-3P0: Aij=0 for ^24,^26Mg;  Aij=5.0e-4 for ^25Mg' 
+*** NOTE4	'1S0-3P2: Aij=4.2e-4 for ^24,^26Mg;  Aij=6.4e-4 for ^25Mg' 
