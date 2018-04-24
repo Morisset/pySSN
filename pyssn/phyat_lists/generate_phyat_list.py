@@ -611,7 +611,7 @@ def config_pyneb():
     #
     pn.atomicData.setDataFile('xe_xi_atom_DP.dat')
     pn.atomicData.setDataFile('xe_xi_coll_DP.dat')
-"""
+    """
     pn.atomicData.setDataFile('rh_ii_atom_DP.dat')
     pn.atomicData.setDataFile('rh_ii_coll_DP.dat')
     pn.atomicData.setDataFile('pd_iii_atom_DP.dat')
@@ -636,7 +636,7 @@ def config_pyneb():
     pn.atomicData.setDataFile('cs_xii_coll_DP.dat')
     pn.atomicData.setDataFile('ba_xiii_atom_DP.dat')
     pn.atomicData.setDataFile('ba_xiii_coll_DP.dat') ADD!
-"""
+    """
     #
     # 4d9: xe_x
     #
