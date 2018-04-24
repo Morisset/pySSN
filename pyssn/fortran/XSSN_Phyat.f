@@ -1525,7 +1525,7 @@ c b/ feeding 4d:
 c alf(nu,lup), lup=lu+1 idem lp1+1
           vc=alf(ns,3)*cmult*hc8/int_ref ! (*Br/wl to get line intensity)
              wlp=wl(ni,l,ns)  ! (3p-4d)
-        Write(out_niv,187) numion,ifre1,imult,ifre2,ni_alph,ns_alph,
+         Write(out_niv,187) numion,ifre1,imult,ifre2,ni_alph,ns_alph,
      $    lp1_alph,nomion,wlp,vc*0.39/wlp,numion,ifre1,imult,ifre2b,
      $    ni,nom(lmin_wr),mult,ns,nom(l+1)  ! (3p-4d)  ! Br's from NIST
                iraies=iraies+1  ! (1 new line 4p-4d)
@@ -2295,7 +2295,7 @@ c
 c
       CHARACTER lambda_output*(*),PHYAT*(*)
 c
-      character*130 ligne,ligne_ref_modele
+      character*150 ligne,ligne_ref_modele
       character res_Directory*4
       integer n,n_ini,n_suiv,ind_new
       integer io
@@ -2310,7 +2310,7 @@ c
       out_phy=16 ! intermediate PHYAT after replacement (16 arb), erase initial PHYAT
       res_Directory = 'res/'
 c     
- 101  format(A130)
+ 101  format(A150)
 c
       OPEN(out_niv,file=res_Directory//lambda_output,status='old')
 cc ex :     OPEN(out_niv,file='OIV_di.res',status='old')
