@@ -878,8 +878,11 @@ pyssn.make_phyat_list('liste_phyat_4_3.dat', tem1=1e4, den1=1e3, cut=1e-4)
 
 """
     
-def touch_all_res():
-    fortran_path = os.path.dirname(os.path.abspath(__file__))
+def touch_all_res(dir_=None):
+    if dir_ is None:
+        fortran_path = os.path.dirname(os.path.abspath(__file__))
+    else:
+        fortran_path = dir_
     for f in glob(fortran_path + '/res/*.res'):
         os.remove(f)
     all_lab = glob(fortran_path + '/data_lab/*.lab')
@@ -887,6 +890,6 @@ def touch_all_res():
     if not os.path.exists(fortran_path + '/res/'):
         os.makedirs(fortran_path + '/res/')
     for f in all_lab:
-        os.system('touch {}'.format(fortran_path + '/res/' + f + '.res'))       
+        os.system('touch {}'.format(fortran_path + '/res/' + f + '.res'))  
 
 
