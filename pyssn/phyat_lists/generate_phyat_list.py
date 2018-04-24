@@ -22,6 +22,8 @@ def config_pyneb():
     # 1s2.2s1     li1, c4: -->o6 ok
     pn.atomicData.setDataFile('li_i_atom_DP.dat')
     pn.atomicData.setDataFile('li_i_coll_DP.dat')
+    pn.atomicData.setDataFile('be_ii_atom_DP.dat')
+    pn.atomicData.setDataFile('be_ii_coll_DP.dat')
     #
     # 3p6.3s1     mg2: -->s6 ok, lk na1
     pn.atomicData.setDataFile('na_i_atom_DP.dat')
