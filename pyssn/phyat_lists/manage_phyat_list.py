@@ -6,6 +6,7 @@ from pyneb.utils.misc import int_to_roman, parseAtom
 import os
 import shutil
 import time
+from glob import glob
 from pyssn.utils.misc import split_atom, read_data, execution_path
 
 pn.atomicData.addAllChianti()
@@ -878,4 +879,14 @@ pyssn.make_phyat_list('liste_phyat_4_3.dat', tem1=1e4, den1=1e3, cut=1e-4)
 
 """
     
-    
+def touch_all_res():
+    fortran_path = os.path.dirname(os.path.abspath(__file__))
+    for f in glob(fortran_path + '/res/*.res'):
+        os.remove(f)
+    all_lab = glob(fortran_path + '/data_lab/*.lab')
+    all_lab = [lab.split('/')[-1][:-4] for lab in all_lab]
+    os.makedirs(fortran_path + '/res/')
+    for f in all_lab:
+        os.system('touch {}'.format(fortran_path + '/res/' + f + '.res'))       
+
+

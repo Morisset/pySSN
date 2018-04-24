@@ -8,7 +8,7 @@ import shutil
 import subprocess
 import time
 import argparse
-from .manage_phyat_list import make_phyat_list, make_ionrec_file, merge_files, substitute_into_file, phyat2model
+from .manage_phyat_list import make_phyat_list, make_ionrec_file, merge_files, substitute_into_file, phyat2model, touch_all_res
 from .entries import execution_path
 from ..fortran.runit import run_XSSN
 import pyneb as pn
@@ -733,7 +733,7 @@ def make_all_lists():
     make_all_lists_args(args)
     
 def make_all_lists_args(args):
-    
+    touch_all_res()
     if args.ion_only is None:
         shutil.copyfile(execution_path('liste_phyat_rec_basic.dat', extra='../fortran/'), 
                  execution_path('liste_phyat_rec.dat', extra='../fortran/'))
@@ -745,7 +745,7 @@ def make_all_lists_args(args):
         
     make_ionrec_file(abund_file=args.abund_file, ion_frac_file=args.ion_frac_file, 
                      ion_only = args.ion_only, out_file=execution_path('ions_rec.dat', extra='../fortran/'))
-    print('ionrec file done')
+    print('ions_rec file done')
     run_XSSN(outputcond_file = args.outputcond_file)
     print('XSSN run')
     time.sleep(2) # !!! Without this, the new file is not copied
