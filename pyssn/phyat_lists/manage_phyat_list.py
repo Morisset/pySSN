@@ -294,7 +294,7 @@ def make_phyat_list(filename, cut=1e-4, E_cut=20, cut_inter=1e-5,
     cut_inter: largest dynamic between ref lines.
     NLevels: max number of levels for the atom
     verbose: set to True of more info needed
-    notry: set to True to force calling print_phyat_list outside of a try (debig mode)
+    notry: set to True to force calling print_phyat_list outside of a try (debug mode)
     atoms: a list of strings, e.g. ['C4', 'C3', 'C2', 'O3', 'O2', 'Ne3', 'Ne2', 'Fe3']. If None, all atoms are done
     ref_lines_dic: e.g. {'Fe7': ((4, 2),),
                          'Fe6': ((2, 1), (5, 1),),
