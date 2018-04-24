@@ -743,7 +743,7 @@ def make_all_lists_args(args):
         shutil.copyfile(args.phyat_file, 
                  execution_path('liste_phyat_rec.dat', extra='../fortran/'))
         
-    make_ionrec_file(abund_file=args.abund_file, ion_frac_file=args.ion_frac_file, 
+    make_ionrec_file(phy_cond_file=args.phy_cond_file, abund_file=args.abund_file, ion_frac_file=args.ion_frac_file, 
                      ion_only = args.ion_only, out_file=execution_path('ions_rec.dat', extra='../fortran/'))
     print('ions_rec file done')
     run_XSSN(outputcond_file = args.outputcond_file)
@@ -761,7 +761,7 @@ def make_all_lists_args(args):
         if ',' in args.ion_only:
             atoms = ['{}{}'.format(ii.strip().split('_')[0],roman_to_int(ii.strip().split('_')[1])) for ii in args.ion_only.split(',')]
         else:
-            atoms = [args.ion_only]
+            atoms = ['{}{}'.format(args.ion_only.strip().split('_')[0],roman_to_int(args.ion_only.strip().split('_')[1]))]
     make_phyat_list(filename=execution_path('liste_phyat_coll.dat'), atoms=atoms, cut=1e-4, E_cut=20,
           verbose=False, notry=False, NLevels=50, 
           ref_lines_dic=ref_lines_dic,

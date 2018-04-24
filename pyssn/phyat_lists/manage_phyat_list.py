@@ -56,7 +56,6 @@ def print_phyat_list(atom, tem, den, cut=1e-3, cut_inter=1e-5, ij_ref = None, fi
     log_file: for the log
     help_file: for the comments on the Te, Ne for each ion.
     """
-    
     up_levs = {'s1': [[2, 3], 4, 5, 6],  
                's2': 'each',
                'p1': [2, [3, 4, 5], [6, 7]], 
@@ -453,7 +452,7 @@ def make_phyat_list(filename, cut=1e-4, E_cut=20, cut_inter=1e-5,
                 dic_dens_ion['{}{}'.format(record['name'], int(record['value']))] = record['dens']
     tab_temp_dens = np.array(zip(tab_ips, tab_temps, tab_denss), dtype=[('IP', float), ('temp', float), ('dens', float)])
     tab_temp_dens.sort()
-
+    
     def get_tem_den(atom):
         if atom.atom in dic_temp_ion:
             temp = dic_temp_ion[atom.atom]
@@ -885,7 +884,8 @@ def touch_all_res():
         os.remove(f)
     all_lab = glob(fortran_path + '/data_lab/*.lab')
     all_lab = [lab.split('/')[-1][:-4] for lab in all_lab]
-    os.makedirs(fortran_path + '/res/')
+    if not os.path.exists(fortran_path + '/res/'):
+        os.makedirs(fortran_path + '/res/')
     for f in all_lab:
         os.system('touch {}'.format(fortran_path + '/res/' + f + '.res'))       
 
