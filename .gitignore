@@ -19,3 +19,8 @@ dist/
 **pySSN.egg-info/*
 **/fortran/data/*
 **/res/**
+**/ions_rec.dat
+**/liste_phyat_rec.dat
+**/outputcond.dat
+**/phyat.old
+**/liste_phyat_coll.dat
