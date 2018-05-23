@@ -1009,6 +1009,7 @@ class spectrum(object):
         sp_theo['spectr'] *= 0.0 
         sp_theo['correc'] *= 0.0
         
+        #TODO parallelize this loop
         for raie in liste_raies:
             #sp_tmp = self.profil_emis(self.w, raie, self.conf['lambda_shift'])
             sp_tmp = self.get_profile(raie)
@@ -1031,6 +1032,7 @@ class spectrum(object):
                     sp_synth += this_line
                 sp_theo['spectr'][tab_tmp] +=  this_line
                 sp_theo['correc'][tab_tmp] = 1.0
+                log_.debug('doing line {}'.format(raie['num']), calling=self.calling)
         tt = (sp_theo['correc'] != 0.)
         for key in ('correc', 'raie_ref', 'spectr'):
             sp_theo[key] = sp_theo[key][tt]
