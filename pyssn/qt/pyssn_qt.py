@@ -1,3 +1,4 @@
+
 """
 This is the window manager part of pySSN
 
@@ -128,7 +129,7 @@ class AppForm(QtGui.QMainWindow):
         self.do_save = True
         self.cont_par_changed = False
         self.axes_fixed = False
-
+        self.showErrorBox = True
         self.create_menu()
         self.create_main_frame()
         self.create_status_bar()
@@ -264,33 +265,34 @@ class AppForm(QtGui.QMainWindow):
 
         self.xlim_min_box = QtGui.QLineEdit()
         self.xlim_min_box.setMinimumWidth(50)
-        self.connect(self.xlim_min_box, QtCore.SIGNAL('editingFinished()'), self.save_from_lim_boxes)
-        self.connect(self.xlim_min_box, QtCore.SIGNAL('returnPressed()'), self.save_from_lim_boxes_and_draw)
+        #self.connect(self.xlim_min_box, QtCore.SIGNAL('editingFinished()'), self.validate_xlim_min)
+        self.connect(self.xlim_min_box, QtCore.SIGNAL('returnPressed()'), self.set_plot_limits_and_draw)
 
         self.xlim_max_box = QtGui.QLineEdit()
         self.xlim_max_box.setMinimumWidth(50)
-        self.connect(self.xlim_max_box, QtCore.SIGNAL('editingFinished()'), self.save_from_lim_boxes)
-        self.connect(self.xlim_max_box, QtCore.SIGNAL('returnPressed()'), self.save_from_lim_boxes_and_draw)
+        #self.connect(self.xlim_max_box, QtCore.SIGNAL('editingFinished()'), self.validate_xlim_max)
+        #self.xlim_max_box.editingFinished.connect(self.validate_xlim_max)
+        self.connect(self.xlim_max_box, QtCore.SIGNAL('returnPressed()'), self.set_plot_limits_and_draw)
         
         self.y1lim_min_box = QtGui.QLineEdit()
         self.y1lim_min_box.setMinimumWidth(50)
-        self.connect(self.y1lim_min_box, QtCore.SIGNAL('editingFinished()'), self.save_from_lim_boxes)
-        self.connect(self.y1lim_min_box, QtCore.SIGNAL('returnPressed()'), self.save_from_lim_boxes_and_draw)
+        #self.connect(self.y1lim_min_box, QtCore.SIGNAL('editingFinished()'), self.validate_y1lim_min)
+        self.connect(self.y1lim_min_box, QtCore.SIGNAL('returnPressed()'), self.set_plot_limits_and_draw)
         
         self.y1lim_max_box = QtGui.QLineEdit()
         self.y1lim_max_box.setMinimumWidth(50)
-        self.connect(self.y1lim_max_box, QtCore.SIGNAL('editingFinished()'), self.save_from_lim_boxes)
-        self.connect(self.y1lim_max_box, QtCore.SIGNAL('returnPressed()'), self.save_from_lim_boxes_and_draw)
+        #self.connect(self.y1lim_max_box, QtCore.SIGNAL('editingFinished()'), self.validate_y1lim_max)
+        self.connect(self.y1lim_max_box, QtCore.SIGNAL('returnPressed()'), self.set_plot_limits_and_draw)
         
         self.y3lim_min_box = QtGui.QLineEdit()
         self.y3lim_min_box.setMinimumWidth(50)
-        self.connect(self.y3lim_min_box, QtCore.SIGNAL('editingFinished()'), self.save_from_lim_boxes)
-        self.connect(self.y3lim_min_box, QtCore.SIGNAL('returnPressed()'), self.save_from_lim_boxes_and_draw)
+        #self.connect(self.y3lim_min_box, QtCore.SIGNAL('editingFinished()'), self.validate_y3lim_min)
+        self.connect(self.y3lim_min_box, QtCore.SIGNAL('returnPressed()'), self.set_plot_limits_and_draw)
         
         self.y3lim_max_box = QtGui.QLineEdit()
         self.y3lim_max_box.setMinimumWidth(50)
-        self.connect(self.y3lim_max_box, QtCore.SIGNAL('editingFinished()'), self.save_from_lim_boxes)
-        self.connect(self.y3lim_max_box, QtCore.SIGNAL('returnPressed()'), self.save_from_lim_boxes_and_draw)
+        #self.connect(self.y3lim_max_box, QtCore.SIGNAL('editingFinished()'), self.validate_y3lim_max)
+        self.connect(self.y3lim_max_box, QtCore.SIGNAL('returnPressed()'), self.set_plot_limits_and_draw)
         
         """
         self.select_init_button = QtGui.QPushButton("Init file")
@@ -306,7 +308,7 @@ class AppForm(QtGui.QMainWindow):
         self.Command_GroupBox = QtGui.QGroupBox("Execute")
         self.Command_GroupBox.setCheckable(False)
         
-        self.ObsSpec_GroupBox = QtGui.QGroupBox("Parameters of the synthetic and observed spectra")
+        self.ObsSpec_GroupBox = QtGui.QGroupBox("Parameters of the synthetic spectrum")
         self.ObsSpec_GroupBox.setCheckable(False)
 
         self.SpecPlot_GroupBox = QtGui.QGroupBox("Plot of spectra")
@@ -339,12 +341,12 @@ class AppForm(QtGui.QMainWindow):
 
         self.sp_min_box = QtGui.QLineEdit()
         self.sp_min_box.setMinimumWidth(50)
-        self.connect(self.sp_min_box, QtCore.SIGNAL('editingFinished()'), self.set_limit_sp)
+        #self.connect(self.sp_min_box, QtCore.SIGNAL('editingFinished()'), self.set_limit_sp)
         self.connect(self.sp_min_box, QtCore.SIGNAL('returnPressed()'), self.set_limit_sp_and_run)
         
         self.sp_max_box = QtGui.QLineEdit()
         self.sp_max_box.setMinimumWidth(50)
-        self.connect(self.sp_max_box, QtCore.SIGNAL('editingFinished()'), self.set_limit_sp)
+        #self.connect(self.sp_max_box, QtCore.SIGNAL('editingFinished()'), self.set_limit_sp)
         self.connect(self.sp_max_box, QtCore.SIGNAL('returnPressed()'), self.set_limit_sp_and_run)
         
         self.sp_norm_box = QtGui.QLineEdit()
@@ -732,7 +734,7 @@ class AppForm(QtGui.QMainWindow):
 
         draw_action = self.create_action("Draw",
                                          shortcut="F8", 
-                                         slot=self.on_draw, 
+                                         slot=self.set_plot_limits_and_draw, 
                                          tip="Redraw plots")
         
         post_proc_action = self.create_action("Post-process",
@@ -812,6 +814,11 @@ class AppForm(QtGui.QMainWindow):
             shortcut=None, slot=self.line_tick_color_clicked, checkable=False, 
             tip='Set color of line ticks')
         self.line_menu.addAction(self.line_tick_color_action)
+
+        self.toggle_legend_action = self.create_action('Toggle legend position and zoom', 
+            shortcut='Alt+Shift+L', slot=self.toggle_legend_clicked, checkable=False, 
+            tip='Toggle the legend position and zoom')
+        self.line_menu.addAction(self.toggle_legend_action)
         
         self.selected_intensities_action = self.create_action('Only above the cut', 
             shortcut='Alt+K', slot=self.selected_lines_clicked, checkable=True, 
@@ -917,10 +924,27 @@ class AppForm(QtGui.QMainWindow):
         if checkable:
             action.setCheckable(True)
         return action          
-  
+    
+    def isInteger(self, str_):
+        try: 
+            int(str_)
+            return True
+        except ValueError:
+            return False
+    
+    def isPositiveOdd(self, str_):
+        if self.isInteger(str_):
+            n = int(str_)
+            if n%2 == 1 and n > 0:
+                return True
+            else:
+                return False
+        else:        
+            return False
+
     def isFloat(self, str_):
         try:
-            float(str_)
+            np.float(str_)
             return True
         except ValueError:
             return False
@@ -974,7 +998,7 @@ class AppForm(QtGui.QMainWindow):
             if field == 'profile':
                 r = int(s)
             else:
-                r = float(s)
+                r = np.float(s)
             fmt = self.sp.field_format[field]
             if 'f' in fmt:
                 s = self.floatFixFormat(r, fmt)
@@ -999,7 +1023,7 @@ class AppForm(QtGui.QMainWindow):
         elif str_.isdigit():
             result = int(str_)
         elif self.isFloat(str_):
-            result = float(str_)
+            result = np.float(str_)
         elif str_.capitalize() == 'True':
             result = True
         elif str_.capitalize() == 'False':
@@ -1091,14 +1115,33 @@ class AppForm(QtGui.QMainWindow):
             f.writelines(lines)
             f.close()
     
-    def plot_tick_at(self, wavelength, ion=None):
-        if ion == None:
-            self.on_draw()
+    def plot_tick_at(self, wavelength, ion, line_num):
+        self.on_draw(False)
+        color = 'green'
+        ion = ion.replace('_',' ').strip()
+        line_num = line_num.strip().strip('0')
+        label = ion + ' (' + line_num.strip() + ')'
+        y1, y2 = self.get_line_tick_lim(self.sp.get_conf('line_tick_pos'))
+        k = self.sp.get_conf('line_tick_ax')    
+        if k == 2: 
+            k = 1
+            y1 = 0.2
+            y2 = 0.8
+        elif k == 1 and self.residual_GroupBox.isChecked():
+            k = 1
         else:
-            self.ion_box.setText(ion)
-            self.draw_ion()
-        y1, y2 = self.get_line_tick_lim((self.sp.get_conf('line_tick_pos')+1)%len(self.line_tick_pos_list))
-        self.fig.axes[0].axvline( wavelength, y1, y2, color = 'green', linestyle = 'solid', linewidth = 3.0 ) 
+            k = 0
+        current_legend_loc = self.sp.legend_loc
+        f = 0.3
+        r =  (self.x_plot_lims[1] - self.x_plot_lims[0])/2
+        if wavelength - self.x_plot_lims[0] < 2*r*f:
+            current_legend_loc = 1
+        if self.x_plot_lims[1] - wavelength < 2*r*f:
+            current_legend_loc = 2
+        self.fig.axes[k].axvline( wavelength, y1, y2, color = color, linestyle = 'solid', linewidth = 2.5 ) 
+        self.fig.axes[k].step( [0,0], [0,100], color = color, linestyle = 'solid', label = label, linewidth = 2.5 )
+        self.fig.axes[k].legend(loc=current_legend_loc, fontsize=self.sp.legend_fontsize)
+
         self.fig.canvas.draw()
 
     def show_line_info_dialog(self):
@@ -1123,6 +1166,12 @@ class AppForm(QtGui.QMainWindow):
             self.init_ion = self.ion_box.text()
             self.init_xmin = self.xlim_min_box.text()
             self.init_xmax = self.xlim_max_box.text()
+            self.init_y1min = self.y1lim_min_box.text()
+            self.init_y1max = self.y1lim_max_box.text()
+            self.init_y3min = self.y3lim_min_box.text()
+            self.init_y3max = self.y3lim_max_box.text()
+            self.init_legend_fontsize = self.sp.legend_fontsize
+            self.init_legend_loc = self.sp.legend_loc
       
         def toggle_statusbar():
             self.showStatusBar = not self.showStatusBar
@@ -1132,8 +1181,15 @@ class AppForm(QtGui.QMainWindow):
             self.ion_box.setText(self.init_ion)
             self.xlim_min_box.setText(self.init_xmin)
             self.xlim_max_box.setText(self.init_xmax)
-            self.save_from_lim_boxes()
-            self.draw_ion()
+            self.y1lim_min_box.setText(self.init_y1min)
+            self.y1lim_max_box.setText(self.init_y1max)
+            self.y3lim_min_box.setText(self.init_y3min)
+            self.y3lim_max_box.setText(self.init_y3max)
+            self.sp.legend_fontsize = self.init_legend_fontsize
+            self.sp.legend_loc = self.init_legend_loc
+            self.set_plot_limits_and_draw()
+            #self.save_from_lim_boxes()
+            #self.draw_ion()
 
         def do_reset():
             self.curr_line_num = self.line_info_box.text()
@@ -1159,30 +1215,53 @@ class AppForm(QtGui.QMainWindow):
             if col in [0,6] and int(s) != 0:
                 self.curr_line_num = s
                 get_info(self.curr_line_num)
+                self.line_info_box.setText(self.curr_line_num)
                 fill_line_info_table()
-            elif col == self.sp.fields.index('lambda'):
-                wavelength = float(s)
-                ion = self.line_info_table.item(row, 1).text()
+         
+        def on_itemClicked():
+            # to avoid blinking with itemSelectionChanged 
+            item = self.line_info_table.currentItem()
+            if item == self.selected_item:
+                on_itemSelectionChanged()
+
+        def on_itemSelectionChanged():
+            item = self.line_info_table.currentItem()
+            if item == None:
+                self.draw_ion()
+                return
+            self.selected_item = item
+            row = item.row()
+            col = item.column()
+            s = item.text()
+            if col == self.sp.fields.index('lambda'):
+                wavelength = np.float(s)
+                ion = str(self.line_info_table.item(row, 1).text())
+                line_num = str(self.line_info_table.item(row, 0).text())
                 max_wave = np.float(self.sp_max_box.text())
                 min_wave = np.float(self.sp_min_box.text())
                 if wavelength > min_wave and wavelength < max_wave:
                     c = self.sp.fields.index('l_shift')
-                    l_shift = float(self.line_info_table.item(row, c).text())
+                    l_shift = np.float(self.line_info_table.item(row, c).text())
                     wavelength = wavelength + l_shift
-                    c = self.sp.fields.index('id')
-                    ion = self.line_info_table.item(row, c).text()
-                    #self.ion_box.setText(ion)
                     r =  (self.x_plot_lims[1] - self.x_plot_lims[0])/2
-                    self.xlim_min_box.setText(self.init_xmin)
-                    self.xlim_max_box.setText(self.init_xmax)
-                    self.x_plot_lims = self.sp.get_conf('x_plot_lims')
-                    self.x_plot_lims = (float(self.init_xmin), float(self.init_xmax))
-                    if (wavelength < self.x_plot_lims[0] + 0.05*r) or (wavelength > self.x_plot_lims[1] - 0.05*r):
-                        self.x_plot_lims = (wavelength-r,wavelength+r)
-                        if not self.fix_axes_cb.isChecked():
+                    f = 0.05
+                    if (wavelength < self.x_plot_lims[0] + f*r) or (wavelength > self.x_plot_lims[1] - f*r):
+                        if wavelength-r < min_wave:
+                            self.x_plot_lims = (min_wave-r*f, min_wave-r*f+2*r)
+                        elif wavelength+r > max_wave:
+                            self.x_plot_lims = (max_wave+r*f-2*r , max_wave+r*f)
+                        else:
+                            self.x_plot_lims = (wavelength-r,wavelength+r)
+                        if not self.axes_fixed:
                             self.update_lim_boxes()
-                    self.restore_axes()
-                    self.plot_tick_at(wavelength, ion)
+                        self.restore_axes()
+                    self.plot_tick_at(wavelength, ion, line_num)
+                elif wavelength == 1:
+                    reftype = str(self.line_info_table.item(row-2, 0).text())
+                    if reftype == 'Subreference line:':
+                        self.plot_line_ticks_for(line_num, ion, self.subsatellites)
+                    elif reftype == 'Reference line:':
+                        self.plot_line_ticks_for(line_num, ion, self.satellites)
 
         def isRefLine(line):
             s = self.sp.fieldStrFromLine(line,'ref').strip()
@@ -1192,7 +1271,7 @@ class AppForm(QtGui.QMainWindow):
                 return False
 
         def isSubRefLine(line):
-            wavelength = float(self.sp.fieldStrFromLine(line,'lambda'))
+            wavelength = np.float(self.sp.fieldStrFromLine(line,'lambda'))
             if not isRefLine(line) and (wavelength < 2.0):
                 return True
             else:
@@ -1228,12 +1307,29 @@ class AppForm(QtGui.QMainWindow):
 
         def fill_text(i, text):
             item = QtGui.QTableWidgetItem(text)
-            item.setFlags(item.flags() ^ QtCore.Qt.ItemIsEditable)
+            item.setFlags(item.flags() ^ (QtCore.Qt.ItemIsEditable|QtCore.Qt.ItemIsSelectable|QtCore.Qt.ItemIsEnabled))
             item.setBackgroundColor(self.readOnlyCells_bg_color)
             item.setTextAlignment(QtCore.Qt.AlignBottom)
             item.setTextColor(QtCore.Qt.blue)
             self.line_info_table.setItem(i,0,item)
             self.line_info_table.setSpan(i,0,2,len(fieldItems))
+
+        def add_satellites_of_subreferences(satellites):
+            subref_list = []
+            true_satellites = satellites
+            for sat_line in satellites:
+                if isSubRefLine(sat_line):
+                    subref_list.append(sat_line)
+            i = 0                    
+            while i < len(subref_list):
+                sat_line_num = self.sp.fieldStrFromLine(subref_list[i],'num')
+                new_satellites = self.sp.read_satellites(self.sp.phyat_file, int(sat_line_num))
+                for line in new_satellites:
+                    if isSubRefLine(line):
+                        subref_list.append(line)
+                true_satellites = true_satellites + new_satellites
+                i += 1
+            return true_satellites        
 
         def get_info(line_num):  
             line = None    
@@ -1284,6 +1380,7 @@ class AppForm(QtGui.QMainWindow):
             if refline is not None:
                 refline_num = self.sp.fieldStrFromLine(refline,'num')
                 satellites = self.sp.read_satellites(self.sp.phyat_file, int(refline_num))
+                satellites = add_satellites_of_subreferences(satellites)
                 do_sort(satellites)
                 n_sat = len(satellites)
                 if do_cosmetics:
@@ -1334,12 +1431,12 @@ class AppForm(QtGui.QMainWindow):
                 max_wave = np.float(self.sp_max_box.text())
                 min_wave = np.float(self.sp_min_box.text())
                 for i in range(0, len(satellites)):
-                    wavelength = float(self.sp.fieldStrFromLine(satellites[i],'lambda'))
+                    wavelength = np.float(self.sp.fieldStrFromLine(satellites[i],'lambda'))
                     if self.show_satellites == 2 or \
                        (self.show_satellites == 1 and (wavelength > min_wave) and (wavelength < max_wave)):
                         SelectedSatellites.append(satellites[i])
                 for i in range(0, len(subsatellites)):
-                    wavelength = float(self.sp.fieldStrFromLine(subsatellites[i],'lambda'))
+                    wavelength = np.float(self.sp.fieldStrFromLine(subsatellites[i],'lambda'))
                     if self.show_satellites == 2 or \
                       (self.show_satellites == 1 and (wavelength > min_wave) and (wavelength < max_wave)):
                         SelectedSubSatellites.append(subsatellites[i])
@@ -1348,6 +1445,7 @@ class AppForm(QtGui.QMainWindow):
             self.line_info_table.setRowCount(n_sat+n_subsat+20)
             self.line_info_table.clearSpans()
             k = 0
+            sat_list = []
             if line is not None:
                 fill_text(k,'Line:')
                 k += 2
@@ -1362,6 +1460,7 @@ class AppForm(QtGui.QMainWindow):
                 if n_subsat > 0:
                     SelectedSubSatellites = do_sort(SelectedSubSatellites)
                     fill_text(k, str(n_subsat) + ' satellites:')
+                    sat_list.append([k,n_subsat])
                     k += 2
                     for i in range(0,n_subsat):
                         fill_data(k+i, SelectedSubSatellites[i], 'sat')
@@ -1373,6 +1472,7 @@ class AppForm(QtGui.QMainWindow):
             if n_sat > 0:
                 SelectedSatellites = do_sort(SelectedSatellites)
                 fill_text(k, str(n_sat) + ' satellites:')
+                sat_list.append([k,n_sat])               
                 k += 2
                 for i in range(0,n_sat):
                     fill_data(k+i, SelectedSatellites[i], 'sat')
@@ -1381,6 +1481,34 @@ class AppForm(QtGui.QMainWindow):
             self.line_info_table.resizeColumnsToContents()
             self.line_info_table.resizeRowsToContents()
             self.line_info_table.blockSignals(False)
+            
+            self.line_info_table.blockSignals(True)
+            if self.show_satellites == 1:
+                s0 = ' (in the synthesis range)'
+            elif self.show_satellites == 2:
+                s0 = ' (in the entire database and including subreferences)'
+            else:
+                s0 = ''
+            for i in sat_list:
+                k = i[0]
+                n = i[1]
+                fill_text(k, str(n) + ' satellites:' + s0)
+            self.line_info_table.blockSignals(False)
+
+            if line is not None:
+                baseLine = line
+                linesToTick = [line]
+            elif subrefline is not None:
+                baseLine = subrefline[0]
+                linesToTick = SelectedSubSatellites
+            else:            
+                baseLine = refline
+                linesToTick = SelectedSatellites
+
+            line_num = self.sp.fieldStrFromLine(baseLine,'num')
+            ion = self.sp.fieldStrFromLine(baseLine,'id')
+            if len(linesToTick) > 0:
+                self.plot_line_ticks_for(line_num, ion, linesToTick)
             return
         
         def on_itemChanged():
@@ -1453,7 +1581,7 @@ class AppForm(QtGui.QMainWindow):
             '   3 - No satellite line is shown; \n' \
             'Double-click on a line number to show the data for that line. \n' \
             'Double-click on an ion to plot line ticks and spectrum for that single ion. \n' \
-            'Double-click on a wavelength to draw a tick at that position and recenter the spectrum if necessary. \n' \
+            'Select or click on a wavelength to draw a tick at that position and recenter the spectrum if necessary. \n' \
             'Click on \"Reset\" to return to the original line and plot settings. \n' \
             'The green fields are editable.'
         statusBar.addWidget(QtGui.QLabel(s),1)
@@ -1498,6 +1626,9 @@ class AppForm(QtGui.QMainWindow):
         self.buttonBox.rejected.connect(self.line_info_dialog.close)
         self.line_info_table.doubleClicked.connect(on_doubleClick)
         self.line_info_table.itemChanged.connect(on_itemChanged)
+        self.selected_item = None
+        self.line_info_table.itemSelectionChanged.connect(on_itemSelectionChanged)
+        self.line_info_table.itemClicked.connect(on_itemClicked)
         vbox = QtGui.QVBoxLayout()
         vbox.addWidget(self.line_info_table)
         vbox.addWidget(self.buttonBox)
@@ -1521,7 +1652,7 @@ class AppForm(QtGui.QMainWindow):
                     s = self.rightFormat(str(s), self.sp.fields[j])
                 else:
                     s = fmt.format(self.nearbyLines[i][j])
-                #s = str(s)
+                s = str(s)
                 s = s.strip()
                 item = QtGui.QTableWidgetItem(s)
                 item.setFlags(item.flags() ^ QtCore.Qt.ItemIsEditable)
@@ -1531,7 +1662,7 @@ class AppForm(QtGui.QMainWindow):
         self.nearbyLines_table.resizeRowsToContents()
                 
     def show_nearbyLines_dialog(self):
-            
+
         def get_window_size_and_position():
             if self.nearbyLines_dialog is None:
                 font = QtGui.QFont()
@@ -1562,13 +1693,26 @@ class AppForm(QtGui.QMainWindow):
             elif col == 1:
                 self.ion_box.setText(item.text())
                 self.draw_ion()
-            elif col == 2:
-                wavelength = float(item.text())
-                l_shift = float(self.nearbyLines_table.item(row,3).text())
+
+        def on_itemClicked():
+            # to avoid blinking with itemSelectionChanged 
+            item = self.nearbyLines_table.currentItem()
+            if item == self.selected_item:
+                on_itemSelectionChanged()
+
+        def on_itemSelectionChanged():
+            item = self.nearbyLines_table.currentItem()
+            self.selected_item = item
+            row = item.row()
+            col = item.column()
+            if col == 2:
+                wavelength = np.float(item.text())
+                l_shift = np.float(self.nearbyLines_table.item(row,3).text())
                 wavelength = wavelength + l_shift
-                ion = self.nearbyLines_table.item(row,1).text()
-                self.plot_tick_at(wavelength,ion)
-           
+                line_num = str(self.nearbyLines_table.item(row,0).text())
+                ion = str(self.nearbyLines_table.item(row,1).text())
+                self.plot_tick_at(wavelength, ion, line_num)
+               
         def do_selection():
             selectedItems = self.nearbyLines_table.selectedItems()
             selected_ions = []
@@ -1601,8 +1745,8 @@ class AppForm(QtGui.QMainWindow):
         statusBar = QtGui.QStatusBar()
         s = 'Double-click on a line number (or select the line number and press \"Apply\") to show line info dialog. \n' \
             'Double-click on an ion to plot line ticks and spectrum for that single ion. \n' \
-            'Double-click on the wavelength to draw a tick at that position. \n' \
-            'Select multiple ions (using click, Shift+click, and Ctrl+click) and press \"Apply\" plot line ticks and spectra for a list of ions. \n' \
+            'Click or select a wavelength to draw a tick at that position. \n' \
+            'Select multiple ions (using click, Shift+click, and Ctrl+click) and press \"Plot ions\" plot line ticks and spectra for a list of ions. \n' \
             'Click on the ion header to select all ions.'
         statusBar.addWidget(QtGui.QLabel(s),1)
         self.showStatusBar = False
@@ -1625,11 +1769,15 @@ class AppForm(QtGui.QMainWindow):
         self.nearbyLines_table.horizontalHeaderItem(8).setToolTip(s)
         self.nearbyLines_table.horizontalHeaderItem(9).setText('  comment')
         self.fill_nearbyLines_table()
-        self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Help|QtGui.QDialogButtonBox.Apply|QtGui.QDialogButtonBox.Close)
+        self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Help|
+                                                QtGui.QDialogButtonBox.Apply|
+                                                QtGui.QDialogButtonBox.Close)
         self.buttonBox.rejected.connect(self.nearbyLines_dialog.close)
         self.buttonBox.button(QtGui.QDialogButtonBox.Apply).clicked.connect(do_selection)
         self.buttonBox.button(QtGui.QDialogButtonBox.Help).clicked.connect(toggle_statusbar)
         self.nearbyLines_table.doubleClicked.connect(on_doubleClick)
+        self.nearbyLines_table.itemSelectionChanged.connect(on_itemSelectionChanged)
+        self.nearbyLines_table.itemClicked.connect(on_itemClicked)
         self.nearbyLines_table.verticalHeader().sectionDoubleClicked.connect(do_selection)
         vbox = QtGui.QVBoxLayout()
         vbox.addWidget(self.nearbyLines_table)
@@ -1770,13 +1918,24 @@ class AppForm(QtGui.QMainWindow):
                 y1 = 0.81
                 y2 = 0.95
         return y1, y2
-                          
-    def on_draw(self):
-        """ Redraws        for w in [self.sp_min_box, self.ebv_box, self.resol_box]:
-            hbox3.addWidget(w)
-            hbox3.setAlignment(w, QtCore.Qt.AlignVCenter)
- the figure
-        """
+
+    def plot_line_ticks_for(self, line_num, ion, lines):
+        self.on_draw()
+        k = self.sp.get_conf('line_tick_ax')    
+        if self.show_line_ticks_action.isChecked():
+            if ( k == 0 ):
+              y1, y2 = self.get_line_tick_lim(self.sp.get_conf('line_tick_pos'))
+              self.sp.plot_line_ticks_for(line_num, ion, lines, self.axes, y1, y2, self.x_plot_lims[0], self.x_plot_lims[1])
+            elif ( k == 1 ):
+                if self.residual_GroupBox.isChecked():
+                    self.sp.plot_ax3(self.axes3)
+                    y1, y2 = self.get_line_tick_lim(self.sp.get_conf('line_tick_pos'))
+                    self.sp.plot_line_ticks_for(line_num, ion, lines, self.axes3, y1, y2)
+            elif ( k == 2 ):
+                self.sp.plot_line_ticks_for(line_num, ion, lines, self.axes2, 0.2, 0.8)     
+        self.canvas.draw()                
+                             
+    def on_draw(self, show_legend=True):
         log_.debug('Entering on_drawn', calling=self.calling)
         if self.sp is None:
             log_.debug('Np sp in on_drawn', calling=self.calling)
@@ -1793,12 +1952,12 @@ class AppForm(QtGui.QMainWindow):
         if self.do_save:
             self.save_axes()
         self.axes.cla()
-        self.sp.plot_ax1(self.axes)
-        
+        self.sp.plot_ax1(self.axes, show_legend)
+
         k = self.sp.get_conf('line_tick_ax')
         if self.show_line_ticks_action.isChecked() and ( k == 0 ):
             y1, y2 = self.get_line_tick_lim(self.sp.get_conf('line_tick_pos'))
-            self.sp.plot_line_ticks(self.axes, y1, y2, self.x_plot_lims[0], self.x_plot_lims[1])
+            self.sp.plot_line_ticks(self.axes, y1, y2, self.x_plot_lims[0], self.x_plot_lims[1], show_legend=show_legend)
 
         if self.sp.get_conf('cont_plot', False):
             self.sp.plot_conts(self.axes)
@@ -1846,6 +2005,16 @@ class AppForm(QtGui.QMainWindow):
         self.sp.set_conf('line_tick_color', str(color.name()))
         if self.show_line_ticks_action.isChecked():
             self.make_axes()
+        
+    def toggle_legend_clicked(self):
+        fontsize_list = ['small', 'medium', 'large']
+        i = fontsize_list.index(self.sp.legend_fontsize) + 1
+        if i == len(fontsize_list):
+            self.sp.legend_fontsize = fontsize_list[0] 
+            self.sp.legend_loc = (self.sp.legend_loc)%2+1
+        else:
+             self.sp.legend_fontsize = fontsize_list[i]
+        self.make_axes()
 
     def show_line_ticks_action_clicked(self):
         self.set_ion()
@@ -2130,32 +2299,6 @@ class AppForm(QtGui.QMainWindow):
             self.instr_prof_file = None
         if self.instr_prof_file is not None:
             self.update_profile()
-            """
-            plt.close(self.fig)
-            self.fig = plt.figure()
-            plt.plot(self.sp.filter_) 
-            plt.draw()
-            plt.show()
-            self.canvas.draw()
-            """
-            
-            """
-            # The Following gives an error self._fig not defined... 
-            plt.ion()
-            self.fc1 = FigureCanvas(self._fig)
-            if self.fig_prof is not None:
-                plt.close(self.fig_prof)
-            self.fig_prof = plt.figure()
-            self.fc1.figure = self.sp.filter_
-            self.fc1.draw()
-            """
-
-            #plt.plot(self.sp.filter_) 
-            #plt.ion()
-            #plt.draw()
-            #plot.ioff()
-            print plt.get_fignums()
-            #_prof.show()
             
     def isValidFilename(self, filename):
         if filename is None:
@@ -2170,9 +2313,16 @@ class AppForm(QtGui.QMainWindow):
             except IOError:
                 return False        
         
-    def test_cosmetic_file(self, cosmetic_file):
+    def test_cosmetic_file(self):
+        self.sp.fic_cosmetik = self.sp.get_conf('fic_cosmetik')
+        cosmetic_file = self.sp.fic_cosmetik
+        if cosmetic_file is None:
+            self.sp.set_conf('do_cosmetik', False)
+            return
+                
         if self.isValidFilename(cosmetic_file):
             return
+            
         title = 'pySSN: cosmetic file'
         msg = "Line cosmetic file not set or invalid. \n" \
               "It can be supplied in the initialization file with:\n" \
@@ -2407,6 +2557,17 @@ class AppForm(QtGui.QMainWindow):
         if self.sp.fic_cosmetik is None:
             return
         if os.path.isfile(self.sp.fic_cosmetik):
+        
+            cosmetik_arr, errorMsg = self.sp.read_cosmetik()
+            if len(errorMsg) > 0:
+                title = 'Error in cosmetic file: '
+                msg = 'Unable to read from file \'{}\':\n{}'.format(self.sp.get_conf('fic_cosmetik'), errorMsg)
+                if self.showErrorBox:
+                    QtGui.QMessageBox.critical(self, title, msg, QtGui.QMessageBox.Ok )
+                else:
+                    log_.warn('{}: {}'.format(title, msg), calling=self.calling)
+                return
+
             ret = None
             f = open(self.sp.fic_cosmetik, 'r')
             cosmetic_lines = f.readlines()
@@ -2432,8 +2593,8 @@ class AppForm(QtGui.QMainWindow):
                         CorrectedList.append(line_c[:k])
                         line = self.sp.read_line(self.sp.phyat_file, line_num)
                         line = line.rstrip()
-                        v0 = {i: float(self.sp.fieldStrFromLine(line, i)) for i in keys}
-                        v1 = {i: float(self.sp.fieldStrFromLine(line_c, i)) for i in keys}
+                        v0 = {i: np.float(self.sp.fieldStrFromLine(line, i)) for i in keys}
+                        v1 = {i: np.float(self.sp.fieldStrFromLine(line_c, i)) for i in keys}
                         l_shift = v1['lambda'] + v1['l_shift'] - v0['lambda']
                         i_cor =  v1['i_cor'] * v1['i_rel'] / v0['i_rel']
                         l_shift_str = self.rightFormat(str(l_shift), 'l_shift')
@@ -2478,25 +2639,140 @@ class AppForm(QtGui.QMainWindow):
                      self.sp.phyat_file.split('/')[-1],
                      self.sp.get_conf('fic_modele').split('/')[-1]))
                     
+    # experiment
+    def test_init_file(self):   
+        
+        if self.sp == None:
+            self.showErrorBox = False
+        self.showErrorBox = True
+
+        f = open(self.init_file_name, 'r')
+        lines = f.readlines()
+        f.close()
+        triple_quoted_string_found = False
+        newlines = []
+        rows = []
+        for i in range(len(lines)):
+            line = lines[i]
+            if line.startswith('"""'):
+                triple_quoted_string_found = not triple_quoted_string_found
+            k = line.find('=')
+            if k > -1 and not line.startswith('#') and not triple_quoted_string_found:
+                newlines.append(line.split('#')[0].rstrip())
+                rows.append(i+1)
+
+        invalidCommands = []
+        for i in range(len(newlines)):
+            line = newlines[i]
+            try:
+                exec(line)
+            except IndentationError:
+                invalidCommands.append('line {:<4}: {}  (indentation error)'.format(rows[i],line))
+            except SyntaxError:
+                invalidCommands.append('line {:<4}: {}  (invalid syntax)'.format(rows[i],line))
+            except Exception: 
+                invalidCommands.append('line {:<4}: {}  (missing quotation marks)'.format(rows[i],line))
+            except: 
+                invalidCommands.append('line {:<4}: {}  (unknown error)'.format(rows[i],line))
+        if len(invalidCommands) > 0:
+            title = 'Fatal error'
+            msg = 'Error in the initialization file {0}: '.format(self.init_file_name)
+            msg = msg + '\n(missing quotation marks for string, invalid float, invalid integer, etc )\n' 
+            for line in invalidCommands:
+                msg = msg + '\n' + line
+            if self.showErrorBox:
+                if self.sp == None:
+                    buttom = QtGui.QMessageBox.Abort
+                else:
+                    buttom = QtGui.QMessageBox.Cancel
+                QtGui.QMessageBox.critical(self, title, msg, buttom)
+            else:
+                log_.warn('{}: {}'.format(title, msg), calling=self.calling)
+            return False
+
+        # Keep only the last input of a field
+        lines = newlines[::-1]
+        newlines = []
+        fields = []
+        for line in lines:
+            i = line.find('=')
+            field = line[:i].strip()
+            if field not in fields:
+                fields.append(field)
+                newlines.append(line)
+        lines = newlines[::-1]
+
+        keys = [line.split('=')[0].strip() for line in lines]
+        values = [line.split('=')[1].strip() for line in lines]
+        if 'spectr_obs' in keys:
+            i = keys.index('spectr_obs')
+            path = values[i]
+        else:
+            i = -1
+        if i > -1 and path is not None:
+            s = path.strip().split('.')
+            spectr_formats = ['fits', 'spr', 'spr.gz']
+            if len(s) == 1:
+                path_list = []
+                for fmt in spectr_formats:
+                    path_list.append(path.strip('\'').strip('\"') + '.' + fmt)
+            else:
+                path_list = [path]
+            pathExists = False
+            fileExt = ''
+            for fmt in spectr_formats:
+                fileExt = fileExt + fmt + '|'
+            fileExt = fileExt[:-1]   
+            filenames = ''
+            for path_ in path_list:
+                filenames = filenames + path_ + ', '
+                pathExists = pathExists or os.path.isfile(path_)
+            filenames = filenames[:-2]
+            if not pathExists:
+                if len(path_list) > 1:
+                    s = ' (with the accepted extensions {})' .format(fileExt)
+                else:
+                    s = ''
+                title = 'Fatal error'
+                msg = 'Error in the initialization file {0}: spectr_obs = {1}\nObserved spectrum file{2} not found.'.format(self.init_file_name, path, s)
+                if self.showErrorBox:
+                    if self.sp == None:
+                        buttom = QtGui.QMessageBox.Abort
+                    else:
+                        buttom = QtGui.QMessageBox.Cancel
+                    QtGui.QMessageBox.critical(self, title, msg, buttom)
+                else:
+                    log_.warn('{}: {}'.format(title, msg), calling=self.calling)
+                return False
+        return True
+
     def start_spectrum(self):
         init_file = self.init_file_name.split('/')[-1]
         dir_ = self.init_file_name.split(init_file)[0]
         if dir_ == '':
             dir_ = './'
         self.directory = dir_
+        
+        if not self.test_init_file():
+            if self.sp == None:
+                sys.exit() 
+            else:
+                return
+        
         self.sp = spectrum(config_file=self.init_file_name)
-            
-        if self.sp.get_conf('fic_cosmetik') == '':
+
+        if ( self.sp.get_conf('fic_cosmetik') is None or
+             self.sp.get_conf('fic_cosmetik') == '' ):
             self.sp.set_conf('do_cosmetik', False)
 
         if self.sp.get_conf('do_synth') and self.sp.get_conf('do_cosmetik'):
-            self.test_cosmetic_file(self.sp.fic_cosmetik)
+            self.test_cosmetic_file()
             self.match_cosmetic_phyat_files()
             if self.sp.get_conf('clean_cosmetic_file'):
                 self.clean_cosmetic_file()
             if self.sp.get_conf('order_cosmetic_file'):
                 self.order_cosmetic_file()
-            
+        
         self.set_status_text()
         self.instr_prof_file = self.sp.get_conf('fic_instr_prof', None)
         if self.instr_prof_file is not None:
@@ -2583,10 +2859,13 @@ class AppForm(QtGui.QMainWindow):
     def sp_norm(self):
         if self.sp is None:
             return
+        if not self.validate_sp_norm():
+            return
         old_sp_norm = self.sp.get_conf('sp_norm')
         new_sp_norm = np.float(self.sp_norm_box.text())
         if old_sp_norm == new_sp_norm:
             return
+        self.sp.set_conf('sp_norm', new_sp_norm)
         log_.message('Changing sp_norm. Old: {}, New: {}'.format(old_sp_norm, new_sp_norm), calling=self.calling)
         self.statusBar().showMessage('Changing intensity scale of the observed spectrum ...') 
         QtGui.QApplication.processEvents() 
@@ -2596,10 +2875,13 @@ class AppForm(QtGui.QMainWindow):
     def obj_velo(self):
         if self.sp is None:
             return
+        if not self.validate_obj_velo():
+            return
         old_obj_velo = self.sp.get_conf('obj_velo')
         new_obj_velo = np.float(self.obj_velo_box.text())
         if old_obj_velo == new_obj_velo:
             return
+        self.sp.set_conf('obj_velo', new_obj_velo)
         log_.message('Changing obj_velo. Old: {}, New: {}'.format(old_obj_velo, new_obj_velo), calling=self.calling)
         self.statusBar().showMessage('Executing doppler correction of the observed spectrum ...') 
         QtGui.QApplication.processEvents() 
@@ -2611,6 +2893,8 @@ class AppForm(QtGui.QMainWindow):
 
     def ebv(self):
         if self.sp is None:
+            return
+        if not self.validate_ebv():
             return
         old_ebv = self.sp.get_conf('e_bv')
         new_ebv = np.float(self.ebv_box.text())
@@ -2628,9 +2912,15 @@ class AppForm(QtGui.QMainWindow):
         self.cont_par_changed = False
             
     def rerun(self):
+        if not self.validate_synthesis_parameters():
+            return
+        if ( self.x_plot_lims[0] < np.float(self.sp_min_box.text()) or
+             self.x_plot_lims[1] > np.float(self.sp_max_box.text()) ):
+            self.xlim_min_box.setText(self.sp_min_box.text())
+            self.xlim_max_box.setText(self.sp_max_box.text())
         self.statusBar().showMessage('Rerunning synthesis ...') 
         QtGui.QApplication.processEvents() 
-        self.set_limit_sp()
+        self.sp.set_conf('limit_sp', (np.float(self.sp_min_box.text()), np.float(self.sp_max_box.text())))
         self.sp.set_conf('resol', np.int(self.resol_box.text()))
         self.sp.set_conf('obj_velo', np.float(self.obj_velo_box.text()))
         self.sp.set_conf('sp_norm', np.float(self.sp_norm_box.text()))
@@ -2639,7 +2929,7 @@ class AppForm(QtGui.QMainWindow):
         self.sp.init_red_corr()
         self.sp.make_continuum()
         self.sp.run()
-        self.on_draw()
+        self.set_plot_limits_and_draw()
 
     def adjust(self):
         if self.sp is None:
@@ -2649,9 +2939,21 @@ class AppForm(QtGui.QMainWindow):
         self.sp_norm()
         self.obj_velo()
         self.ebv()
-        ndiff = self.sp.adjust()
+        ndiff, errorMsg = self.sp.adjust()
+        if ndiff == -1:
+            self.sp.do_cosmetik = False
+            self.sp.set_conf('do_cosmetik', False)   
+            self.sp.fic_cosmetik      
+            self.set_status_text()
+            title = 'Error in cosmetic file: '
+            msg = 'Unable to read from file \'{}\'\nChanging to \'no cosmetic\':\n{}'.format(self.sp.get_conf('fic_cosmetik'), errorMsg)
+            if self.showErrorBox:
+                QtGui.QMessageBox.critical(self, title, msg, QtGui.QMessageBox.Ok )
+            else:
+                log_.warn('{}: {}'.format(title, msg), calling=self.calling)
         if ndiff > 0:
             self.on_draw()
+        self.line_info()
         self.statusBar().showMessage('Update finished.', 4000)
         return ndiff 
 
@@ -2693,16 +2995,22 @@ class AppForm(QtGui.QMainWindow):
     def cut2(self):
         if self.sp is None:
             return
-        self.sp.set_conf('cut_plot2', np.float(self.cut2_box.text()))
-        self.on_draw()
+        if not self.validate_cut():
+            return    
+        self.selected_intensities_action.setChecked(True)
+        self.sp.set_conf('show_selected_intensities_only', True) 
+        self.cut_cb.setChecked(True)
+        self.draw_ion()
 
     def get_ion_str(self,s):
         s = s.strip()
         s = s.replace(' ', '_')
         if s.isdigit():
-            self.sp.line_info(int(s), sort='i_rel')
-            s = self.sp.get_ion_from_code(s)
-            s = s.strip()
+            line = self.sp.get_line_from_reduce_code(s)
+            if line is None:
+                s = ''
+            else: 
+                s = self.sp.fieldStrFromLine(line,'id').strip()
         return s
 
     def set_ion(self):
@@ -2722,33 +3030,39 @@ class AppForm(QtGui.QMainWindow):
         for s0 in sList:
             s = s + s0 + ', '
         s = s[:-2]
+        
         for item in sList:
-            if '_' not in item:
+            if item.ljust(9) in self.sp.liste_raies['id']:
+                if self.sp.true_ion(item) == item:
+                    sList = sList + self.sp.get_all_ions_from_ion(item)
+            elif item.ljust(9) in self.sp.sp_theo['raie_ref']['id']:
+                if self.sp.true_ion(item) == item:
+                    sList = sList + self.sp.get_all_ions_from_ion(item)
+            else:
                 ion_list = self.sp.get_ions_from_element(item)
                 if len(ion_list) > 0:
                     k = sList.index(item)
                     for ion in ion_list[::-1]:
                         sList.insert(k, ion)
                 sList.remove(item)
-            else:
-                if self.sp.true_ion(item) == item:
-                    sList = sList + self.sp.get_all_ions_from_ion(item)
+
         sList = list(set(sList))
         self.sp.set_conf('selected_ions', sList)
         self.ion_box.setText(s)
         
     def set_refline_to_info_box(self,j):
-        if self.sp.get_conf('diff_lines_by') == 0: 
+        if self.sp.get_conf('diff_lines_by') == 0 and len(self.sp.selected_ions_data) > 0: 
             if j == -1:
                 j = 0
-            try:
-                s = str(self.sp.selected_ions_data[j][2][0])
-                self.line_info_box.setText(s)
-            except:
-                log_.warn('out of range self.sp.selected_ions_data[j][2][0] where j = {} and selected_ion_data = {}'.format(j, self.sp.selected_ions_data), 
-                           calling=self.calling)
-                
+            s = str(self.sp.selected_ions_data[j][2][0])
+            self.line_info_box.setText(s)
+        
     def draw_ion(self):
+        if self.cut_cb.isChecked():
+            if self.validate_cut():
+                self.sp.set_conf('cut_plot2', np.float(self.cut2_box.text()))
+            else:
+                return
         self.set_ion()
         self.sp.set_conf('index_of_current_ion', -1)
         self.sp.set_selected_ions_data()
@@ -2759,7 +3073,7 @@ class AppForm(QtGui.QMainWindow):
         if self.sp is None:
             return
         msg = ''
-        s = self.line_info_box.text()
+        s = str(self.line_info_box.text())
         if s == '':
             return
         w = self.sp.field_width['num'] - 1
@@ -2772,11 +3086,9 @@ class AppForm(QtGui.QMainWindow):
         except ValueError:
             msg = 'Invalid input.\n It is not an integer'
         if msg == '':
-            line = self.sp.read_line(self.sp.phyat_file, new_ref)
+            line = self.sp.get_line_from_reduce_code(s)
             if line is None:
-                line = self.sp.read_line(self.sp.fic_model, new_ref)
-                if line is None:
-                    msg = 'No line associated to this number.'
+                msg = 'No line unambiguously associated with this number.'
         if msg == '':
             s = self.sp.fieldStrFromLine(line,'num').strip()
             self.line_info_box.setText(s) 
@@ -2863,47 +3175,143 @@ class AppForm(QtGui.QMainWindow):
             y3_lims = (m - min_diff/2,m + min_diff/2)
         else:
             y3_lims = self.y3_plot_lims
-        if self.x_plot_lims[0] != float(self.xlim_min_box.text()):
+        if self.x_plot_lims[0] != np.float(self.xlim_min_box.text()):
             self.xlim_min_box.setText(xformat.format(x_lims[0]))
-        if self.x_plot_lims[1] != float(self.xlim_max_box.text()):
+        if self.x_plot_lims[1] != np.float(self.xlim_max_box.text()):
             self.xlim_max_box.setText(xformat.format(x_lims[1]))
         delta = abs(y1_lims[1]-y1_lims[0])
         if delta < 2:
             precision = 2
         else:
             precision = 1
-        if self.y1_plot_lims[0] != float(self.y1lim_min_box.text()):
+        if self.y1_plot_lims[0] != np.float(self.y1lim_min_box.text()):
             self.y1lim_min_box.setText(yformat.format(precision, y1_lims[0]))
-        if self.y1_plot_lims[1] != float(self.y1lim_max_box.text()):
+        if self.y1_plot_lims[1] != np.float(self.y1lim_max_box.text()):
             self.y1lim_max_box.setText(yformat.format(precision, y1_lims[1]))
         delta = abs(y3_lims[1]-y3_lims[0])
         if delta < 2:
             precision = 2
         else:
             precision = 1
-        if self.y3_plot_lims[0] != float(self.y3lim_min_box.text()):
+        if self.y3_plot_lims[0] != np.float(self.y3lim_min_box.text()):
             self.y3lim_min_box.setText(yformat.format(precision, y3_lims[0]))
-        if self.y3_plot_lims[1] != float(self.y3lim_max_box.text()):
+        if self.y3_plot_lims[1] != np.float(self.y3lim_max_box.text()):
             self.y3lim_max_box.setText(yformat.format(precision, y3_lims[1]))
-        self.save_from_lim_boxes_and_draw()
+        self.set_plot_limits_and_draw()
 
-    def save_from_lim_boxes(self):
-        self.x_plot_lims = (float(self.xlim_min_box.text()), float(self.xlim_max_box.text()))
-        self.y1_plot_lims = (float(self.y1lim_min_box.text()), float(self.y1lim_max_box.text()))
-        self.y3_plot_lims = (float(self.y3lim_min_box.text()), float(self.y3lim_max_box.text()))
+    def validate_input(self, editBox, field, title, varType = 'float'):
+        value = editBox.text()
+        if value == None:
+            return False
+        if ( ( varType == 'float' and not self.isFloat(value) ) or \
+             ( varType == 'integer' and not self.isInteger(value) ) or \
+             ( varType == 'positive odd integer' and not self.isPositiveOdd(value) ) ):
+            msg = '{} should be a {}'.format(field, varType)
+            msg.replace('a integer', 'an integer')
+            editBox.setFocus()
+            if self.showErrorBox:
+                QtGui.QMessageBox.critical(self, title, msg, QtGui.QMessageBox.Ok )
+            else:
+                log_.warn('{}: {}'.format(title, msg), calling=self.calling)
+            return False
+        else:
+            return True
+
+    def validate_sp_min(self):
+        return self.validate_input(self.sp_min_box, 'xmin for the synthesis', 'Input error', 'float')
+
+    def validate_sp_max(self):
+        return self.validate_input(self.sp_max_box, 'xmax for the synthesis', 'Input error', 'float')
+
+    def validate_sp_norm(self):
+        return self.validate_input(self.sp_norm_box, 'normalization factor', 'Input error', 'float')
+
+    def validate_ebv(self):
+        return self.validate_input(self.ebv_box, 'color excess E(B-V)', 'Input error', 'float')
+
+    def validate_obj_velo(self):
+        return self.validate_input(self.obj_velo_box, 'radial velocity', 'Input error', 'float')
+
+    def validate_resol(self):
+        return self.validate_input(self.resol_box, 'rebinning factor', 'Input error', 'positive odd integer')
+
+    def validate_xlim_min(self):
+        return self.validate_input(self.xlim_min_box, 'xmin', 'Invalid plot limit', 'float')  
+
+    def validate_xlim_max(self):
+        return self.validate_input(self.xlim_max_box, 'xmax', 'Invalid plot limit', 'float')  
+
+    def validate_y1lim_min(self):
+        return self.validate_input(self.y1lim_min_box, 'ymin', 'Invalid plot limit', 'float')  
+
+    def validate_y1lim_max(self):
+        return self.validate_input(self.y1lim_max_box, 'ymax', 'Invalid plot limit', 'float')  
+
+    def validate_y3lim_min(self):
+        return self.validate_input(self.y3lim_min_box, 'residual ymin', 'Invalid plot limit', 'float')  
+
+    def validate_y3lim_max(self):
+        return self.validate_input(self.y3lim_max_box, 'residual ymax', 'Invalid plot limit', 'float')  
+
+    def validate_cut(self):
+        return self.validate_input(self.cut2_box, 'cut', 'Input error', 'float')  
+
+    def sp_lim_in_range(self):
+        xmin = np.float(self.sp_min_box.text())
+        xmax = np.float(self.sp_max_box.text())
+        if ( xmin < xmax - 9.999 ) and ( xmin > 3000. ) and ( xmax < 20000.):
+            return True
+        else:
+            if self.showErrorBox:
+                QtGui.QMessageBox.critical(self, 'Invalid synthesis limits', 'The acceptable values are:\n\n xmax - xmin > 10,\n xmin > 3000,\n xmax < 20000', QtGui.QMessageBox.Ok )
+            else:
+                log_.warn('{}: {}'.format(title, msg), calling=self.calling)
+            return False
+
+    def validate_synthesis_parameters(self):
+        return ( self.validate_sp_min() and
+                 self.validate_sp_max() and
+                 self.sp_lim_in_range() and
+                 self.validate_sp_norm() and
+                 self.validate_obj_velo() and
+                 self.validate_ebv() and
+                 self.validate_resol() )
+
+    def validate_plot_parameters(self):
+        return ( self.validate_xlim_min() and
+                 self.validate_xlim_max() and
+                 self.validate_y1lim_min() and
+                 self.validate_y1lim_max() and
+                 self.validate_y3lim_min() and
+                 self.validate_y3lim_max() )
+
+    def set_plot_limits_and_draw(self):
+        if not self.validate_plot_parameters():
+            return
+        self.x_plot_lims = (np.float(self.xlim_min_box.text()), np.float(self.xlim_max_box.text()))
+        self.y1_plot_lims = (np.float(self.y1lim_min_box.text()), np.float(self.y1lim_max_box.text()))
+        self.y3_plot_lims = (np.float(self.y3lim_min_box.text()), np.float(self.y3lim_max_box.text()))
         self.restore_axes()
-
-    def save_from_lim_boxes_and_draw(self):
-        self.save_from_lim_boxes()
-        self.on_draw()
+        self.draw_ion()
 
     def set_limit_sp(self):
+        if not ( self.validate_sp_min() and 
+                 self.validate_sp_max() and
+                 self.sp_lim_in_range() ):
+            return
         limit_sp = (np.float(self.sp_min_box.text()), np.float(self.sp_max_box.text()))
         self.sp.set_conf('limit_sp', limit_sp)
     
     def set_limit_sp_and_run(self):
+        if not ( self.validate_sp_min() and 
+                 self.validate_sp_max() and
+                 self.sp_lim_in_range() ):
+            return
         old_limit_sp = self.sp.get_conf('limit_sp')
         new_limit_sp = (np.float(self.sp_min_box.text()), np.float(self.sp_max_box.text()))
+        if not self.axes_fixed:
+            self.xlim_min_box.setText(self.sp_min_box.text())
+            self.xlim_max_box.setText(self.sp_max_box.text())
         if old_limit_sp == new_limit_sp:
             return
         self.sp.set_conf('limit_sp', new_limit_sp)
@@ -2914,13 +3322,18 @@ class AppForm(QtGui.QMainWindow):
         self.sp.init_red_corr()
         self.sp.make_continuum()
         self.sp.run(do_synth = True, do_read_liste = True, do_profiles=False)
-        self.on_draw()
-
+        self.set_plot_limits_and_draw()
+        
     def resol(self):
         if self.sp is None:
             return
+        if not self.validate_resol():
+            return
         old_resol = self.sp.get_conf('resol')
         new_resol = np.int(self.resol_box.text())
+        if old_resol == new_resol:
+            return
+        self.sp.set_conf('resol', new_resol)
         log_.message('Changing resol. Old: {}, New: {}'.format(old_resol, new_resol), calling=self.calling)
         self.statusBar().showMessage('Changing rebinning factor ...') 
         QtGui.QApplication.processEvents() 
@@ -2933,7 +3346,13 @@ class AppForm(QtGui.QMainWindow):
         
     def leave_fig(self, event):
         self.sp.firstClick = True
-        if not self.axes_fixed:
+        if ( self.x_plot_lims != self.axes.get_xlim() or 
+             self.y1_plot_lims != self.axes.get_ylim() or
+             ( self.axes3 is not None and self.y3_plot_lims != self.axes3.get_ylim() ) ):
+            limits_changed = True
+        else:
+            limits_changed = False
+        if not self.axes_fixed and limits_changed:
             self.save_axes()
             self.update_lim_boxes()
         
