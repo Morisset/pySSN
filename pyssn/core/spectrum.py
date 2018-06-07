@@ -255,6 +255,8 @@ class spectrum(object):
         self.y1_plot_lims = None
         self.y2_plot_lims = None
         self.y3_plot_lims = None
+        
+        self.read_obs_error = ''
  
     def init_obs(self, spectr_obs=None, sp_norm=None, obj_velo=None, limit_sp=None):
         
@@ -572,49 +574,57 @@ class spectrum(object):
         return cosmetik_arr, ErrorMsg
 
     def read_obs(self, k_spline = 1):
-        
-        if self.get_conf('spectr_obs') is None:
+
+        self.read_obs_error = ''
+        if self.get_conf('spectr_obs') is not None:
+            s = self.conf['spectr_obs'].split('.')
+            if len(s) == 1:
+                comm = '(with extention .fits, .spr, and .spr.gz) '
+                obs_file = self.directory + s[0] + '.spr'
+                if not os.path.isfile(obs_file):
+                    obs_file = self.directory + s[0] + '.spr.gz'
+                    if not os.path.isfile(obs_file):
+                        obs_file = self.directory + s[0] + '.fits'
+            else:
+                comm = ''
+                obs_file = self.directory + self.conf['spectr_obs']
+                
+            if not os.path.isfile(obs_file):
+                self.read_obs_error = 'Observed spectrum file \'{}\' {}not found'.format(self.conf['spectr_obs'], comm)
+                log_.warn(self.read_obs_error, calling = self.calling)
+            else:
+                if obs_file.split('.')[-1] == 'fits':
+                    from astropy.io import fits
+                    try:
+                        self.f, header = fits.getdata(obs_file, header=True)
+                        dispersion_start = header['CRVAL1'] - (header['CRPIX1'] - 1) * header['CDELT1']
+                        self.w = dispersion_start + np.arange(len(self.f)) * header['CDELT1']
+                    except:
+                        self.read_obs_error = 'Observations NOT read from {0}'.format(obs_file)
+                        log_.warn(self.read_obs_error, calling = self.calling)
+                else:
+                    try:                
+                        self.obs = np.loadtxt(obs_file)
+                        log_.message('Observations read from {0}'.format(obs_file),
+                                            calling = self.calling)
+                        if bool(self.get_conf('data_incl_w', undefined = False)):
+                            self.w = self.obs[:,0]
+                            self.f = self.obs[:,1]
+                        else:
+                            self.f = self.obs
+                            self.w = None
+                        if bool(self.get_conf('reverse_spectra', undefined=False)):
+                            self.f = self.f[::-1]
+                    except:
+                        self.read_obs_error = 'Observations NOT read from {0}'.format(obs_file)
+                        log_.warn(self.read_obs_error, calling = self.calling)
+                
+        if self.get_conf('spectr_obs') is None or len(self.read_obs_error) > 0:
             n_pix = (self.limit_sp[1] - self.limit_sp[0]) / self.conf['lambda_pix']
             self.w = np.linspace(self.limit_sp[0], self.limit_sp[1], n_pix)
             self.f = np.ones_like(self.w)
-        else:
-            if self.conf['spectr_obs'].split('.')[-1] == 'fits':
-                from astropy.io import fits
-                if not os.path.exists(self.conf['spectr_obs']):
-                    log_.error('File {} not found'.format(self.conf['spectr_obs']))
-                try:
-                    self.f, header = fits.getdata(self.conf['spectr_obs'], header=True)
-                    dispersion_start = header['CRVAL1'] - (header['CRPIX1'] - 1) * header['CDELT1']
-                    self.w = dispersion_start + np.arange(len(self.f)) * header['CDELT1']
-                except:
-                    log_.warn('Observations NOT read from {0}'.format(self.conf['spectr_obs']),
-                                    calling = self.calling)
-                    self.n_lambda = 0.
-                    return None
-            else:
-                obs_file = self.directory + self.conf['spectr_obs']+'.spr.gz'
-                if not os.path.isfile(obs_file):
-                    obs_file = self.directory + self.conf['spectr_obs']+'.spr'
-                try:                
-                    self.obs = np.loadtxt(obs_file)
-                    log_.message('Observations read from {0}'.format(obs_file),
-                                        calling = self.calling)
-                except:
-                    self.f = None
-                    log_.warn('Observations NOT read from {0}'.format(obs_file),
-                                        calling = self.calling)
-                    self.n_lambda = 0.
-                    return None
-                
-                if bool(self.get_conf('data_incl_w', undefined = False)):
-                    self.w = self.obs[:,0]
-                    self.f = self.obs[:,1]
-                else:
-                    self.f = self.obs
-                    self.w = None
-                
-                if bool(self.get_conf('reverse_spectra', undefined=False)) :
-                        self.f = self.f[::-1]
+            self.set_conf('plot_ax3', False)   
+
         if self.get_conf('wave_unit') == 'mu':
             self.w *= 10000.
         self.n_lambda = len(self.f)
@@ -653,7 +663,6 @@ class spectrum(object):
                 self.set_conf('obj_velo', 0.0)
                 log_.warn('Error interpolating radial velocity; set to 0.0', calling = self.calling)
             
-
         self.obj_velo = self.get_conf("obj_velo", undefined=0.)
         self.w *= 1 - self.obj_velo/(CST.CLIGHT/1e5)
         log_.message('Wavelenghts shifted by Vel = {} km/s'.format(self.conf["obj_velo"]),
@@ -1009,6 +1018,7 @@ class spectrum(object):
         sp_theo['spectr'] *= 0.0 
         sp_theo['correc'] *= 0.0
         
+        #TODO parallelize this loop
         for raie in liste_raies:
             #sp_tmp = self.profil_emis(self.w, raie, self.conf['lambda_shift'])
             sp_tmp = self.get_profile(raie)
@@ -1031,6 +1041,7 @@ class spectrum(object):
                     sp_synth += this_line
                 sp_theo['spectr'][tab_tmp] +=  this_line
                 sp_theo['correc'][tab_tmp] = 1.0
+                log_.debug('doing line {}'.format(raie['num']), calling=self.calling)
         tt = (sp_theo['correc'] != 0.)
         for key in ('correc', 'raie_ref', 'spectr'):
             sp_theo[key] = sp_theo[key][tt]
