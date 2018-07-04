@@ -59,7 +59,10 @@ def change_size(tab, fact):
         return tab.copy()
     size = len(tab)
     old_tab_pix = np.linspace(0, size-1, size)
-    new_tab_pix = np.linspace(0, size-1, size*fact)
+
+    # mvfc: number of intervals, size-1, times fact, plus 1 for the last point
+    new_tab_pix = np.linspace(0, size-1, (size-1)*fact+1)
+
     interp = interpolate.interp1d(old_tab_pix, tab)
     tab_out = interp(new_tab_pix)
     return tab_out
@@ -67,8 +70,19 @@ def change_size(tab, fact):
 def rebin(tab, fact):
     if fact == 1:
         return tab.copy()
+      
+    # mvfc: 
+    if fact%2 != 1 or fact < 0:
+        pyssn.log_.error('Rebinning factor, fact = {0}, must be an odd positive integer'.format(fact), 
+                         calling = 'pyssn.misc.rebin')
+        return None    
+    # mvfc: replicates the firt and the last bins
+    while len(tab) % fact != 0:
+        tab = np.append(tab, tab[-1])
+        tab = np.insert(tab, 0, tab[0])
+
     if len(tab) % fact != 0:
-        pyssn.log_.error('Dimension of tab ({0}) is not a multiple of fact ({1})'.format(len(tab), fact), 
+        pyssn.log_.error('Dimension of modified tab ({0}) is not a multiple of fact ({1})'.format(len(tab), fact), 
                          calling = 'pyssn.misc.rebin')
         return None
     return tab.reshape(len(tab)/fact, fact).sum(1) / fact

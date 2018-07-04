@@ -28,6 +28,7 @@ from ..core.spectrum import spectrum
 from ..utils.misc import get_parser
 
 from collections import OrderedDict
+import time
 
 log_.level = 4
 
@@ -115,6 +116,16 @@ class AppForm(QtGui.QMainWindow):
         self.axes3 = None
         self.fig = None
         self.init_file_name = init_filename
+        self.init_line_num = None
+        self.init_ion = None
+        self.init_xmin = None
+        self.init_xmax = None
+        self.init_y1min = None
+        self.init_y1max = None
+        self.init_y3min = None
+        self.init_y3max = None
+        self.init_legend_fontsize = None
+        self.init_legend_loc = None
         self.instr_prof_file = None
         self.call_on_draw = True
         self.cursor_on = False
@@ -140,6 +151,7 @@ class AppForm(QtGui.QMainWindow):
         self.nearbyLines_dialog = None
         self.line_info_dialog = None
         self.fig_prof = None
+        self.green_tick_shown = False
 
     def closeEvent(self, evnt):
         if self.cont_pars_dialog is not None:
@@ -148,6 +160,7 @@ class AppForm(QtGui.QMainWindow):
             self.nearbyLines_dialog.close()
         if self.line_info_dialog is not None:
             self.line_info_dialog.close()
+            self.line_info_table.close()
         
     def image_extension_list(self):
         filetypes = self.canvas.get_supported_filetypes()
@@ -932,6 +945,16 @@ class AppForm(QtGui.QMainWindow):
         except ValueError:
             return False
     
+    def isPositiveInteger(self, str_):
+        if self.isInteger(str_):
+            n = int(str_)
+            if n > 0:
+                return True
+            else:
+                return False
+        else:        
+            return False
+    
     def isPositiveOdd(self, str_):
         if self.isInteger(str_):
             n = int(str_)
@@ -1116,12 +1139,21 @@ class AppForm(QtGui.QMainWindow):
             f.close()
     
     def plot_tick_at(self, wavelength, ion, line_num):
-        self.on_draw(False)
+        #self.on_draw(False)
+        if self.green_tick_shown:
+            self.on_draw()
+            # to add green tick to legend
+            # self.on_draw(False)
         color = 'green'
         ion = ion.replace('_',' ').strip()
         line_num = line_num.strip().strip('0')
         label = ion + ' (' + line_num.strip() + ')'
-        y1, y2 = self.get_line_tick_lim(self.sp.get_conf('line_tick_pos'))
+        posTick = self.sp.get_conf('line_tick_pos')
+        if posTick == 2:
+            posTick = 0
+        else:
+            posTick = 2
+        y1, y2 = self.get_line_tick_lim(posTick)
         k = self.sp.get_conf('line_tick_ax')    
         if k == 2: 
             k = 1
@@ -1139,10 +1171,11 @@ class AppForm(QtGui.QMainWindow):
         if self.x_plot_lims[1] - wavelength < 2*r*f:
             current_legend_loc = 2
         self.fig.axes[k].axvline( wavelength, y1, y2, color = color, linestyle = 'solid', linewidth = 2.5 ) 
-        self.fig.axes[k].step( [0,0], [0,100], color = color, linestyle = 'solid', label = label, linewidth = 2.5 )
-        self.fig.axes[k].legend(loc=current_legend_loc, fontsize=self.sp.legend_fontsize)
-
+        # uncomment to add green tick to legend
+        # self.fig.axes[k].step( [0,0], [0,100], color = color, linestyle = 'solid', label = label, linewidth = 2.5 )
+        # self.fig.axes[k].legend(loc=current_legend_loc, fontsize=self.sp.legend_fontsize)
         self.fig.canvas.draw()
+        self.green_tick_shown = True
 
     def show_line_info_dialog(self):
 
@@ -1163,6 +1196,7 @@ class AppForm(QtGui.QMainWindow):
                 self.line_info_dialog_y = self.line_info_dialog.pos().y()
     
         def save_initial_plot_pars():
+            self.init_line_num = self.line_info_box.text()
             self.init_ion = self.ion_box.text()
             self.init_xmin = self.xlim_min_box.text()
             self.init_xmax = self.xlim_max_box.text()
@@ -1178,6 +1212,7 @@ class AppForm(QtGui.QMainWindow):
             statusBar.setVisible(self.showStatusBar)
          
         def redo_initial_plot():
+            self.line_info_box.setText(self.init_line_num)
             self.ion_box.setText(self.init_ion)
             self.xlim_min_box.setText(self.init_xmin)
             self.xlim_max_box.setText(self.init_xmax)
@@ -1192,7 +1227,7 @@ class AppForm(QtGui.QMainWindow):
             #self.draw_ion()
 
         def do_reset():
-            self.curr_line_num = self.line_info_box.text()
+            self.curr_line_num = self.init_line_num
             get_info(self.curr_line_num)
             fill_line_info_table()
             redo_initial_plot()
@@ -1233,6 +1268,7 @@ class AppForm(QtGui.QMainWindow):
             row = item.row()
             col = item.column()
             s = item.text()
+            l_shift_refline = np.float(self.sp.fieldStrFromLine(self.refline,'l_shift'))
             if col == self.sp.fields.index('lambda'):
                 wavelength = np.float(s)
                 ion = str(self.line_info_table.item(row, 1).text())
@@ -1242,7 +1278,7 @@ class AppForm(QtGui.QMainWindow):
                 if wavelength > min_wave and wavelength < max_wave:
                     c = self.sp.fields.index('l_shift')
                     l_shift = np.float(self.line_info_table.item(row, c).text())
-                    wavelength = wavelength + l_shift
+                    wavelength = wavelength + l_shift + l_shift_refline
                     r =  (self.x_plot_lims[1] - self.x_plot_lims[0])/2
                     f = 0.05
                     if (wavelength < self.x_plot_lims[0] + f*r) or (wavelength > self.x_plot_lims[1] - f*r):
@@ -1257,11 +1293,28 @@ class AppForm(QtGui.QMainWindow):
                         self.restore_axes()
                     self.plot_tick_at(wavelength, ion, line_num)
                 elif wavelength == 1:
-                    reftype = str(self.line_info_table.item(row-2, 0).text())
-                    if reftype == 'Subreference line:':
-                        self.plot_line_ticks_for(line_num, ion, self.subsatellites)
-                    elif reftype == 'Reference line:':
-                        self.plot_line_ticks_for(line_num, ion, self.satellites)
+                    if str(self.line_info_table.item(row, self.sp.fields.index('ref')).text()) == '0000000000000':
+                        satellites = self.satellites
+                    else:
+                        satellites = self.sp.read_satellites(self.sp.phyat_file, int(line_num))
+                        satellites = add_satellites_of_subreferences(satellites)
+                    SelectedSatellites = []
+                    max_wave = np.float(self.sp_max_box.text())
+                    min_wave = np.float(self.sp_min_box.text())
+                    for i in range(0, len(satellites)):
+                        wavelength = np.float(self.sp.fieldStrFromLine(satellites[i],'lambda'))
+                        if (wavelength > min_wave) and (wavelength < max_wave):
+                            SelectedSatellites.append(satellites[i])
+                    satellites = SelectedSatellites
+                    self.plot_line_ticks_for(satellites, ion, line_num, self.refline)
+                else:
+                    if self.green_tick_shown:
+                        self.on_draw()
+                    self.green_tick_shown = False
+            else:
+                if self.green_tick_shown:
+                    self.on_draw()
+                self.green_tick_shown = False
 
         def isRefLine(line):
             s = self.sp.fieldStrFromLine(line,'ref').strip()
@@ -1316,7 +1369,7 @@ class AppForm(QtGui.QMainWindow):
 
         def add_satellites_of_subreferences(satellites):
             subref_list = []
-            true_satellites = satellites
+            all_satellites = satellites
             for sat_line in satellites:
                 if isSubRefLine(sat_line):
                     subref_list.append(sat_line)
@@ -1327,9 +1380,11 @@ class AppForm(QtGui.QMainWindow):
                 for line in new_satellites:
                     if isSubRefLine(line):
                         subref_list.append(line)
-                true_satellites = true_satellites + new_satellites
                 i += 1
-            return true_satellites        
+                for line in new_satellites:
+                    if not line in all_satellites:
+                        all_satellites.append(line) 
+            return all_satellites        
 
         def get_info(line_num):  
             line = None    
@@ -1376,12 +1431,12 @@ class AppForm(QtGui.QMainWindow):
                         if cosmetic_line is not None:
                             subsat[i] = cosmetic_line
                 subsatellites = subsatellites + subsat
+            subsatellites = add_satellites_of_subreferences(subsatellites)
             n_subsat = len(subsatellites)
             if refline is not None:
                 refline_num = self.sp.fieldStrFromLine(refline,'num')
                 satellites = self.sp.read_satellites(self.sp.phyat_file, int(refline_num))
                 satellites = add_satellites_of_subreferences(satellites)
-                do_sort(satellites)
                 n_sat = len(satellites)
                 if do_cosmetics:
                     for i in range(0,n_sat):
@@ -1442,6 +1497,7 @@ class AppForm(QtGui.QMainWindow):
                         SelectedSubSatellites.append(subsatellites[i])
                 n_sat = len(SelectedSatellites)
                 n_subsat = len(SelectedSubSatellites)
+            self.line_info_table.clearContents()
             self.line_info_table.setRowCount(n_sat+n_subsat+20)
             self.line_info_table.clearSpans()
             k = 0
@@ -1463,7 +1519,10 @@ class AppForm(QtGui.QMainWindow):
                     sat_list.append([k,n_subsat])
                     k += 2
                     for i in range(0,n_subsat):
-                        fill_data(k+i, SelectedSubSatellites[i], 'sat')
+                        if isSubRefLine(SelectedSubSatellites[i]):
+                            fill_data(k+i, SelectedSubSatellites[i], 'subref')
+                        else:
+                            fill_data(k+i, SelectedSubSatellites[i], 'sat')
                     k += n_subsat
             fill_text(k,'Reference line:')
             k += 2
@@ -1475,7 +1534,10 @@ class AppForm(QtGui.QMainWindow):
                 sat_list.append([k,n_sat])               
                 k += 2
                 for i in range(0,n_sat):
-                    fill_data(k+i, SelectedSatellites[i], 'sat')
+                    if isSubRefLine(SelectedSatellites[i]):
+                        fill_data(k+i, SelectedSatellites[i], 'subref')
+                    else:
+                        fill_data(k+i, SelectedSatellites[i], 'sat')
                 k += n_sat
             self.line_info_table.setRowCount(k)
             self.line_info_table.resizeColumnsToContents()
@@ -1494,22 +1556,6 @@ class AppForm(QtGui.QMainWindow):
                 n = i[1]
                 fill_text(k, str(n) + ' satellites:' + s0)
             self.line_info_table.blockSignals(False)
-
-            if line is not None:
-                baseLine = line
-                linesToTick = [line]
-            elif subrefline is not None:
-                baseLine = subrefline[0]
-                linesToTick = SelectedSubSatellites
-            else:            
-                baseLine = refline
-                linesToTick = SelectedSatellites
-
-            line_num = self.sp.fieldStrFromLine(baseLine,'num')
-            ion = self.sp.fieldStrFromLine(baseLine,'id')
-            if len(linesToTick) > 0:
-                self.plot_line_ticks_for(line_num, ion, linesToTick)
-            return
         
         def on_itemChanged():
             self.line_info_table.blockSignals(True)
@@ -1589,6 +1635,11 @@ class AppForm(QtGui.QMainWindow):
         statusBar.setVisible(self.showStatusBar)
         self.show_satellites = 1
         get_window_size_and_position()
+
+        if self.line_info_dialog is not None:
+            self.line_info_dialog.close()
+            self.line_info_table.close()
+
         self.line_info_dialog = QtGui.QDialog()
         self.line_info_dialog.resize(self.line_info_dialog_width,self.line_info_dialog_height)
         self.line_info_dialog.move(self.line_info_dialog_x,self.line_info_dialog_y)
@@ -1712,6 +1763,10 @@ class AppForm(QtGui.QMainWindow):
                 line_num = str(self.nearbyLines_table.item(row,0).text())
                 ion = str(self.nearbyLines_table.item(row,1).text())
                 self.plot_tick_at(wavelength, ion, line_num)
+            else:
+                if self.green_tick_shown:
+                    self.on_draw()
+                    self.green_tick_shown = False
                
         def do_selection():
             selectedItems = self.nearbyLines_table.selectedItems()
@@ -1919,20 +1974,26 @@ class AppForm(QtGui.QMainWindow):
                 y2 = 0.95
         return y1, y2
 
-    def plot_line_ticks_for(self, line_num, ion, lines):
+    def plot_line_ticks_for(self, satellites, ion, line_num, refline):
         self.on_draw()
         k = self.sp.get_conf('line_tick_ax')    
-        if self.show_line_ticks_action.isChecked():
+        posTick = self.sp.get_conf('line_tick_pos')
+        if posTick == 2:
+            posTick = 0
+        else:
+            posTick = 2
+        y1, y2 = self.get_line_tick_lim(posTick)
+        #if self.show_line_ticks_action.isChecked() and len(satellites) > 0:
+        if len(satellites) > 0:
             if ( k == 0 ):
-              y1, y2 = self.get_line_tick_lim(self.sp.get_conf('line_tick_pos'))
-              self.sp.plot_line_ticks_for(line_num, ion, lines, self.axes, y1, y2, self.x_plot_lims[0], self.x_plot_lims[1])
+              self.sp.plot_line_ticks_for(satellites, ion, line_num, refline, self.axes, y1, y2, self.x_plot_lims[0], self.x_plot_lims[1])
             elif ( k == 1 ):
                 if self.residual_GroupBox.isChecked():
                     self.sp.plot_ax3(self.axes3)
-                    y1, y2 = self.get_line_tick_lim(self.sp.get_conf('line_tick_pos'))
-                    self.sp.plot_line_ticks_for(line_num, ion, lines, self.axes3, y1, y2)
+                    self.sp.plot_line_ticks_for(satellites, ion, line_num, refline, self.axes3, y1, y2)
             elif ( k == 2 ):
-                self.sp.plot_line_ticks_for(line_num, ion, lines, self.axes2, 0.2, 0.8)     
+                self.sp.plot_line_ticks_for(satellites, ion, line_num, refline, self.axes2, 0.2, 0.8)     
+            self.green_tick_shown = True
         self.canvas.draw()                
                              
     def on_draw(self, show_legend=True):
@@ -2638,46 +2699,72 @@ class AppForm(QtGui.QMainWindow):
                      self.sp.config_file.split('/')[-1], 
                      self.sp.phyat_file.split('/')[-1],
                      self.sp.get_conf('fic_modele').split('/')[-1]))
-                    
-    # experiment
+
     def test_init_file(self):   
-        
+
         if self.sp == None:
             self.showErrorBox = False
         self.showErrorBox = True
 
-        f = open(self.init_file_name, 'r')
-        lines = f.readlines()
-        f.close()
+        invalidCommands = []
+        if os.path.isfile(self.init_file_name):
+            f = open(self.init_file_name, 'r')
+            lines = f.readlines()
+            f.close()
+        else:
+            invalidCommands.append('\nFile not found')
+            lines = []
+
         triple_quoted_string_found = False
         newlines = []
         rows = []
         for i in range(len(lines)):
-            line = lines[i]
-            if line.startswith('"""'):
-                triple_quoted_string_found = not triple_quoted_string_found
+            line = lines[i].split('#')[0].rstrip()
             k = line.find('=')
-            if k > -1 and not line.startswith('#') and not triple_quoted_string_found:
-                newlines.append(line.split('#')[0].rstrip())
-                rows.append(i+1)
+            if not (line.strip().startswith('#') or len(line.strip()) == 0):
+                if '"""' in line:
+                    triple_quoted_string_found = not triple_quoted_string_found
+                    if triple_quoted_string_found:
+                        newlines.append(line.split('#')[0].rstrip())
+                        rows.append(i+1)
+                    else:
+                        s = line.split('#')[0].rstrip()
+                        if len(s.strip()) > 0:
+                            newlines[-1] += '\n' + s
+                else:
+                    if len(line) == len(line.lstrip()) and not triple_quoted_string_found:
+                        newlines.append(line.split('#')[0].rstrip())
+                        rows.append(i+1)
+                    else:
+                        s = line.split('#')[0].rstrip()
+                        if len(s.strip()) > 0:
+                            newlines[-1] += '\n' + s
 
-        invalidCommands = []
         for i in range(len(newlines)):
             line = newlines[i]
+            line_list = line.split('\n')
+            if len(line_list) > 3:
+                line_str = line_list[0] + '\n' + line_list[1] + '\n' + line_list[2] + '\n...'
+            else:
+                line_str = line
+            
             try:
                 exec(line)
             except IndentationError:
-                invalidCommands.append('line {:<4}: {}  (indentation error)'.format(rows[i],line))
+                invalidCommands.append('\nIndentation error, line {}:\n{}'.format(rows[i],line_str))
             except SyntaxError:
-                invalidCommands.append('line {:<4}: {}  (invalid syntax)'.format(rows[i],line))
-            except Exception: 
-                invalidCommands.append('line {:<4}: {}  (missing quotation marks)'.format(rows[i],line))
+                if '"""' in line and triple_quoted_string_found:
+                    invalidCommands.append('\nUnclosed triple-quotation mark, line {}:\n{}'.format(rows[i],line_str))
+                else:
+                    invalidCommands.append('\nInvalid syntax, line {}:\n{}'.format(rows[i],line_str))
+            except(AttributeError, NameError): 
+                invalidCommands.append('\nUndefined variable name or attribute, line {}:\n{}'.format(rows[i],line_str))
             except: 
-                invalidCommands.append('line {:<4}: {}  (unknown error)'.format(rows[i],line))
+                invalidCommands.append('\nUndefined error, line {}:\n{}'.format(rows[i],line_str))
+
         if len(invalidCommands) > 0:
             title = 'Fatal error'
             msg = 'Error in the initialization file {0}: '.format(self.init_file_name)
-            msg = msg + '\n(missing quotation marks for string, invalid float, invalid integer, etc )\n' 
             for line in invalidCommands:
                 msg = msg + '\n' + line
             if self.showErrorBox:
@@ -2690,60 +2777,6 @@ class AppForm(QtGui.QMainWindow):
                 log_.warn('{}: {}'.format(title, msg), calling=self.calling)
             return False
 
-        # Keep only the last input of a field
-        lines = newlines[::-1]
-        newlines = []
-        fields = []
-        for line in lines:
-            i = line.find('=')
-            field = line[:i].strip()
-            if field not in fields:
-                fields.append(field)
-                newlines.append(line)
-        lines = newlines[::-1]
-
-        keys = [line.split('=')[0].strip() for line in lines]
-        values = [line.split('=')[1].strip() for line in lines]
-        if 'spectr_obs' in keys:
-            i = keys.index('spectr_obs')
-            path = values[i]
-        else:
-            i = -1
-        if i > -1 and path is not None:
-            s = path.strip().split('.')
-            spectr_formats = ['fits', 'spr', 'spr.gz']
-            if len(s) == 1:
-                path_list = []
-                for fmt in spectr_formats:
-                    path_list.append(path.strip('\'').strip('\"') + '.' + fmt)
-            else:
-                path_list = [path]
-            pathExists = False
-            fileExt = ''
-            for fmt in spectr_formats:
-                fileExt = fileExt + fmt + '|'
-            fileExt = fileExt[:-1]   
-            filenames = ''
-            for path_ in path_list:
-                filenames = filenames + path_ + ', '
-                pathExists = pathExists or os.path.isfile(path_)
-            filenames = filenames[:-2]
-            if not pathExists:
-                if len(path_list) > 1:
-                    s = ' (with the accepted extensions {})' .format(fileExt)
-                else:
-                    s = ''
-                title = 'Fatal error'
-                msg = 'Error in the initialization file {0}: spectr_obs = {1}\nObserved spectrum file{2} not found.'.format(self.init_file_name, path, s)
-                if self.showErrorBox:
-                    if self.sp == None:
-                        buttom = QtGui.QMessageBox.Abort
-                    else:
-                        buttom = QtGui.QMessageBox.Cancel
-                    QtGui.QMessageBox.critical(self, title, msg, buttom)
-                else:
-                    log_.warn('{}: {}'.format(title, msg), calling=self.calling)
-                return False
         return True
 
     def start_spectrum(self):
@@ -2760,7 +2793,16 @@ class AppForm(QtGui.QMainWindow):
                 return
         
         self.sp = spectrum(config_file=self.init_file_name)
+        if len(self.sp.read_obs_error) > 0:
+            title = 'Error reading observations: '
+            msg = self.sp.read_obs_error
+            if self.showErrorBox:
+                QtGui.QMessageBox.critical(self, title, msg, QtGui.QMessageBox.Ok )
+            else:
+                log_.warn('{}: {}'.format(title, msg), calling=self.calling)
 
+        #sys.exit()
+        
         if ( self.sp.get_conf('fic_cosmetik') is None or
              self.sp.get_conf('fic_cosmetik') == '' ):
             self.sp.set_conf('do_cosmetik', False)
@@ -2865,7 +2907,6 @@ class AppForm(QtGui.QMainWindow):
         new_sp_norm = np.float(self.sp_norm_box.text())
         if old_sp_norm == new_sp_norm:
             return
-        self.sp.set_conf('sp_norm', new_sp_norm)
         log_.message('Changing sp_norm. Old: {}, New: {}'.format(old_sp_norm, new_sp_norm), calling=self.calling)
         self.statusBar().showMessage('Changing intensity scale of the observed spectrum ...') 
         QtGui.QApplication.processEvents() 
@@ -2953,7 +2994,14 @@ class AppForm(QtGui.QMainWindow):
                 log_.warn('{}: {}'.format(title, msg), calling=self.calling)
         if ndiff > 0:
             self.on_draw()
+
+        """
+        mvfc:  QObject::installEventFilter(): Cannot filter events for objects in a different thread.
+               Segmentation fault
+
         self.line_info()
+        """
+
         self.statusBar().showMessage('Update finished.', 4000)
         return ndiff 
 
@@ -3199,20 +3247,22 @@ class AppForm(QtGui.QMainWindow):
             self.y3lim_max_box.setText(yformat.format(precision, y3_lims[1]))
         self.set_plot_limits_and_draw()
 
-    def validate_input(self, editBox, field, title, varType = 'float'):
+    def validate_input(self, editBox, field, title, varType = 'float', showError = True):
         value = editBox.text()
         if value == None:
             return False
         if ( ( varType == 'float' and not self.isFloat(value) ) or \
              ( varType == 'integer' and not self.isInteger(value) ) or \
+             ( varType == 'positive integer' and not self.isPositiveInteger(value) ) or \
              ( varType == 'positive odd integer' and not self.isPositiveOdd(value) ) ):
             msg = '{} should be a {}'.format(field, varType)
             msg.replace('a integer', 'an integer')
             editBox.setFocus()
-            if self.showErrorBox:
-                QtGui.QMessageBox.critical(self, title, msg, QtGui.QMessageBox.Ok )
-            else:
-                log_.warn('{}: {}'.format(title, msg), calling=self.calling)
+            if showError:
+                if self.showErrorBox:
+                    QtGui.QMessageBox.critical(self, title, msg, QtGui.QMessageBox.Ok )
+                else:
+                    log_.warn('{}: {}'.format(title, msg), calling=self.calling)
             return False
         else:
             return True
@@ -3235,11 +3285,11 @@ class AppForm(QtGui.QMainWindow):
     def validate_resol(self):
         return self.validate_input(self.resol_box, 'rebinning factor', 'Input error', 'positive odd integer')
 
-    def validate_xlim_min(self):
-        return self.validate_input(self.xlim_min_box, 'xmin', 'Invalid plot limit', 'float')  
+    def validate_xlim_min(self, showError = True):
+        return self.validate_input(self.xlim_min_box, 'xmin', 'Invalid plot limit', 'float', showError)  
 
-    def validate_xlim_max(self):
-        return self.validate_input(self.xlim_max_box, 'xmax', 'Invalid plot limit', 'float')  
+    def validate_xlim_max(self, showError = True):
+        return self.validate_input(self.xlim_max_box, 'xmax', 'Invalid plot limit', 'float', showError)  
 
     def validate_y1lim_min(self):
         return self.validate_input(self.y1lim_min_box, 'ymin', 'Invalid plot limit', 'float')  
@@ -3309,11 +3359,28 @@ class AppForm(QtGui.QMainWindow):
             return
         old_limit_sp = self.sp.get_conf('limit_sp')
         new_limit_sp = (np.float(self.sp_min_box.text()), np.float(self.sp_max_box.text()))
-        if not self.axes_fixed:
+        if old_limit_sp == new_limit_sp:
+            if not self.axes_fixed:
+                self.xlim_min_box.setText(self.sp_min_box.text())
+                self.xlim_max_box.setText(self.sp_max_box.text())
+                self.set_plot_limits_and_draw()
+            return
+        if not self.validate_xlim_min(False):
+            self.xlim_min_box.setText(self.sp_min_box.text())
+        if not self.validate_xlim_max(False):
+            self.xlim_max_box.setText(self.sp_max_box.text())            
+        if ( np.float(self.xlim_min_box.text()) >= new_limit_sp[1] or
+             np.float(self.xlim_max_box.text()) <= new_limit_sp[0] ):
             self.xlim_min_box.setText(self.sp_min_box.text())
             self.xlim_max_box.setText(self.sp_max_box.text())
-        if old_limit_sp == new_limit_sp:
-            return
+        """
+        else:
+            if not self.axes_fixed:
+                if np.float(self.xlim_min_box.text()) < new_limit_sp[0]:
+                    self.xlim_min_box.setText(self.sp_min_box.text())
+                if np.float(self.xlim_max_box.text()) > new_limit_sp[0]:
+                    self.xlim_max_box.setText(self.sp_max_box.text())
+        """
         self.sp.set_conf('limit_sp', new_limit_sp)
         log_.message('Changing limit_sp. Old: {}, New: {}'.format(old_limit_sp, new_limit_sp), calling=self.calling)
         self.statusBar().showMessage('Changing the synthesis wavelength limits ...') 
@@ -3421,6 +3488,8 @@ def main():
     log_.level = args.verbosity    
     app = QtGui.QApplication(sys.argv)
     form = AppForm(init_filename=args.file, post_proc_file=args.post_proc)
+    #import pdb
+    #pdb.set_trace()
     form.show()
     app.exec_()
     
