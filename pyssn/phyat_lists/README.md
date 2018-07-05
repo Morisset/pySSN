@@ -22,7 +22,9 @@ From a working directory:
 GENERATE THE `liste_phyat` AND `liste_model` FILES
 ====
 
-`pySSN_phyat --abund_file=abunds.dat --ion_frac_file=50_-2_R_ionfrac.dat --phy_cond_file=phy_cond.dat --outputcond_file=outputcond.dat --phyat_file=liste_phyat_test1.dat `
+`pySSN_phyat --abund_file=abunds.dat --ion_frac_file=50_-2_R_ionfrac.dat --phy_cond_file=phy_cond.dat --outputcond_file=outputcond.dat --phyat_file=liste_phyat_test1.dat [--pynebdatafiles=pynebatomicdata.dat]`
+
+The optional pynebdatafiles argument is a file containing the list of atomic data files to be used instead of the default ones.
 
 `pySSN_model --abund_file=abunds.dat --ion_frac_file=50_-2_R_ionfrac.dat --phyat_file=liste_phyat_test1.dat --model_file=liste_model_test1.dat --norm_hbeta=10000 --ion_frac_min=0.0000000001`
 
