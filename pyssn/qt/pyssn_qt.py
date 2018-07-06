@@ -1171,9 +1171,8 @@ class AppForm(QtGui.QMainWindow):
         if self.x_plot_lims[1] - wavelength < 2*r*f:
             current_legend_loc = 2
         self.fig.axes[k].axvline( wavelength, y1, y2, color = color, linestyle = 'solid', linewidth = 2.5 ) 
-        # uncomment to add green tick to legend
-        # self.fig.axes[k].step( [0,0], [0,100], color = color, linestyle = 'solid', label = label, linewidth = 2.5 )
-        # self.fig.axes[k].legend(loc=current_legend_loc, fontsize=self.sp.legend_fontsize)
+        #self.fig.axes[k].step( [0,0], [0,100], color = color, linestyle = 'solid', label = label, linewidth = 2.5 )
+        self.fig.axes[k].legend(loc=current_legend_loc, fontsize=self.sp.legend_fontsize)
         self.fig.canvas.draw()
         self.green_tick_shown = True
 
