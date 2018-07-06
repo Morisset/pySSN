@@ -3308,13 +3308,14 @@ class AppForm(QtGui.QMainWindow):
     def sp_lim_in_range(self):
         xmin = np.float(self.sp_min_box.text())
         xmax = np.float(self.sp_max_box.text())
-        if ( xmin < xmax - 9.999 ) and ( xmin > 3000. ) and ( xmax < 20000.):
+        if ( xmin < xmax - 9.999 ) and ( xmin > 0. ) and ( xmax < 200000000.):
             return True
         else:
             if self.showErrorBox:
-                QtGui.QMessageBox.critical(self, 'Invalid synthesis limits', 'The acceptable values are:\n\n xmax - xmin > 10,\n xmin > 3000,\n xmax < 20000', QtGui.QMessageBox.Ok )
+                QtGui.QMessageBox.critical(self, 'Invalid synthesis limits', 'The acceptable values are:\n\n xmax - xmin > 10,\n xmin > 0,\n xmax < 200000000.', 
+                                           QtGui.QMessageBox.Ok )
             else:
-                log_.warn('{}: {}'.format(title, msg), calling=self.calling)
+                log_.warn('Invalid synthesis limits', 'The acceptable values are:\n\n xmax - xmin > 10,\n xmin > 0,\n xmax < 200000000.', calling=self.calling)
             return False
 
     def validate_synthesis_parameters(self):
