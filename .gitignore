@@ -24,3 +24,4 @@ dist/
 **/phyat.old
 **/liste_phyat_coll.dat
 **/liste_phyat_rec.dat
+pySSN.egg-info/**
