@@ -796,7 +796,10 @@ def make_ionrec_file(phy_cond_file = 'phy_cond.dat', abund_file='asplund_2009.da
         ab_dic[record['elem']] = record['abund']
     ab_dic['3He'] = 1e-3
                 
-    ion_frac_data = np.genfromtxt(ion_frac_file_full, dtype=None, names = 'ion, ion_frac')
+    try:
+        ion_frac_data = np.genfromtxt(ion_frac_file_full, dtype=None, names = 'ion, ion_frac')
+    except:
+        raise NameError('File not found {}'.format(ion_frac_file_full))
     ion_frac_dic = {}
     for record in ion_frac_data:
         ion_frac_dic[record['ion']] = record['ion_frac']
