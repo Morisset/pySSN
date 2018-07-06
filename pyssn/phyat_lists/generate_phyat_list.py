@@ -14,7 +14,7 @@ from ..fortran.runit import run_XSSN
 import pyneb as pn
 from pyneb.utils.misc import roman_to_int, parseAtom
 
-def config_pyneb():
+def config_pyneb(pynebdatafiles=None):
     pn.atomicData.addDataFilePath(os.path.join(os.path.dirname(sys._getframe(1).f_code.co_filename), '../pyneb_data/'))
                                   
     # ***********************
@@ -679,7 +679,17 @@ def config_pyneb():
     # 5p6.4f2 ce_iii    **TBD
     # ...
     # 
-
+    if pynebdatafiles is not None:
+        if os.path.exists(pynebdatafiles):
+            with open(pynebdatafiles, 'r') as f:
+                for l in f:
+                    try:
+                        pn.atomicData.setDataFile(l.strip())
+                        print('Using {}'.format(l.strip()))
+                    except:
+                        raise NameError('Unknown atomic data file {}'.format(l.strip()))
+        else:
+            raise NameError('File {} not found'.format(pynebdatafiles))
 
 
 # ***********************
@@ -726,8 +736,10 @@ def make_all_lists():
     parser.add_argument("-P", "--phy_cond_file", help="Physical conditions file")
     parser.add_argument("-C", "--outputcond_file", help="Output conditions file")
     parser.add_argument("-N", "--ion_only", help="Only change ion", default=None)
+    parser.add_argument("-D", "--pynebdatafiles", help="PyNeb datafiles file", default=None)
     parser.add_argument("-O", "--phyat_file", help="Output phyat file")
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose")
+    
     
     args = parser.parse_args()
     make_all_lists_args(args)
@@ -753,7 +765,7 @@ def make_all_lists_args(args):
         shutil.copyfile(execution_path('liste_phyat_rec.dat', extra='../fortran/'), 
                  args.phyat_file)
     
-    config_pyneb()
+    config_pyneb(args.pynebdatafiles)
     print('PyNeb configured')
     if args.ion_only is None:
         atoms = None

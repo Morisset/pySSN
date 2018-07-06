@@ -125,8 +125,12 @@ def print_phyat_list(atom, tem, den, cut=1e-3, cut_inter=1e-5, ij_ref = None, fi
     
     if type(atom) is str:
         atom = pn.Atom(atom=atom, NLevels=NLevels)
+    try:
+        atom_str = '{}-{}'.format(atom.atomFile, atom.collFile)
+    except:
+        atom_str = ''
     if atom.NLevels == 0:
-        logprint('Atom without data. '.format(atom.atom))
+        logprint('Atom {} without data.'.format(atom_str))
         return None        
     energies = atom.getEnergy(unit='eV')
     N_energies = (energies < E_cut).sum()
@@ -137,9 +141,9 @@ def print_phyat_list(atom, tem, den, cut=1e-3, cut_inter=1e-5, ij_ref = None, fi
         
     if this_NLevels <=1:
         if N_energies <= 1:
-            logprint('Atom without level below {} eV'.format(E_cut))
+            logprint('Atom {} without level below {} eV'.format(atom_str, E_cut))
         else:
-            logprint('Atom without energy levels')
+            logprint('Atom {} without energy levels'.format(atom_str))
         return None
     #print('Doing {} with NLevels={}'.format(atom.atom, this_NLevels))
     atom = pn.Atom(atom=atom.atom, NLevels=this_NLevels)
@@ -269,7 +273,7 @@ def print_phyat_list(atom, tem, den, cut=1e-3, cut_inter=1e-5, ij_ref = None, fi
         hprint('# {} - Temp. = {} K, Dens. = {} cm-3 \n'.format(atom.atom, tem, den))
         for str_ in to_print:
             myprint(str_)
-        logprint('{} lines printed. '.format(N_lines))
+        logprint('{} lines printed. {}'.format(N_lines, atom_str))
     else:
         logprint('No print. ')
         if len(up_lev_list) == 0:
@@ -518,14 +522,19 @@ def make_phyat_list(filename, cut=1e-4, E_cut=20, cut_inter=1e-5,
                 log_file.write('{}, conf={}, '.format(a, conf))
                 if conf not in printed_confs:
                     printed_confs.append(conf)
+                atom_str=''
                 try:
                     atom = pn.Atom(atom=a, NLevels=this_NLevels)
+                    try:
+                        atom_str = '{}-{}'.format(atom.atomFile, atom.collFile)
+                    except:
+                        atom_str = 'atom {} not build'.format(a)
                     if atom.NLevels > 0:
                         do_it = True
                     else:
                         do_it = False
                 except:
-                    log_file.write('NIST missing. \n')
+                    log_file.write('Atom not build. {} \n'.format(atom_str))
                     do_it = False
                 if do_it:
                     tem, den = get_tem_den(atom)
@@ -796,7 +805,10 @@ def make_ionrec_file(phy_cond_file = 'phy_cond.dat', abund_file='asplund_2009.da
         ab_dic[record['elem']] = record['abund']
     ab_dic['3He'] = 1e-3
                 
-    ion_frac_data = np.genfromtxt(ion_frac_file_full, dtype=None, names = 'ion, ion_frac')
+    try:
+        ion_frac_data = np.genfromtxt(ion_frac_file_full, dtype=None, names = 'ion, ion_frac')
+    except:
+        raise NameError('File not found {}'.format(ion_frac_file_full))
     ion_frac_dic = {}
     for record in ion_frac_data:
         ion_frac_dic[record['ion']] = record['ion_frac']

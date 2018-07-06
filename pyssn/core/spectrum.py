@@ -561,16 +561,27 @@ class spectrum(object):
         self.fic_cosmetik = self.get_conf('fic_cosmetik', message='warn')
         self.do_cosmetik = self.get_conf('do_cosmetik')
         cosmetik_arr = []
+        ErrorMsg = ''
         if self.do_cosmetik and self.fic_cosmetik is not None:
-            cosmetik_arr, ErrorMsg = read_data(self.fic_cosmetik)
-            if ErrorMsg == '':
-                log_.message('cosmetik read from {0}'.format(self.directory + self.fic_cosmetik),
-                                calling = self.calling)
+            if os.path.isabs(self.fic_cosmetik):
+                path = self.fic_cosmetik
             else:
-                self.do_cosmetik = False
-                self.set_conf('do_cosmetik', False)        
-                log_.warn('unable to read from {0}'.format(self.directory + self.fic_cosmetik),
-                                calling = self.calling)
+                path = self.directory + self.fic_cosmetik
+            if os.path.isfile(path):
+                if os.path.getsize(path) > 0:
+                    cosmetik_arr, ErrorMsg = read_data(path)
+                    if ErrorMsg == '':
+                        log_.message('cosmetik read from {0}'.format(path), calling = self.calling)
+                    else:
+                        self.do_cosmetik = False
+                        self.set_conf('do_cosmetik', False)        
+                        log_.warn('unable to read from {0}'.format(path), calling = self.calling)
+                else:
+                    log_.warn('empty cosmetic file {0}'.format(path), calling = self.calling)                    
+            else:
+                log_.warn('new cosmetic file {0}'.format(path), calling = self.calling)
+              
+            
         return cosmetik_arr, ErrorMsg
 
     def read_obs(self, k_spline = 1):
@@ -1774,8 +1785,8 @@ class spectrum(object):
 
     def plot1(self):
         f, ax = plt.subplots()
-        ax.step(self.w_ori, self.f_ori, label='Obs')
-        ax.step(self.w_ori, self.sp_synth_lr, label='Synth')
+        ax.step(self.w_ori, self.f_ori, where='mid', label='Obs')
+        ax.step(self.w_ori, self.sp_synth_lr, where='mid', label='Synth')
         ax.legend()
         return f, ax
         
@@ -1854,14 +1865,20 @@ class spectrum(object):
         plt.subplots_adjust(hspace=0.0)
 
     def plot_ax1(self, ax, xlims=None, show_legend=True):
-        
-        ax.step(self.w_ori, self.f_ori, label='Obs', c='red')
-        
+
+        ax.step(self.w_ori, self.f_ori, where='mid', label='Obs', c='red')
+
         if self.sp_synth_lr is None:
             return
-        self.ax1_line_synth = ax.step(self.w_ori, self.sp_synth_lr, label='Synth', c='blue', linewidth=2)[0]
+
+        self.ax1_line_synth = ax.step(self.w_ori, self.sp_synth_lr, where='mid', label='Synth', c='blue', linewidth=2)[0]
+
+        # just to show
+        #ax.plot(self.w_ori, self.f_ori, 'ro')
+        #ax.plot(self.w_ori, self.sp_synth_lr, 'ro', c='blue')
+        
         if self.hr:
-            ax.step(self.w, self.sp_synth, c='green')
+            ax.step(self.w, self.sp_synth, where='mid', c='green')
 
         selected_ions = self.get_conf('selected_ions')
         self.set_selected_ions_data()
@@ -1885,7 +1902,12 @@ class spectrum(object):
                 y = 0
                 for i in range(0,len(i_ion)):
                     y = y + self.sp_theo['spectr'][i_ion][i]
-                ax.step(self.w, self.cont+y, c=color, label=label, linestyle=linestyle )[0]
+                ax.step(self.w, self.cont+y, where='mid', c=color, label=label, linestyle=linestyle )[0]
+                
+                # just to show
+                #ax.step(self.w, self.cont+y, where='mid', c=color, label=label+' where=mid', linestyle=linestyle )[0]
+                #ax.step(self.w, self.cont+y, c='green', label=label+' default, where=pre', linestyle=linestyle )[0]
+                #ax.plot(self.w, self.cont+y, 'ro', c=color)
 
         if show_legend:
             ax.legend(loc=self.legend_loc, fontsize=self.legend_fontsize)
@@ -1948,28 +1970,30 @@ class spectrum(object):
         log_.debug('Line ticks drawn on ax ID {}'.format(id(ax)), calling=self.calling)
 
     
-    def plot_line_ticks_for(self, line_num, ion, lines, ax, y1, y2, wmin=0., wmax=20000.):
+    def plot_line_ticks_for(self, satellites, ion, line_num, refline, ax, y1, y2, wmin=0., wmax=20000.):
         if self.sp_synth_lr is None:
             return
+        l_shift_refline = np.float(self.fieldStrFromLine(refline,'l_shift'))
         ion = ion.replace('_',' ').strip()
         line_num = line_num.strip().strip('0')
         label = ion + ' (' + line_num + ')'
         color = 'green'
-        for line in lines:
+        for line in satellites:
             wl = np.float(self.fieldStrFromLine(line,'lambda')) + \
                  np.float(self.fieldStrFromLine(line,'l_shift')) + \
-                 self.conf['lambda_shift']
+                 self.conf['lambda_shift'] + l_shift_refline
             if (wmin < wl) and (wl < wmax): 
                 ax.axvline( wl, ymin=y1, ymax=y2, color = color, linestyle = 'solid', linewidth = 2.5 )
-        ax.step( [0,0], [0,100], color = color, linestyle = 'solid', label = label, linewidth = 2.5 )
-        ax.legend(loc=self.legend_loc, fontsize=self.legend_fontsize)
+        # uncomment to add green tick to legend
+        # ax.step( [0,0], [0,100], color = color, linestyle = 'solid', label = label, linewidth = 2.5 )
+        # ax.legend(loc=self.legend_loc, fontsize=self.legend_fontsize)
         log_.debug('Line ticks drawn on ax ID {} for line {}'.format(id(ax), line_num), calling=self.calling)
 
     def plot_ax3(self, ax):     
         if self.sp_synth_lr is not None:
-            ax.step(self.w, self.f - self.cont, c = 'red', linestyle='--')
+            ax.step(self.w, self.f - self.cont, where='mid', c = 'red', linestyle='--')
             ax.plot((0, 1e10), (0.0, 0.0), c='green')
-            ax_line_diff = ax.step(self.w_ori, self.f_ori - self.sp_synth_lr, c='blue')[0]
+            ax_line_diff = ax.step(self.w_ori, self.f_ori - self.sp_synth_lr, where='mid', c='blue')[0]
             log_.debug('ax3 drawn on ax ID {}'.format(id(ax)), calling=self.calling)
         
     def update_plot2(self):
@@ -1979,7 +2003,7 @@ class spectrum(object):
         if self.sp_synth_lr is None:
             return
         self.ax1_line_synth.remove()
-        self.ax1_line_synth = self.ax1.step(self.w_ori, self.sp_synth_lr, label='Synth', c='blue', linewidth=2)[0]
+        self.ax1_line_synth = self.ax1.step(self.w_ori, self.sp_synth_lr, where='mid', label='Synth', c='blue', linewidth=2)[0]
         self.ax1.legend(loc=self.legend_loc)
         if self.plot_magenta is not None:
             try:
@@ -1990,7 +2014,7 @@ class spectrum(object):
             if self.label_magenta is None:
                 self.label_magenta = self.sp_theo['raie_ref'][i_magenta]['id']
             if len(i_magenta) == 1:
-                self.ax1_line_magenta = self.ax1.step(self.w, self.cont+self.sp_theo['spectr'][i_magenta][0], c='magenta', 
+                self.ax1_line_magenta = self.ax1.step(self.w, self.cont+self.sp_theo['spectr'][i_magenta][0], where='mid', c='magenta', 
                                                       label=self.label_magenta, linestyle='--')[0]
         if self.plot_cyan is not None:
             try:
@@ -2001,7 +2025,7 @@ class spectrum(object):
             if self.label_cyan is None:
                 self.label_cyan = self.sp_theo['raie_ref'][i_cyan]['id']
             if len(i_cyan) == 1:
-                self.ax1_line_cyan = self.ax1.step(self.w, self.cont+self.sp_theo['spectr'][i_cyan][0], c='cyan', 
+                self.ax1_line_cyan = self.ax1.step(self.w, self.cont+self.sp_theo['spectr'][i_cyan][0], where='mid', c='cyan', 
                                                    label=self.label_cyan, linestyle='-')[0]
         
         for i in np.arange(len(self.ax2.texts)):
@@ -2022,7 +2046,7 @@ class spectrum(object):
  
         if self.do_ax3:
             #self.ax3_line_diff.remove()
-            self.ax3_line_diff = self.ax3.step(self.w_ori, self.f_ori - self.sp_synth_lr, c='blue')[0]
+            self.ax3_line_diff = self.ax3.step(self.w_ori, self.f_ori - self.sp_synth_lr, where='mid', c='blue')[0]
         
         self.fig1.canvas.draw()
  
