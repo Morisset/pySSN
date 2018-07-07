@@ -6,6 +6,12 @@
 # set here or sometime in the control panel.
 # This is a python script that will be executed.
 
+# Qt widget style
+qt_style = 0
+
+# Enable tooltips of Qt widgets
+enable_tooltips = True
+
 # Verbosity level:
 # 1: only errors
 # 2: errors and warnings
@@ -43,7 +49,6 @@ reverse_spectra = False
 # Rebinning factor applied to the observations before the synthesis.
 # Nouveau mode.
 resol = 1  # Resol must be small if the obs resol is large
-
 
 #-------------------------------------------------------------------
 #   Synthesis
