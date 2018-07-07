@@ -283,5 +283,12 @@ def split_atom(atom_str):
     return iso, elem, ion
     
     
-
+def extract_line_type(filename, ltype=0):
+    
+    with open(filename, 'r') as f:
+        for l in f:
+            if l[5] == ltype:
+                print(l[:-1])
+                
+    
     
