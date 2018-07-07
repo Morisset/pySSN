@@ -332,13 +332,13 @@ class AppForm(QtGui.QMainWindow):
         self.lineIDs_GroupBox.setChecked(True)
         
         self.connect(self.lineIDs_GroupBox, QtCore.SIGNAL('clicked()'), self.show_lines_clicked)
-        self.lineIDs_GroupBox.setToolTip( 'Check to show ticks at the central positions of the spectral lines and plot the lines of selected ions' )        
+        self.lineIDs_GroupBox_ToolTip = 'Check to show ticks at the central positions of the spectral lines and plot the lines of selected ions'
 
         self.residual_GroupBox = QtGui.QGroupBox("Plot of residuals")
         self.residual_GroupBox.setCheckable(True)
         self.residual_GroupBox.setChecked(True)
         self.connect(self.residual_GroupBox, QtCore.SIGNAL('clicked()'), self.make_axes)
-        self.residual_GroupBox.setToolTip( 'Check to display the residual plot' )        
+        self.residual_GroupBox_ToolTip = 'Check to display the residual plot'
 
         self.adjust_button = QtGui.QPushButton("Update")
         self.adjust_button.setChecked(False)
@@ -429,85 +429,85 @@ class AppForm(QtGui.QMainWindow):
                            }""")
         
         s = 'Click to execute the synthesis from the beginning.'
-        self.run_button.setToolTip(s)        
+        self.run_button_ToolTip = s        
         
         s = 'Click to update synthesis with changes in line intensities, profiles, and continuum parameters.'
-        self.adjust_button.setToolTip(s)        
+        self.adjust_button_ToolTip = s
         
         s = 'Enter line number to get information on\n' \
             'the reference line and on its satellites.'
-        self.line_info_box.setToolTip(s)        
+        self.line_info_box_ToolTip = s        
 
         s =  'Color excess E(B-V)\n\n' \
              'Set with: \n' \
              '    e_bv = <float>\n\n' \
              'Comment: \n' \
             u'    E(B-V) \u2248 C(H\u03B2) / 1.5'
-        self.ebv_box.setToolTip(s)  
+        self.ebv_box_ToolTip = s  
         
         s = 'Radial velocity in km/s\n\n' \
             'Set with: \n' \
             '    obj_velo = <float>'
-        self.obj_velo_box.setToolTip(s) 
+        self.obj_velo_box_ToolTip = s 
 
         s = 'Minimum wavelength of the synthetic spectrum (in angstroms)\n\n' \
             'Set with:  \n' \
             '    limit_sp = (<xmin>, <xmax>)'
-        self.sp_min_box.setToolTip(s)        
+        self.sp_min_box_ToolTip = s        
 
         s = 'Maximum wavelength of the synthetic spectrum  (in angstroms)\n\n' \
             'Set with:  \n' \
             '    limit_sp = (<xmin>, <xmax>)'
-        self.sp_max_box.setToolTip(s)        
+        self.sp_max_box_ToolTip = s        
 
         s = 'Minimum wavelength in the plots of spectra and residuals  (in angstroms)\n\n' \
             'Set with:  \n' \
             '    x_plot_lims = (<xmin>, <xmax>)'
-        self.xlim_min_box.setToolTip(s)        
+        self.xlim_min_box_ToolTip = s        
 
         s = 'Maximum wavelength in the plots of spectra and residuals  (in angstroms)\n\n' \
             'Set with:  \n' \
             '    x_plot_lims = (<xmin>, <xmax>)'
-        self.xlim_max_box.setToolTip(s)        
+        self.xlim_max_box_ToolTip = s        
 
         s = 'Minimum ordinate in the plot of spectra, in units of relative intensity \n\n' \
             'Set with:  \n' \
             '    y1_plot_lims = (<ymin>, <ymax>)'
-        self.y1lim_min_box.setToolTip(s)        
+        self.y1lim_min_box_ToolTip = s        
 
         s = 'Maximum ordinate in the plot of spectra, in units of relative intensity\n\n' \
             'Set with:  \n' \
             '    y1_plot_lims = (<ymin>, <ymax>)'
-        self.y1lim_max_box.setToolTip(s)        
+        self.y1lim_max_box_ToolTip = s        
 
         s = 'Minimum ordinate in the plot of residuals, in units of relative intensity\n\n' \
             'Set with:  \n' \
             '    y3_plot_lims = (<ymin>, <ymax>)'
-        self.y3lim_min_box.setToolTip(s)        
+        self.y3lim_min_box_ToolTip = s        
 
         s = 'Maximum ordinate in the plot of residuals, in units of relative intensity\n\n' \
             'Set with:  \n' \
             '    y3_plot_lims = (<ymin>, <ymax>)'
-        self.y3lim_max_box.setToolTip(s)        
+        self.y3lim_max_box_ToolTip = s        
         
         s = 'Check to retain the current limits of the plots while zooming and panning.'
-        self.fix_axes_cb.setToolTip(s)        
+        self.fix_axes_cb_ToolTip = s        
         
         s = 'Check to show only lines with intensities above cut. \n\n' \
              'Set with: \n' \
              '    show_selected_intensities_only = <boolean>'
-        self.cut_cb.setToolTip(s)        
+        self.cut_cb_ToolTip = s        
 
         s = 'Check to show only lines of selected ions. \n\n' \
              'Set with: \n' \
              '    show_selected_ions_only = <boolean>'
-        self.ion_cb.setToolTip(s)        
+        self.ion_cb_ToolTip = s        
         
         s = 'Normalization factor, ratio between the intensity and the \n' \
             u'observed flux of the reference line, usually 10\u2074/F(H\u03B2)\n\n' \
              'Set with: \n' \
              '    sp_norm = <float>'
-        self.sp_norm_box.setToolTip(s)        
+        self.sp_norm_box_ToolTip = s        
 
         s = 'Rebinning factor, the odd integer factor by which the number of points \n' \
             'of the original spectrum is multiplied in the rebinning process\n\n' \
@@ -515,23 +515,24 @@ class AppForm(QtGui.QMainWindow):
             '    resol = <integer>\n\n' \
             'Usage: \n' \
             '    Set to \'1\' if the resolution of the observed spectrum is large enough' 
-        self.resol_box.setToolTip(s) 
+        self.resol_box_ToolTip = s 
         
         s = 'Minimum relative intensity of lines to be shown. \n\n' \
              'Set with: \n' \
              '    cut_plot2 = <float>'
-        self.cut2_box.setToolTip(s)        
+        self.cut2_box_ToolTip = s        
         
         s = 'Comma-separated list of selected ions, elements, or line numbers to be shown. \n\n' \
              'Set with: \n' \
              '    selected_ions = [<ion1>,<ion2>,...]\n\n' \
              'Examples: \n' \
-             '    \'Fe III\' (or \'Fe_III\') to show the lines of Fe III\n' \
-             '    \'Fe III, Fe IV\' to show the lines of Fe III and Fe IV\n' \
-             '    \'Fe\' to show the lines of all Fe ions\n' \
+             '    \'O III\' (or \'O_III\') to show the lines of O III\n' \
+             '    \'O III*\' (or \'O_III*\') to show the lines of O III, O IIIfl, O III5g, etc\n' \
+             '    \'O III, O IV\' to show the lines of O III and O IV\n' \
+             '    \'O\' to show the lines of all O ions\n' \
              '    \'Fe, N\' to show the lines of all Fe and N ions\n' \
              '    <line number> to show the lines of that same ion'                
-        self.ion_box.setToolTip(s)        
+        self.ion_box_ToolTip = s        
 
         #
         # Layout with box sizers
@@ -618,7 +619,7 @@ class AppForm(QtGui.QMainWindow):
         vbox.addWidget(self.mpl_toolbar)
 
         vbox.addLayout(grid)
-        QtGui.qApp.setStyle('Plastique')
+        
         self.main_frame.setLayout(vbox)
         self.setCentralWidget(self.main_frame)
         
@@ -665,7 +666,7 @@ class AppForm(QtGui.QMainWindow):
         self.line_sort_ag = QtGui.QActionGroup(self, exclusive=True)
 
         self.line_sort_menu = self.file_menu.addMenu("Sort lines by")
-        self.line_sort_menu.setToolTip(s)        
+        self.line_sort_menu_ToolTip = s        
 
         for i in range(len(self.line_sort_list)):
             a = self.line_sort_ag.addAction(QtGui.QAction(self.line_sort_list[i], self, checkable=True))
@@ -688,7 +689,7 @@ class AppForm(QtGui.QMainWindow):
         s = s + '\nSet with:\n' + '    line_field_print = <list>'
 
         self.line_field_menu = self.file_menu.addMenu("Show fields")
-        self.line_field_menu.setToolTip(s)        
+        self.line_field_menu_ToolTip = s        
 
         for i in range(len(items)):
             a = self.create_action(items[i], 
@@ -801,7 +802,7 @@ class AppForm(QtGui.QMainWindow):
             s = s + '    ' + str(i) + ' - ' + self.line_tick_ax_list[i] + '\n'
         s = s + '\nSet with:\n' + '    line_tick_ax = <integer>'
         self.line_tick_ax_ag = QtGui.QActionGroup(self, exclusive=True)
-        self.line_tick_ax_menu.setToolTip(s)        
+        self.line_tick_ax_menu_ToolTip = s        
 
         for i in range(len(self.line_tick_ax_list)):
             a = self.line_tick_ax_ag.addAction(QtGui.QAction(self.line_tick_ax_list[i], self, checkable=True))
@@ -816,7 +817,7 @@ class AppForm(QtGui.QMainWindow):
             s = s + '    ' + str(i) + ' - ' + self.line_tick_pos_list[i] + '\n'
         s = s + '\nSet with:\n' + '    line_tick_pos = <integer>'
         self.line_tick_pos_ag = QtGui.QActionGroup(self, exclusive=True)
-        self.line_tick_pos_menu.setToolTip(s)        
+        self.line_tick_pos_menu_ToolTip = s        
 
         for i in range(len(self.line_tick_pos_list)):
             a = self.line_tick_pos_ag.addAction(QtGui.QAction(self.line_tick_pos_list[i], self, checkable=True))
@@ -852,7 +853,7 @@ class AppForm(QtGui.QMainWindow):
         self.diff_lines_ag = QtGui.QActionGroup(self, exclusive=True)
 
         self.diff_lines_menu = self.line_menu.addMenu("Differentiate lines by")
-        self.diff_lines_menu.setToolTip(s)        
+        self.diff_lines_menu_ToolTip = s        
 
         for i in range(len(self.diff_lines_list)):
             a = self.diff_lines_ag.addAction(QtGui.QAction(self.diff_lines_list[i], self, checkable=True))
@@ -886,6 +887,9 @@ class AppForm(QtGui.QMainWindow):
         self.add_actions(self.cont_menu, 
              (self.plot_cont_action, self.cont_action,))
 
+
+        self.settings_menu = self.menuBar().addMenu('Settings')
+
         self.verbosity_list = ['None', 'Errors', 'Errors and warnings', 'Errors, warnings, and comments', 'Debug messages' ]
         s = 'Verbosity level:\n'
         for i in range(len(self.verbosity_list)):
@@ -893,15 +897,37 @@ class AppForm(QtGui.QMainWindow):
         s = s + '\nSet with:\n' + '    log_level = <integer>'
         self.verbosity_ag = QtGui.QActionGroup(self, exclusive=True)
         
-        self.verbosity_menu = self.menuBar().addMenu("Verbosity")
-        self.verbosity_menu.setToolTip(s)        
+        #self.verbosity_menu = self.menuBar().addMenu("Verbosity")
+        self.verbosity_menu = self.settings_menu.addMenu("Verbosity")
+        self.verbosity_menu_ToolTip = s        
 
         for i in range(len(self.verbosity_list)):
             a = self.verbosity_ag.addAction(QtGui.QAction(self.verbosity_list[i], self, checkable=True))
             self.verbosity_menu.addAction(a)
         self.verbosity_ag.triggered.connect(self.verbosity)
 
-        #self.settings_menu = self.menuBar().addMenu("Settings")
+        self.style_list = list(QtGui.QStyleFactory.keys())
+        s = 'Widget styles:\n'
+        for i in range(len(self.style_list)):
+            s = s + '    ' + str(i) + ' - ' + self.style_list[i] + '\n'
+        s = s + '\nSet with:\n' + '    qt_style = <integer>'
+        self.style_ag = QtGui.QActionGroup(self, exclusive=True)
+
+        self.style_menu = self.settings_menu.addMenu('Widget style')
+
+        self.style_menu_ToolTip = s        
+
+        for i in range(len(self.style_list)):
+            a = self.style_ag.addAction(QtGui.QAction(self.style_list[i], self, checkable=True))
+            self.style_menu.addAction(a)
+        self.style_ag.triggered.connect(self.style)
+                
+        self.enable_tooltips_action = self.create_action('Enable tooltips', 
+            slot=self.enable_tooltips_action_clicked, checkable=True, 
+            tip='Check to enable tooltips')
+            
+        self.add_actions(self.settings_menu, 
+            (None, self.enable_tooltips_action))         
         
         self.help_menu = self.menuBar().addMenu("&Help")
         
@@ -1171,7 +1197,8 @@ class AppForm(QtGui.QMainWindow):
         if self.x_plot_lims[1] - wavelength < 2*r*f:
             current_legend_loc = 2
         self.fig.axes[k].axvline( wavelength, y1, y2, color = color, linestyle = 'solid', linewidth = 2.5 ) 
-        #self.fig.axes[k].step( [0,0], [0,100], color = color, linestyle = 'solid', label = label, linewidth = 2.5 )
+        # uncomment to add green tick to legend
+        # self.fig.axes[k].step( [0,0], [0,100], color = color, linestyle = 'solid', label = label, linewidth = 2.5 )
         self.fig.axes[k].legend(loc=current_legend_loc, fontsize=self.sp.legend_fontsize)
         self.fig.canvas.draw()
         self.green_tick_shown = True
@@ -1647,12 +1674,14 @@ class AppForm(QtGui.QMainWindow):
         fieldItems = self.sp.fields
         fieldNames = [ self.sp.field_abbr[item] for item in fieldItems ]
         self.line_info_table.setHorizontalHeaderLabels(fieldNames)
-        for j in range(0,len(fieldItems)):
-            self.line_info_table.horizontalHeaderItem(j).setToolTip(self.sp.field_tip[fieldItems[j]])
+        if self.enable_tooltips_action.isChecked():
+            for j in range(0,len(fieldItems)):
+                self.line_info_table.horizontalHeaderItem(j).setToolTip(self.sp.field_tip[fieldItems[j]])
         self.line_info_table.horizontalHeaderItem(8).setText(u'\u0394v (factor)')
         s = 'For a reference line, it is the thermal broadening parameter, in km/s. \n' \
             'For satellite line, it is the dimensionless correction factor for the thermal broadening parameter with respect to the reference line.'
-        self.line_info_table.horizontalHeaderItem(8).setToolTip(s)
+        if self.enable_tooltips_action.isChecked():
+            self.line_info_table.horizontalHeaderItem(8).setToolTip(s)
         self.line_info_table.horizontalHeaderItem(9).setTextAlignment(QtCore.Qt.AlignLeft)
         self.line_info_table.horizontalHeaderItem(9).setText('  comment')
         init_lines()
@@ -1667,10 +1696,12 @@ class AppForm(QtGui.QMainWindow):
                                                 QtGui.QDialogButtonBox.Reset|
                                                 QtGui.QDialogButtonBox.Apply)
         self.buttonBox.button(QtGui.QDialogButtonBox.Apply).setText("Satellites")
-        self.buttonBox.button(QtGui.QDialogButtonBox.Apply).setToolTip("Click to toggle the satellite lines")
+        if self.enable_tooltips_action.isChecked():
+            self.buttonBox.button(QtGui.QDialogButtonBox.Apply).setToolTip("Click to toggle the satellite lines")
         self.buttonBox.button(QtGui.QDialogButtonBox.Apply).clicked.connect(toggle_show_satellites)
         s = "Click to return to the initial states of the line info dialog and figures"
-        self.buttonBox.button(QtGui.QDialogButtonBox.Reset).setToolTip(s)
+        if self.enable_tooltips_action.isChecked():
+            self.buttonBox.button(QtGui.QDialogButtonBox.Reset).setToolTip(s)
         self.buttonBox.button(QtGui.QDialogButtonBox.Reset).clicked.connect(do_reset)
         self.buttonBox.button(QtGui.QDialogButtonBox.Help).clicked.connect(toggle_statusbar)
         self.buttonBox.rejected.connect(self.line_info_dialog.close)
@@ -1811,16 +1842,18 @@ class AppForm(QtGui.QMainWindow):
         fieldItems = self.sp.fields
         fieldNames = [ self.sp.field_abbr[item] for item in fieldItems ]
         self.nearbyLines_table.setHorizontalHeaderLabels(fieldNames)
-        for j in range(0,len(fieldItems)):
-            self.nearbyLines_table.horizontalHeaderItem(j).setToolTip(self.sp.field_tip[fieldItems[j]])
+        if self.enable_tooltips_action.isChecked():
+            for j in range(0,len(fieldItems)):
+                self.nearbyLines_table.horizontalHeaderItem(j).setToolTip(self.sp.field_tip[fieldItems[j]])
         self.nearbyLines_table.horizontalHeaderItem(9).setTextAlignment(QtCore.Qt.AlignLeft);
         self.nearbyLines_table.horizontalHeaderItem(8).setText(u'\u0394v')
-        s = u'\u0394v is the thermal broadening parameter of the line, in km/s. \n' \
-             'For a single Gaussian profile, it is the half-width of the line at the level of 1/e of the peak, \n' \
-             'related to the full-width at half maximum and the Gaussian standard deviation by:\n\n' \
-            u'     \u0394v = FWHM/(2(ln2)^\u00BD) = FWHM/1.665\n' \
-            u'     \u0394v = \u221A2 \u03C3\n' 
-        self.nearbyLines_table.horizontalHeaderItem(8).setToolTip(s)
+        if self.enable_tooltips_action.isChecked():
+            s = u'\u0394v is the thermal broadening parameter of the line, in km/s. \n' \
+                 'For a single Gaussian profile, it is the half-width of the line at the level of 1/e of the peak, \n' \
+                 'related to the full-width at half maximum and the Gaussian standard deviation by:\n\n' \
+                u'     \u0394v = FWHM/(2(ln2)^\u00BD) = FWHM/1.665\n' \
+                u'     \u0394v = \u221A2 \u03C3\n' 
+            self.nearbyLines_table.horizontalHeaderItem(8).setToolTip(s)
         self.nearbyLines_table.horizontalHeaderItem(9).setText('  comment')
         self.fill_nearbyLines_table()
         self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Help|
@@ -1947,7 +1980,8 @@ class AppForm(QtGui.QMainWindow):
                                                 QtGui.QDialogButtonBox.Close)
         self.buttonBox.button(QtGui.QDialogButtonBox.Help).setDefault(True)
         self.buttonBox.button(QtGui.QDialogButtonBox.Apply).setText('Update')
-        self.buttonBox.button(QtGui.QDialogButtonBox.Apply).setToolTip('Click to update synthesis with changes in the continuum parameters.')
+        if self.enable_tooltips_action.isChecked():
+            self.buttonBox.button(QtGui.QDialogButtonBox.Apply).setToolTip('Click to update synthesis with changes in the continuum parameters.')
         self.buttonBox.button(QtGui.QDialogButtonBox.Apply).clicked.connect(self.adjust)
         self.buttonBox.rejected.connect(self.cont_pars_dialog.close)
         self.buttonBox.button(QtGui.QDialogButtonBox.Save).clicked.connect(self.save_cont_pars)
@@ -2076,6 +2110,76 @@ class AppForm(QtGui.QMainWindow):
              self.sp.legend_fontsize = fontsize_list[i]
         self.make_axes()
 
+    def enable_tooltips_action_clicked(self):
+        if self.enable_tooltips_action.isChecked():   
+            self.enableToolTips()         
+            log_.debug('Tooltips enabled', calling=self.calling)
+        else:
+            self.disableToolTips()
+            log_.debug('Tooltips disabled', calling=self.calling)
+
+    def disableToolTips(self):
+        self.lineIDs_GroupBox.setToolTip('')        
+        self.residual_GroupBox.setToolTip('')        
+        self.run_button.setToolTip('')        
+        self.adjust_button.setToolTip('')        
+        self.line_info_box.setToolTip('')        
+        self.ebv_box.setToolTip('')  
+        self.obj_velo_box.setToolTip('') 
+        self.sp_min_box.setToolTip('')        
+        self.sp_max_box.setToolTip('')        
+        self.xlim_min_box.setToolTip('')        
+        self.xlim_max_box.setToolTip('')        
+        self.y1lim_min_box.setToolTip('')        
+        self.y1lim_max_box.setToolTip('')        
+        self.y3lim_min_box.setToolTip('')        
+        self.y3lim_max_box.setToolTip('')        
+        self.fix_axes_cb.setToolTip('')        
+        self.cut_cb.setToolTip('')        
+        self.ion_cb.setToolTip('')        
+        self.sp_norm_box.setToolTip('')        
+        self.resol_box.setToolTip('') 
+        self.cut2_box.setToolTip('')        
+        self.ion_box.setToolTip('')        
+        self.line_sort_menu.setToolTip('')        
+        self.line_field_menu.setToolTip('')        
+        self.line_tick_ax_menu.setToolTip('')        
+        self.line_tick_pos_menu.setToolTip('')        
+        self.diff_lines_menu.setToolTip('')        
+        self.verbosity_menu.setToolTip('')        
+        self.style_menu.setToolTip('')        
+        
+    def enableToolTips(self):
+        self.lineIDs_GroupBox.setToolTip(self.lineIDs_GroupBox_ToolTip)        
+        self.residual_GroupBox.setToolTip(self.residual_GroupBox_ToolTip)        
+        self.run_button.setToolTip(self.run_button_ToolTip)        
+        self.adjust_button.setToolTip(self.adjust_button_ToolTip)        
+        self.line_info_box.setToolTip(self.line_info_box_ToolTip)        
+        self.ebv_box.setToolTip(self.ebv_box_ToolTip)  
+        self.obj_velo_box.setToolTip(self.obj_velo_box_ToolTip) 
+        self.sp_min_box.setToolTip(self.sp_min_box_ToolTip)        
+        self.sp_max_box.setToolTip(self.sp_max_box_ToolTip)        
+        self.xlim_min_box.setToolTip(self.xlim_min_box_ToolTip)        
+        self.xlim_max_box.setToolTip(self.xlim_max_box_ToolTip)        
+        self.y1lim_min_box.setToolTip(self.y1lim_min_box_ToolTip)        
+        self.y1lim_max_box.setToolTip(self.y1lim_max_box_ToolTip)        
+        self.y3lim_min_box.setToolTip(self.y3lim_min_box_ToolTip)        
+        self.y3lim_max_box.setToolTip(self.y3lim_max_box_ToolTip)        
+        self.fix_axes_cb.setToolTip(self.fix_axes_cb_ToolTip)        
+        self.cut_cb.setToolTip(self.cut_cb_ToolTip)        
+        self.ion_cb.setToolTip(self.ion_cb_ToolTip)        
+        self.sp_norm_box.setToolTip(self.sp_norm_box_ToolTip)        
+        self.resol_box.setToolTip(self.resol_box_ToolTip) 
+        self.cut2_box.setToolTip(self.cut2_box_ToolTip)        
+        self.ion_box.setToolTip(self.ion_box_ToolTip)        
+        self.line_sort_menu.setToolTip(self.line_sort_menu_ToolTip)        
+        self.line_field_menu.setToolTip(self.line_field_menu_ToolTip)        
+        self.line_tick_ax_menu.setToolTip(self.line_tick_ax_menu_ToolTip)        
+        self.line_tick_pos_menu.setToolTip(self.line_tick_pos_menu_ToolTip)        
+        self.diff_lines_menu.setToolTip(self.diff_lines_menu_ToolTip)        
+        self.verbosity_menu.setToolTip(self.verbosity_menu_ToolTip)        
+        self.style_menu.setToolTip(self.style_menu_ToolTip)        
+    
     def show_line_ticks_action_clicked(self):
         self.set_ion()
         if self.plot_lines_action.isChecked():
@@ -2497,7 +2601,8 @@ class AppForm(QtGui.QMainWindow):
             msgBox.setDetailedText(detailedText)
             DelButton = msgBox.addButton(self.tr("Delete"), QtGui.QMessageBox.ActionRole)
             s = 'Delete from the cosmetic file all unchanged lines'
-            DelButton.setToolTip(s)
+            if self.enable_tooltips_action.isChecked():
+                DelButton.setToolTip(s)
             msgBox.addButton(QtGui.QMessageBox.Cancel)
             answer = msgBox.exec_()
             if msgBox.clickedButton() == DelButton:
@@ -2585,12 +2690,13 @@ class AppForm(QtGui.QMainWindow):
             DelAllButton = msgBox.addButton(self.tr("Delete all"), QtGui.QMessageBox.ActionRole)
             DelNotFndButton = msgBox.addButton(self.tr("delete not found"), QtGui.QMessageBox.ActionRole)
             DelUncorButton = msgBox.addButton(self.tr("delete uncorrected"), QtGui.QMessageBox.ActionRole)
-            s = 'Delete from the cosmetic file all lines that still have problems'
-            DelAllButton.setToolTip(s)
-            s = 'Delete from the cosmetic file the lines not found in the atomic database'
-            DelNotFndButton.setToolTip(s)
-            s = 'Delete from the cosmetic file the uncorrected lines'
-            DelUncorButton.setToolTip(s)
+            if self.enable_tooltips_action.isChecked():
+                s = 'Delete from the cosmetic file all lines that still have problems'
+                DelAllButton.setToolTip(s)
+                s = 'Delete from the cosmetic file the lines not found in the atomic database'
+                DelNotFndButton.setToolTip(s)
+                s = 'Delete from the cosmetic file the uncorrected lines'
+                DelUncorButton.setToolTip(s)
             msgBox.addButton(QtGui.QMessageBox.Cancel)
             msgBox.setMaximumHeight(16777215)
             msgBox.setMinimumHeight(800)
@@ -2896,6 +3002,12 @@ class AppForm(QtGui.QMainWindow):
 
         self.readOnlyCells_bg_color = QtGui.QColor('white')
         self.editableCells_bg_color = QtGui.QColor('lightgreen')
+        if self.sp.get_conf('qt_style') >= len(self.style_list):
+            self.sp.set_conf('qt_style', 0)
+        self.style_ag.actions()[self.sp.get_conf('qt_style')].setChecked(True)
+        QtGui.qApp.setStyle(self.style_list[self.sp.get_conf('qt_style')])
+        self.enable_tooltips_action.setChecked(self.sp.get_conf('enable_tooltips', True))
+        self.enable_tooltips_action_clicked()
 
     def sp_norm(self):
         if self.sp is None:
@@ -3066,33 +3178,39 @@ class AppForm(QtGui.QMainWindow):
         sList = []
         s = self.ion_box.text()
         k = s.indexOf(',')
-        while k > 0:
+        while k >= 0:
             s0 = self.get_ion_str(str(s[:k]))
-            sList.append(s0)
+            if s0 != '' and s0 != '*':
+                sList.append(s0)
             s = s[k+1:]
             k = s.indexOf(',')
         s0 = self.get_ion_str(str(s))
-        sList.append(s0)
+        if s0 != '' and s0 != '*':
+            sList.append(s0)
         s = ''
         for s0 in sList:
             s = s + s0 + ', '
         s = s[:-2]
-        
-        for item in sList:
-            if item.ljust(9) in self.sp.liste_raies['id']:
-                if self.sp.true_ion(item) == item:
-                    sList = sList + self.sp.get_all_ions_from_ion(item)
+        for item in sList[:]:
+            sList.remove(item)
+            if item[-1] == '*':
+                item = item[:-1]
+                this_ion_only = False
+            else:
+                this_ion_only = True                
+            if item.ljust(9) in self.sp.liste_raies['id']:                
+                if self.sp.true_ion(item) == item or this_ion_only:
+                    sList = sList + [item]
+                    if not this_ion_only:
+                        sList = sList + self.sp.get_all_ions_from_ion(item)
             elif item.ljust(9) in self.sp.sp_theo['raie_ref']['id']:
-                if self.sp.true_ion(item) == item:
-                    sList = sList + self.sp.get_all_ions_from_ion(item)
+                if self.sp.true_ion(item) == item or this_ion_only:
+                    sList = sList + [item]
+                    if not this_ion_only:
+                        sList = sList + self.sp.get_all_ions_from_ion(item)
             else:
                 ion_list = self.sp.get_ions_from_element(item)
-                if len(ion_list) > 0:
-                    k = sList.index(item)
-                    for ion in ion_list[::-1]:
-                        sList.insert(k, ion)
-                sList.remove(item)
-
+                sList = sList + ion_list
         sList = list(set(sList))
         self.sp.set_conf('selected_ions', sList)
         self.ion_box.setText(s)
@@ -3198,9 +3316,21 @@ class AppForm(QtGui.QMainWindow):
         
     def verbosity(self):
         verbosity = self.verbosity_list.index(self.verbosity_ag.checkedAction().text())
-        log_.debug('Change verbosity from {} to {}'.format(log_.level, verbosity), calling=self.calling)
+        if verbosity == log_.level:
+            return
+        log_.debug('Verbosity changed from {} to {}'.format(log_.level, verbosity), calling=self.calling)
         log_.level = verbosity
         
+    def style(self):
+        new_style_str = self.style_ag.checkedAction().text()
+        old_style_str = self.style_list[self.sp.get_conf('qt_style')]
+        if new_style_str == old_style_str:
+            return
+        style = self.style_list.index(new_style_str)
+        self.sp.set_conf('qt_style', style)
+        QtGui.qApp.setStyle(new_style_str)
+        log_.debug('Widget style changed from {} to {}'.format(old_style_str, new_style_str), calling=self.calling)
+            
     def update_lim_boxes(self):
         xformat = '{:.1f}'
         yformat = '{1:.{0}f}'
