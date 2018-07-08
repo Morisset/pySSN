@@ -1040,7 +1040,7 @@ class spectrum(object):
                     log_.message('Area of {0} {1} could be wrong'.format(raie['id'], raie['lambda']), 
                                       calling = self.calling)
                 intens_pic = raie['i_rel'] * raie['i_cor'] * self.aire_ref / aire
-
+                log_.debug('{} aire = {}'.format(raie['num'], aire), calling=self.calling)
                 if raie['ref'] == 0:
                     tab_tmp = (sp_theo['raie_ref'].num == raie['num'])
                 else:
