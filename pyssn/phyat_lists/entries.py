@@ -21,6 +21,10 @@ def print_asplund(file_out='abunds.dat'):
     file_in = execution_path('asplund_2009.dat')
     copyfile(file_in, file_out)
 
+def print_asplund_depleted(file_out='abunds.dat'):
+    file_in = execution_path('asplund_2009_depleted.dat')
+    copyfile(file_in, file_out)
+
 def print_outputcond(file_out='outputcond.dat'):
     
     file_in = execution_path('outputcond_ex.dat', extra='../fortran/')
@@ -51,6 +55,7 @@ def print_files():
     parser.add_argument("-P", "--print_phy_cond", action="store_true", help="Write on disk the phy_cond.dat file")
     parser.add_argument("-I", "--print_ionfrac", action="store_true", help="Write on disk the ionfrac file")
     parser.add_argument("-A", "--print_asplund", action="store_true", help="Write on disk the asplund_2009.dat file")
+    parser.add_argument("-D", "--print_asplund_depleted", action="store_true", help="Write on disk the asplund_2009_depleted.dat file")
     parser.add_argument("-O", "--print_outputcond", action="store_true", help="Write on disk the outputcond.dat file")
     
     parser.add_argument("-T", "--Teff", help="Effective temperature")
@@ -64,5 +69,7 @@ def print_files():
         print_ionfrac_args(args.Teff, args.logU, args.B)
     if args.print_asplund:
         print_asplund()
+    if args.print_asplund_depleted:
+        print_asplund_depleted()
     if args.print_outputcond:
         print_outputcond()

@@ -27,7 +27,7 @@ setup(name='pySSN',
                                      'ions_rec.dat',
                                      'res/*',
                                      'data_lab/*'],
-                    'pyssn.phyat_lists':['asplund_2009.dat', 'phy_cond.dat',
+                    'pyssn.phyat_lists':['asplund_2009.dat', 'asplund_2009_depleted.dat', 'phy_cond.dat',
                                          'liste_phyat_others.dat',
                                          'ionfracs/*']
                     },
