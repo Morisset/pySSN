@@ -7,7 +7,8 @@
 # This is a python script that will be executed.
 
 # Qt widget style
-qt_style = 0
+# User can specify it using QT_STYLE environment variable. If not set, 0 is used.
+qt_style = None
 
 # Enable tooltips of Qt widgets
 enable_tooltips = True
@@ -225,8 +226,6 @@ line_saved_ordered_by = 0
 
 line_saved_format = 'tex' # tex or csv
 line_saved_filename = 'lines.dat'
-
-plot_filename = 'plot.pdf'
 
 plot_filename = 'plot.pdf'
 

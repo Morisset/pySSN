@@ -12,7 +12,6 @@ Inspired by a demo code by:
 Eli Bendersky (eliben@gmail.com)
 """
 import sys, os
-import argparse
 
 from PyQt4 import QtCore, QtGui
 
@@ -28,7 +27,6 @@ from ..core.spectrum import spectrum
 from ..utils.misc import get_parser
 
 from collections import OrderedDict
-import time
 
 log_.level = 4
 
@@ -3002,6 +3000,11 @@ class AppForm(QtGui.QMainWindow):
 
         self.readOnlyCells_bg_color = QtGui.QColor('white')
         self.editableCells_bg_color = QtGui.QColor('lightgreen')
+        if self.sp.get_conf('qt_style') is None:
+            if 'QT_STYLE' in os.environ:
+                self.sp.set_conf('qt_style', int(os.environ['QT_STYLE']))
+            else:
+                self.sp.set_conf('qt_style', 0)
         if self.sp.get_conf('qt_style') >= len(self.style_list):
             self.sp.set_conf('qt_style', 0)
         self.style_ag.actions()[self.sp.get_conf('qt_style')].setChecked(True)
