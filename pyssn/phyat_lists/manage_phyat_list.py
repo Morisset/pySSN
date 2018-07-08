@@ -464,7 +464,7 @@ def make_phyat_list(filename, cut=1e-4, E_cut=20, cut_inter=1e-5,
             return temp, dens
         else:
             for temp_dens in tab_temp_dens:
-                if temp_dens['IP'] > atom.IP_up:
+                if temp_dens['IP'] > atom.IP:
                     temp = temp_dens['temp']
                     dens = temp_dens['dens']
                     return temp, dens
