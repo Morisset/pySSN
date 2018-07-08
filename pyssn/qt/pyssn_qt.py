@@ -3000,15 +3000,28 @@ class AppForm(QtGui.QMainWindow):
 
         self.readOnlyCells_bg_color = QtGui.QColor('white')
         self.editableCells_bg_color = QtGui.QColor('lightgreen')
-        if self.sp.get_conf('qt_style') is None:
+        
+        if 'linux' in sys.platform and 'Plastique' in self.style_list:
+            default_style = 'Plastique'
+        elif 'darwin' in sys.platform and 'Macintosh (aqua)' in self.style_list:
+            default_style = 'Macintosh (aqua)'
+        else:
+            default_style = self.style_list[0]
+            
+        if self.sp.get_conf('qt_style') not in self.style_list:
+            
             if 'QT_STYLE' in os.environ:
-                self.sp.set_conf('qt_style', int(os.environ['QT_STYLE']))
+                if os.environ['QT_STYLE'] in self.style_list:
+                    self.sp.set_conf('qt_style', os.environ['QT_STYLE'])
+                else:
+                    log_.warn('Unknown Qt style {}, using {}'.format(os.environ['QT_STYLE'], default_style))
+                    self.sp.set_conf('qt_style', default_style) 
             else:
-                self.sp.set_conf('qt_style', 0)
-        if self.sp.get_conf('qt_style') >= len(self.style_list):
-            self.sp.set_conf('qt_style', 0)
-        self.style_ag.actions()[self.sp.get_conf('qt_style')].setChecked(True)
-        QtGui.qApp.setStyle(self.style_list[self.sp.get_conf('qt_style')])
+                self.sp.set_conf('qt_style', default_style)  
+        index_style = self.style_list.index(self.sp.get_conf('qt_style'))
+        
+        self.style_ag.actions()[index_style].setChecked(True)
+        QtGui.qApp.setStyle(self.sp.get_conf('qt_style'))
         self.enable_tooltips_action.setChecked(self.sp.get_conf('enable_tooltips', True))
         self.enable_tooltips_action_clicked()
 
