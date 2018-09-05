@@ -33,7 +33,7 @@ RUN SYNTHESIS
 =====
 
 
-Define for example test1_init.dat:
+Define for example test1_init.py:
 
 	spectr_obs = None
 	limit_sp = (4000, 7000)
