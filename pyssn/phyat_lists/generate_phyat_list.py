@@ -695,24 +695,9 @@ def config_pyneb(pynebdatafiles=None):
 # ***********************
 # Set to None (atoms = None) to generate all of the available atoms
 atoms = None
-# atoms = ['C4', 'C3', 'C2', 'O3', 'O2', 'Ne3', 'Ne2', 'Fe3']
-
-# atoms = ['F5', 'Ne6', 'Na7', 'Al9', 'Sc17', 'V19', 'Ga1', 'Ge1', 'Ge2', 'As1', 'As2', 'As3', 'Se1', 'Se2', 'Se3', 'Se4', 'Br1', 'Br2', 'Br3', 'Br4', 'Br5', 'Kr2', 'Kr3', 'Kr4', 'Kr5', 'Kr6', 'Rb3', 'Rb4', 'Rb5', 'Rb6', 'Rb7', 'Sr4', 'Sr5', 'Sr6', 'Sr7', 'Sr8', 'Y5', 'Y6', 'Y7', 'Y8', 'Y9', 'Zr6', 'Zr7', 'Zr8', 'Zr9', 'Zr10', 'Nb7', 'Nb8', 'Nb9', 'Nb10', 'Nb11', 'Mo8', 'Mo9', 'Mo10', 'Mo11', 'Mo12','In1','Sn1', 'Sn2', 'Sb1', 'Sb2', 'Sb3', 'Te1', 'Te2', 'Te3', 'Te4', 'I1', 'I2', 'I3', 'I4', 'I5', 'Xe2', 'Xe3', 'Xe4', 'Xe5', 'Xe6', 'Cs3', 'Cs4', 'Cs5', 'Cs6', 'Cs7', 'Ba4', 'Ba5', 'Ba6', 'Ba7', 'Ba8', 'La5', 'L6', 'La7', 'La8', 'La9', 'Ce6', 'Ce7', 'Ce8', 'Ce9', 'Tl1', 'Pb2', 'Bi3', 'Pb1', 'Bi2', 'Ba2']
 
 # File containing additional data in the phyat_list format
 extra_file = None
-# extra_file = 'phyat_list_DP_p3.dat'
-# extra_file = 'phyat_list_DP_nouv.dat'
-# extra_file = 'phyat_list_bidon.dat'
-# extra_file = 'phyat_list_DP_nouv.dat'
-
-# Name of the output
-# filename = 'listep3t1_12.dat'
-# filename = 'listep3SIIt4_10.dat'
-# filename = 'listep3SIIt1_8.dat'
-# filename = 'listeCIIIt1.5_4.6.4.dat'
-# filename = 'liste_test_DP.dat'
-# filename = 'liste_extrafile_none_noBaIIgenerate.dat'
 filename = 'liste_phyat_coll.dat'
 phy_cond_file = 'phy_cond.dat'
 
