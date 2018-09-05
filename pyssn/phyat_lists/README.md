@@ -6,9 +6,13 @@ If you want to run pySSN in a separate python installation
 python environment), you can just create a new environment using:
 
 `conda create -n env_pySSN python=2.7 numpy scipy matplotlib pyqt=4`
+
 Then swich to this envirponment:
+
 `source activate env_pySSN`
+
 Install pyneb:
+
 `pip install pyneb` 
 
 INSTALLATION OF PYSSN (DO IT ONLY ONCE)
