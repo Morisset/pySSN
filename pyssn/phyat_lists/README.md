@@ -1,4 +1,17 @@
-INSTALLATION (DO IT ONLY ONCE)
+PYTHON SETUP
+======
+
+If you want to run pySSN in a separate python installation 
+(because you will need python 2.7 and QT4 and you do not want to change your actual 
+python environment), you can just create a new environment using:
+
+`conda create -n env_pySSN python=2.7 numpy scipy matplotlib pyqt=4`
+Then swich to this envirponment:
+`source activate env_pySSN`
+Install pyneb:
+`pip install pyneb` 
+
+INSTALLATION OF PYSSN (DO IT ONLY ONCE)
 ======
 
 
