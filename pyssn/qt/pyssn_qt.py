@@ -1,4 +1,3 @@
-
 """
 This is the window manager part of pySSN
 
@@ -27,6 +26,7 @@ from ..core.spectrum import spectrum
 from ..utils.misc import get_parser
 
 from collections import OrderedDict
+from ..utils.physics import CST
 
 log_.level = 4
 
@@ -124,6 +124,18 @@ class AppForm(QtGui.QMainWindow):
         self.init_y3max = None
         self.init_legend_fontsize = None
         self.init_legend_loc = None
+
+        self.init_nearby_line_num = None
+        self.init_nearby_ion = None
+        self.init_nearby_xmin = None
+        self.init_nearby_xmax = None
+        self.init_nearby_y1min = None
+        self.init_nearby_y1max = None
+        self.init_nearby_y3min = None
+        self.init_nearby_y3max = None
+        self.init_nearby_legend_fontsize = None
+        self.init_nearby_legend_loc = None
+
         self.instr_prof_file = None
         self.call_on_draw = True
         self.cursor_on = False
@@ -135,6 +147,7 @@ class AppForm(QtGui.QMainWindow):
         self.xscale = None
         self.yscale = None        
         self.post_proc_file = post_proc_file
+        self.tick_file = None
         self.do_save = True
         self.cont_par_changed = False
         self.axes_fixed = False
@@ -146,12 +159,22 @@ class AppForm(QtGui.QMainWindow):
         self.cont_pars_dialog = None
         self.cursor_w1 = None
         self.cursor_w2 = None
+        self.nearbyLines = None
+        self.nearbyLines_sort_by = 'i_tot'
+        self.nearbyLines_sort_reverse = True
         self.nearbyLines_dialog = None
+        self.nearbyLines_selected_ions = None
         self.line_info_dialog = None
         self.fig_prof = None
         self.green_tick_shown = False
-
+        self.magenta_tick_shown = False
+        self.addGreenTickToLegend = True
+        self.show_true_ions = False
+        self.nearbyDialogFilterIsActive = False
+        
     def closeEvent(self, evnt):
+        if self.sp.get_conf('save_parameters_on_exit'):
+            self.save_pars_as()
         if self.cont_pars_dialog is not None:
             self.cont_pars_dialog.close()
         if self.nearbyLines_dialog is not None:
@@ -159,53 +182,49 @@ class AppForm(QtGui.QMainWindow):
         if self.line_info_dialog is not None:
             self.line_info_dialog.close()
             self.line_info_table.close()
-        
+
     def image_extension_list(self):
         filetypes = self.canvas.get_supported_filetypes()
         file_extensions = filetypes.keys()
         file_extensions.sort()
         return file_extensions
-        
-    def image_filter(self):
+
+    def image_filter(self, fileExt=''):
         filetypes = self.canvas.get_supported_filetypes_grouped()
         imagetype_list = filetypes.keys()
         imagetype_list.sort()
         s = ''
+        k = 0
         for imagetype in imagetype_list:
             extension_list = filetypes[ imagetype ]
+            if fileExt in extension_list:
+                k = imagetype_list.index(imagetype)
             s = s + str(imagetype)
             s1 = ' (*.' + str(extension_list[0])
             for extension in extension_list[1:]:
                 s1 = s1 + ' *.' + str(extension)
             s1 = s1 + ')'
             s = s + s1 + s1 + ';;'
-        return s
-
-    def set_save_plot_action_tip(self):
-        plotFile = self.sp.get_conf('plot_filename')
-        path, filename = os.path.split(plotFile)
-        if path == os.getcwd():
-            plotFile = filename
-        s = "Save plot to file '" + plotFile + "' (initially set with 'plot_filename = <filename>'; " \
-            "use option 'Save plot as' to change the file name and image format)" 
-        self.save_plot_action.setStatusTip(s)
+        filter_str = s[:-2]
+        selectedFilter = s.split(';;')[k] 
+        return filter_str, selectedFilter
 
     def save_plot(self):
         path = self.sp.get_conf('plot_filename')
         self.canvas.print_figure(path, dpi=self.dpi)
-        self.statusBar().showMessage('Saved to %s' % path, 2000)
+        self.statusBar().showMessage('Plot saved to file %s' % path, 2000)
       
     def save_plot_as(self):
-        file_choices = self.image_filter()
         path = self.sp.get_conf('plot_filename')
-        path = unicode(QtGui.QFileDialog.getSaveFileName(self, 'Save plot to file', path, file_choices))
         extension = os.path.splitext(path)[1][1:].lower()
+        file_choices, selectedFilter = self.image_filter(extension)
+        path = unicode(QtGui.QFileDialog.getSaveFileName(self, 'Save plot to file', path, file_choices, selectedFilter))
         if path:
+            extension = os.path.splitext(path)[1][1:].lower()
             if extension in self.image_extension_list():
                 self.sp.set_conf('plot_filename', path)
                 self.canvas.print_figure(path, dpi=self.dpi)
-                self.statusBar().showMessage('Saved to %s' % path, 2000)
-                self.set_save_plot_action_tip()
+                self.statusBar().showMessage('Plot saved to file %s' % path, 2000)
             else:
                 title = 'Error saving plot'
                 msg = 'Format "{0}" not supported.'.format(extension)
@@ -230,11 +249,24 @@ class AppForm(QtGui.QMainWindow):
                 
     def on_click(self, event):
         if self.cursor_on:
-            do_print = not self.sp.get_conf('show_dialogs', True)
-            self.nearbyLines = self.sp.nearby_lines(event, do_print, sort='i_tot', reverse=True)
+            do_print = not self.sp.get_conf('qt_show_dialogs', True)
+            nearbyLines = self.sp.nearby_lines(event, do_print, sort='i_tot', reverse=True)
+            if nearbyLines is None:
+                return
+            self.nearbyLines = nearbyLines
             if not do_print:
-                if self.nearbyLines is not None:
-                    self.show_nearbyLines_dialog()
+                self.show_nearbyLines_dialog()
+
+    def sort_nearbyLines(self, sort, reverse=False):
+        if self.nearbyLines is None:
+            return
+        if sort == 'proc':
+            sorts = np.argsort([ self.sp.process[str(line_num)[-9]] for line_num in self.nearbyLines['num'] ])
+        else:
+            sorts = np.argsort(self.nearbyLines[sort])
+        if reverse:
+            sorts = sorts[::-1]
+        self.nearbyLines = np.array(self.nearbyLines)[sorts]
 
     def create_main_frame(self):
         
@@ -245,12 +277,12 @@ class AppForm(QtGui.QMainWindow):
         # Create the mpl Figure and FigCanvas objects. 
         #
         self.dpi = 100
+        #self.fig = plt.figure(figsize=(15,15))
         self.fig = plt.figure(figsize=(15,15))
         # self.fig = plt.figure(figsize=(20.0, 15.0), dpi=self.dpi)
         
         log_.debug('creating figure {}'.format(id(self.fig)), calling=self.calling)
-        
-        
+                
         self.canvas = FigureCanvas(self.fig)
         if self.use_workspace:
             self.main_frame.addWindow(self.canvas)
@@ -335,7 +367,7 @@ class AppForm(QtGui.QMainWindow):
         self.residual_GroupBox = QtGui.QGroupBox("Plot of residuals")
         self.residual_GroupBox.setCheckable(True)
         self.residual_GroupBox.setChecked(True)
-        self.connect(self.residual_GroupBox, QtCore.SIGNAL('clicked()'), self.make_axes)
+        self.connect(self.residual_GroupBox, QtCore.SIGNAL('clicked()'), self.residual_box_clicked)
         self.residual_GroupBox_ToolTip = 'Check to display the residual plot'
 
         self.adjust_button = QtGui.QPushButton("Update")
@@ -615,8 +647,8 @@ class AppForm(QtGui.QMainWindow):
         vbox = QtGui.QVBoxLayout()
         vbox.addWidget(self.canvas)
         vbox.addWidget(self.mpl_toolbar)
-
-        vbox.addLayout(grid)
+        vbox.addLayout(grid)        
+        #vbox.setAlignment(QtCore.Qt.AlignBottom)
         
         self.main_frame.setLayout(vbox)
         self.setCentralWidget(self.main_frame)
@@ -633,20 +665,30 @@ class AppForm(QtGui.QMainWindow):
                                               slot=self.select_init, 
                                               tip="Open the initialization file and run the synthesis")
         
-        self.save_plot_action = self.create_action("Save plot",
+        save_pars_action = self.create_action("Save parameters",
                                               shortcut="Ctrl+S", 
-                                              slot=self.save_plot,
-                                              tip="Save plot to default file")
+                                              slot=self.save_pars_as, 
+                                              tip="Save synthesis and plot parameters to file")
+        
+        save_pars_as_action = self.create_action("Save parameters as",
+                                              shortcut="Ctrl+Shift+S", 
+                                              slot=self.save_pars_as, 
+                                              tip="Select file name and save parameters of the synthesis")
+        
+        self.save_plot_action = self.create_action("Save plot",
+                                              shortcut="Ctrl+P", 
+                                              slot=self.save_plot_as,
+                                              tip="Save plot to file")
         
         save_plot_as_action = self.create_action("Save plot as",
-                                              shortcut="Ctrl+Shift+S", 
+                                              shortcut="Ctrl+Shift+P", 
                                               slot=self.save_plot_as, 
                                               tip="Select file name and save plot")
 
         save_lines_action = self.create_action("Save lines",
                                               shortcut="Ctrl+L", 
-                                              slot=self.save_lines, 
-                                              tip="Save list of lines")
+                                              slot=self.save_lines_as, 
+                                              tip="Save list of lines to file")
 
         save_lines_as_action = self.create_action("Save lines as",
                                               shortcut="Ctrl+Shift+L", 
@@ -654,40 +696,49 @@ class AppForm(QtGui.QMainWindow):
                                               tip="Select file name and save list of lines")
 
         self.add_actions(self.file_menu, 
-            (open_init_action, None, self.save_plot_action, save_plot_as_action, None, save_lines_action, save_lines_as_action))
+            (open_init_action, save_pars_action, None, self.save_plot_action, None, save_lines_action))
+       
+        #(open_init_action, save_pars_action, save_pars_as_action, None, self.save_plot_action, save_plot_as_action, None, save_lines_action, save_lines_as_action))
 
         self.line_sort_list = ['wavelength', 'decreasing wavelength', 'intensity', 'decreasing intensity', 'ion' , 'decreasing ion' ]
         s = 'Sort lines by:\n'
         for i in range(len(self.line_sort_list)):
             s = s + '    ' + str(i) + ' - ' + self.line_sort_list[i] + '\n'
-        s = s + '\nSet with:\n' + '    line_saved_ordered_by = <integer>'
+        s = s + '\nSet with:\n' + '    save_lines_sort = <integer>'
         self.line_sort_ag = QtGui.QActionGroup(self, exclusive=True)
 
         self.line_sort_menu = self.file_menu.addMenu("Sort lines by")
-        self.line_sort_menu_ToolTip = s        
-
+        self.line_sort_menu_ToolTip = ''       
+        
         for i in range(len(self.line_sort_list)):
             a = self.line_sort_ag.addAction(QtGui.QAction(self.line_sort_list[i], self, checkable=True))
             self.line_sort_menu.addAction(a)
 
         self.line_sort_ag.triggered.connect(self.line_sort)
         
-        self.line_print_dic = OrderedDict( [ ( 'id'      , 'ion' ), 
+        self.line_print_dic = OrderedDict( [ 
+                                ( 'num'     , 'line number' ),
+                                ( 'id'      , 'ion' ), 
                                 ( 'lambda'  , 'wavelength' ), 
                                 ( 'l_shift' , 'wavelength shift' ), 
                                 ( 'l_tot'   , 'corrected wavelength' ), 
                                 ( 'i_rel'   , 'intensity' ), 
                                 ( 'i_cor'   , 'intensity correction factor' ), 
-                                ( 'i_tot'   , 'corrected intensity' ) ])
-        
+                                ( 'i_tot'   , 'corrected intensity' ),
+                                ( 'ref'     , 'reference line number' ),
+                                ( 'profile' , 'line profile code number' ),
+                                ( 'vitesse' , 'natural line width' ), 
+                                ( 'comment' , 'comment' ) ])
+
         items = list(self.line_print_dic.values())
+        
         s = 'Fields to be printed:\n'
         for i in range(len(items)):
             s = s + '    ' + str(i) + ' - ' + items[i] + '\n'
-        s = s + '\nSet with:\n' + '    line_field_print = <list>'
+        s = s + '\nSet with:\n' + '    save_lines_fields = <list>'
 
         self.line_field_menu = self.file_menu.addMenu("Show fields")
-        self.line_field_menu_ToolTip = s        
+        self.line_field_menu_ToolTip = ''      
 
         for i in range(len(items)):
             a = self.create_action(items[i], 
@@ -709,7 +760,7 @@ class AppForm(QtGui.QMainWindow):
                                               shortcut="", 
                                               tip="Open the cosmetic file")
 
-        self.clean_cosmetic_file_action = self.create_action("Purge cosmetic file",
+        self.clean_cosmetic_file_action = self.create_action("Clean cosmetic file",
                                               slot=self.clean_cosmetic_file, 
                                               shortcut="", 
                                               tip="Remove the unchanged lines from the cosmetic file")
@@ -754,32 +805,50 @@ class AppForm(QtGui.QMainWindow):
                                                slot=self.apply_post_proc, 
                                                tip="Edit the plots with python commands defined in an external file")
         
-        self.ask_postprocfile_action = self.create_action("Ask for post-process file name",
-                                               checkable=True, 
-                                               tip="Check to be asked for the post-process file name before executing post-process")
-        
         open_profile_action = self.create_action("Instrumental profile",
                                               shortcut="F7", 
                                               slot=self.apply_instr_prof, 
                                               tip="Open the instrumental profile file and run the synthesis")
-        
-        self.ask_instr_prof_file_action = self.create_action("Ask for instrumental profile file name",
-                                               checkable=True, 
-                                               tip="Check to be asked for the instrumetal profile file name before executing instrumental profile")
 
         self.add_actions(self.run_menu, (update_action, run_action, draw_action, None, 
-                                         post_proc_action, self.ask_postprocfile_action, None, 
-                                         open_profile_action, self.ask_instr_prof_file_action))
+                                         post_proc_action, open_profile_action))
 
         self.line_menu = self.menuBar().addMenu('Lines')
         
-        self.show_line_ticks_action = self.create_action('Show line ticks', 
+        self.show_line_ticks_action = self.create_action('Plot line ticks', 
             shortcut='Alt+L', slot=self.show_line_ticks_action_clicked, checkable=True, 
             tip='Check to show line ticks')
         
-        self.plot_lines_action = self.create_action('Plot lines', 
+        self.plot_lines_action = self.create_action('Plot spectra of selected ions', 
             shortcut='Alt+P', slot=self.show_line_ticks_action_clicked, checkable=True, 
             tip='Check to plot spectra of selected ions')
+        
+        self.selected_intensities_action = self.create_action('Only above the cut', 
+            shortcut='Alt+K', slot=self.selected_lines_clicked, checkable=True, 
+            tip='Check to show the ticks for lines with intensities above cut only')
+        
+        self.selected_ions_action = self.create_action('Only for selected ions', 
+            shortcut='Alt+I', slot=self.selected_lines_clicked, checkable=True, 
+            tip='Check to show the line ticks for selected ions only')
+
+        self.add_actions(self.line_menu, 
+            (self.plot_lines_action, None, self.show_line_ticks_action, self.selected_intensities_action, self.selected_ions_action))
+
+        self.diff_lines_list = ['ion and reference line', 'ion and process', 'ion', 'element' ]
+        s = 'Differentiate lines by:\n'
+        for i in range(len(self.diff_lines_list)):
+            s = s + '    ' + str(i) + ' - ' + self.diff_lines_list[i] + '\n'
+        s = s + '\nSet with:\n' + '    diff_lines_by = <integer>'
+        self.diff_lines_ag = QtGui.QActionGroup(self, exclusive=True)
+
+        self.diff_lines_menu = self.line_menu.addMenu("Differentiate lines by")
+        self.diff_lines_menu_ToolTip = ''        
+
+        for i in range(len(self.diff_lines_list)):
+            a = self.diff_lines_ag.addAction(QtGui.QAction(self.diff_lines_list[i], self, checkable=True))
+            a.setShortcut('Alt+' + str(i+1))
+            self.diff_lines_menu.addAction(a)
+        self.diff_lines_ag.triggered.connect(self.diff_lines)
         
         self.cycle_forwards_ions_action = self.create_action('Cycle forwards selected ions', 
             shortcut='Alt+0', slot=self.cycle_forwards_ions, checkable=False, 
@@ -790,7 +859,7 @@ class AppForm(QtGui.QMainWindow):
             tip='Click to cycle backwards the selected ions')
 
         self.add_actions(self.line_menu, 
-            (self.show_line_ticks_action, self.plot_lines_action, None, self.cycle_forwards_ions_action, self.cycle_backwards_ions, None))
+            (None, self.cycle_forwards_ions_action, self.cycle_backwards_ions, None))
 
         self.line_tick_ax_menu = self.line_menu.addMenu('Window of line ticks')
        
@@ -800,7 +869,7 @@ class AppForm(QtGui.QMainWindow):
             s = s + '    ' + str(i) + ' - ' + self.line_tick_ax_list[i] + '\n'
         s = s + '\nSet with:\n' + '    line_tick_ax = <integer>'
         self.line_tick_ax_ag = QtGui.QActionGroup(self, exclusive=True)
-        self.line_tick_ax_menu_ToolTip = s        
+        self.line_tick_ax_menu_ToolTip = ''        
 
         for i in range(len(self.line_tick_ax_list)):
             a = self.line_tick_ax_ag.addAction(QtGui.QAction(self.line_tick_ax_list[i], self, checkable=True))
@@ -815,7 +884,7 @@ class AppForm(QtGui.QMainWindow):
             s = s + '    ' + str(i) + ' - ' + self.line_tick_pos_list[i] + '\n'
         s = s + '\nSet with:\n' + '    line_tick_pos = <integer>'
         self.line_tick_pos_ag = QtGui.QActionGroup(self, exclusive=True)
-        self.line_tick_pos_menu_ToolTip = s        
+        self.line_tick_pos_menu_ToolTip = ''        
 
         for i in range(len(self.line_tick_pos_list)):
             a = self.line_tick_pos_ag.addAction(QtGui.QAction(self.line_tick_pos_list[i], self, checkable=True))
@@ -825,49 +894,28 @@ class AppForm(QtGui.QMainWindow):
         self.line_tick_color_action = self.create_action('Color of line ticks', 
             shortcut=None, slot=self.line_tick_color_clicked, checkable=False, 
             tip='Set color of line ticks')
-        self.line_menu.addAction(self.line_tick_color_action)
 
         self.toggle_legend_action = self.create_action('Toggle legend position and zoom', 
             shortcut='Alt+Shift+L', slot=self.toggle_legend_clicked, checkable=False, 
             tip='Toggle the legend position and zoom')
         self.line_menu.addAction(self.toggle_legend_action)
         
-        self.selected_intensities_action = self.create_action('Only above the cut', 
-            shortcut='Alt+K', slot=self.selected_lines_clicked, checkable=True, 
-            tip='Check to show the ticks for lines with intensities above cut only')
-        
-        self.selected_ions_action = self.create_action('Only selected ions', 
-            shortcut='Alt+I', slot=self.selected_lines_clicked, checkable=True, 
-            tip='Check to show the line ticks for selected ions only')
-
-        self.add_actions(self.line_menu, 
-            (None, self.selected_intensities_action, self.selected_ions_action))         
-
-        self.diff_lines_list = ['ion, process, and reference line', 'ion and process', 'ion' ]
-        s = 'Differentiate lines by:\n'
-        for i in range(len(self.diff_lines_list)):
-            s = s + '    ' + str(i) + ' - ' + self.diff_lines_list[i] + '\n'
-        s = s + '\nSet with:\n' + '    diff_lines_by = <integer>'
-        self.diff_lines_ag = QtGui.QActionGroup(self, exclusive=True)
-
-        self.diff_lines_menu = self.line_menu.addMenu("Differentiate lines by")
-        self.diff_lines_menu_ToolTip = s        
-
-        for i in range(len(self.diff_lines_list)):
-            a = self.diff_lines_ag.addAction(QtGui.QAction(self.diff_lines_list[i], self, checkable=True))
-            a.setShortcut('Alt+' + str(i+1))
-            self.diff_lines_menu.addAction(a)
-        self.diff_lines_ag.triggered.connect(self.diff_lines)
-        
-        self.editing_lines_action = self.create_action('Allow editing', 
+        self.editing_lines_action = self.create_action('Allow editing line parameters', 
             slot=self.editing_lines_clicked, checkable=True, 
             tip='Check to allow editing line parameters in line info dialog')
         
-        self.update_lines_action = self.create_action('Update after editing', 
+        self.update_lines_action = self.create_action('Update after editing line parameters', 
             shortcut='Alt+U', slot=self.update_lines_clicked, checkable=True, 
             tip='Check to update synthesis after editing line parameters in line info dialog')
+       
+        self.show_line_ticks_from_file_action = self.create_action('Plot line ticks from file', 
+            shortcut='F6', slot=self.show_line_ticks_from_file,  
+            tip='Check to show line ticks defined in an external file')
+        
+        self.ask_tickfile_action = self.create_action("Ask for file name",
+            checkable=True, tip="Check to be always asked for the text file containing a list of wavelengths to be ticked")
              
-        self.add_actions(self.line_menu, (None, self.editing_lines_action, self.update_lines_action))
+        self.add_actions(self.line_menu, (None, self.show_line_ticks_from_file_action))
 
         self.cont_menu = self.menuBar().addMenu('Continuum')
 
@@ -897,7 +945,7 @@ class AppForm(QtGui.QMainWindow):
         
         #self.verbosity_menu = self.menuBar().addMenu("Verbosity")
         self.verbosity_menu = self.settings_menu.addMenu("Verbosity")
-        self.verbosity_menu_ToolTip = s        
+        self.verbosity_menu_ToolTip = ''        
 
         for i in range(len(self.verbosity_list)):
             a = self.verbosity_ag.addAction(QtGui.QAction(self.verbosity_list[i], self, checkable=True))
@@ -913,7 +961,7 @@ class AppForm(QtGui.QMainWindow):
 
         self.style_menu = self.settings_menu.addMenu('Widget style')
 
-        self.style_menu_ToolTip = s        
+        self.style_menu_ToolTip = ''        
 
         for i in range(len(self.style_list)):
             a = self.style_ag.addAction(QtGui.QAction(self.style_list[i], self, checkable=True))
@@ -923,9 +971,13 @@ class AppForm(QtGui.QMainWindow):
         self.enable_tooltips_action = self.create_action('Enable tooltips', 
             slot=self.enable_tooltips_action_clicked, checkable=True, 
             tip='Check to enable tooltips')
+                
+        self.adjust_fig_action = self.create_action('Adjust figure', 
+            slot=self.adjust_fig_action_clicked, checkable=True, 
+            tip='Automatically adjust figure to avoid overlaps and to minimize the empty borders.')
             
         self.add_actions(self.settings_menu, 
-            (None, self.enable_tooltips_action))         
+            (None, self.enable_tooltips_action, self.adjust_fig_action, None, self.editing_lines_action, self.update_lines_action))         
         
         self.help_menu = self.menuBar().addMenu("&Help")
         
@@ -1161,53 +1213,87 @@ class AppForm(QtGui.QMainWindow):
             f = open(path, 'w')
             f.writelines(lines)
             f.close()
+        
+    def get_shifts_from_profile(self, profile_key):
+        if profile_key not in self.sp.emis_profiles:
+            profile_key = '1'
+        vel = self.sp.emis_profiles[profile_key]['vel']
+        par_list = self.sp.emis_profiles[profile_key]['params']
+        shift_list = []
+        for item in par_list:
+            shift = np.float(item[2])
+            intensity = np.float(item[1])
+            if item[0]=='G' and ( intensity > 0.2 ):
+                shift_list.append(shift)
+        shift_list.sort()
+        return shift_list, vel
     
     def plot_tick_at(self, wavelength, ion, line_num):
-        #self.on_draw(False)
         if self.green_tick_shown:
             self.on_draw()
-            # to add green tick to legend
-            # self.on_draw(False)
         color = 'green'
         ion = ion.replace('_',' ').strip()
+        to_select = (self.sp.liste_raies['num'] == np.int(line_num))
+        vitesse = self.sp.liste_raies[to_select]['vitesse']
+        profile_key = str(self.sp.liste_raies[to_select]['profile'][0])
+        shift_list, vel = self.get_shifts_from_profile(profile_key)
         line_num = line_num.strip().strip('0')
-        label = ion + ' (' + line_num.strip() + ')'
-        posTick = self.sp.get_conf('line_tick_pos')
-        if posTick == 2:
-            posTick = 0
-        else:
-            posTick = 2
+        # label = ion + ' (' + line_num.strip() + ')'
+        label = ion + ' {:.2f}'.format(wavelength)
+        posTick = self.getTickPosOfSelectedLine()
         y1, y2 = self.get_line_tick_lim(posTick)
         k = self.sp.get_conf('line_tick_ax')    
-        if k == 2: 
-            k = 1
-            y1 = 0.2
-            y2 = 0.8
-        elif k == 1 and self.residual_GroupBox.isChecked():
-            k = 1
-        else:
+        if not (k == 1 and self.residual_GroupBox.isChecked()):
             k = 0
+        if len(shift_list) > 0:
+            if posTick == 0:
+                ys1 = 2*y1-y2
+                ys2 = y1
+                ym = y1
+            else:
+                ys1 = y2
+                ys2 = 2*y2-y1
+                ym = y2
+            if k == 0:
+                yy1 = self.y1_plot_lims[0] + ym*(self.y1_plot_lims[1] - self.y1_plot_lims[0])
+            else:
+                yy1 = self.y3_plot_lims[0] + ym*(self.y3_plot_lims[1] - self.y3_plot_lims[0])
         current_legend_loc = self.sp.legend_loc
-        f = 0.3
+        f = 0.15
         r =  (self.x_plot_lims[1] - self.x_plot_lims[0])/2
         if wavelength - self.x_plot_lims[0] < 2*r*f:
             current_legend_loc = 1
         if self.x_plot_lims[1] - wavelength < 2*r*f:
             current_legend_loc = 2
         self.fig.axes[k].axvline( wavelength, y1, y2, color = color, linestyle = 'solid', linewidth = 2.5 ) 
-        # uncomment to add green tick to legend
-        # self.fig.axes[k].step( [0,0], [0,100], color = color, linestyle = 'solid', label = label, linewidth = 2.5 )
+        wave_shifts = -vitesse*wavelength*shift_list / CST.CLIGHT * 1e5 + wavelength*vel / CST.CLIGHT * 1e5
+        if len(wave_shifts) > 0:
+            max_wave_shift = max(abs(wave_shifts))
+        else:
+            max_wave_shift = 0
+
+        # Ticks for the profiles components are not shown if they are within 1000*f percent of the x-axis width. 
+        f = 0.001 
+        if max_wave_shift > f*(self.x_plot_lims[1] - self.x_plot_lims[0]):
+            x1 = (wavelength - self.x_plot_lims[0])/(self.x_plot_lims[1] - self.x_plot_lims[0])
+            for shift in wave_shifts:            
+                self.fig.axes[k].axvline( wavelength+shift, ys1, ys2, color = color, linestyle = '--', linewidth = 2.5 )                 
+                x2 = (wavelength + shift - self.x_plot_lims[0])/(self.x_plot_lims[1] - self.x_plot_lims[0])
+                self.fig.axes[k].axhline( yy1, x1, x2, color = color, linestyle = '-', linewidth = 1.0 ) 
+            
+        if self.addGreenTickToLegend:
+            self.fig.axes[k].step( [0,0], [0,100], color = color, linestyle = 'solid', label = label, linewidth = 2.5 )
         self.fig.axes[k].legend(loc=current_legend_loc, fontsize=self.sp.legend_fontsize)
         self.fig.canvas.draw()
         self.green_tick_shown = True
+        self.magenta_tick_shown = False
 
     def show_line_info_dialog(self):
 
         def get_window_size_and_position():
             if self.line_info_dialog is None:
                 font = QtGui.QFont()
-                width = 800
-                width = QtGui.QFontMetrics(font).width('='*110)
+                width = QtGui.QFontMetrics(font).width('='*120)
                 self.line_info_dialog_width = width
                 self.line_info_dialog_height = 470
                 sG = QtGui.QApplication.desktop().screenGeometry()
@@ -1260,18 +1346,35 @@ class AppForm(QtGui.QMainWindow):
             self.show_satellites = (self.show_satellites + 1)%3
             fill_line_info_table()
          
+        def on_click():
+            item = self.line_info_table.currentItem()
+            row = item.row()
+            col = item.column()
+            s = item.text()
+            if col == col_ion:
+                ion = self.line_info_table.item(row, col).text()
+                self.ion_box.setText(ion)
+                self.draw_ion()
+            if not self.isFloat(s):
+                return               
+            if col in [col_num, col_ref] and int(s) != 0:
+                self.curr_line_num = s
+                get_info(self.curr_line_num)
+                self.line_info_box.setText(self.curr_line_num)
+                fill_line_info_table()
+         
         def on_doubleClick():
             item = self.line_info_table.currentItem()
             row = item.row()
             col = item.column()
             s = item.text()
-            if col == 1:
-                ion = self.line_info_table.item(row, 1).text()
+            if col == col_ion:
+                ion = self.line_info_table.item(row, col).text()
                 self.ion_box.setText(ion)
                 self.draw_ion()
             if not self.isFloat(s):
                 return               
-            if col in [0,6] and int(s) != 0:
+            if col in [col_num, col_ref] and int(s) != 0:
                 self.curr_line_num = s
                 get_info(self.curr_line_num)
                 self.line_info_box.setText(self.curr_line_num)
@@ -1284,6 +1387,11 @@ class AppForm(QtGui.QMainWindow):
                 on_itemSelectionChanged()
 
         def on_itemSelectionChanged():
+
+            if self.green_tick_shown:
+                self.on_draw()
+            self.green_tick_shown = False
+            
             item = self.line_info_table.currentItem()
             if item == None:
                 self.draw_ion()
@@ -1293,15 +1401,14 @@ class AppForm(QtGui.QMainWindow):
             col = item.column()
             s = item.text()
             l_shift_refline = np.float(self.sp.fieldStrFromLine(self.refline,'l_shift'))
-            if col == self.sp.fields.index('lambda'):
+            if col == col_wave:
                 wavelength = np.float(s)
-                ion = str(self.line_info_table.item(row, 1).text())
-                line_num = str(self.line_info_table.item(row, 0).text())
+                ion = str(self.line_info_table.item(row, col_ion).text())
+                line_num = str(self.line_info_table.item(row, col_num).text())
                 max_wave = np.float(self.sp_max_box.text())
                 min_wave = np.float(self.sp_min_box.text())
                 if wavelength > min_wave and wavelength < max_wave:
-                    c = self.sp.fields.index('l_shift')
-                    l_shift = np.float(self.line_info_table.item(row, c).text())
+                    l_shift = np.float(self.line_info_table.item(row, col_lshift).text())
                     wavelength = wavelength + l_shift + l_shift_refline
                     r =  (self.x_plot_lims[1] - self.x_plot_lims[0])/2
                     f = 0.05
@@ -1317,7 +1424,7 @@ class AppForm(QtGui.QMainWindow):
                         self.restore_axes()
                     self.plot_tick_at(wavelength, ion, line_num)
                 elif wavelength == 1:
-                    if str(self.line_info_table.item(row, self.sp.fields.index('ref')).text()) == '0000000000000':
+                    if str(self.line_info_table.item(row, col_ref).text()) == '0000000000000':
                         satellites = self.satellites
                     else:
                         satellites = self.sp.read_satellites(self.sp.phyat_file, int(line_num))
@@ -1331,14 +1438,6 @@ class AppForm(QtGui.QMainWindow):
                             SelectedSatellites.append(satellites[i])
                     satellites = SelectedSatellites
                     self.plot_line_ticks_for(satellites, ion, line_num, self.refline)
-                else:
-                    if self.green_tick_shown:
-                        self.on_draw()
-                    self.green_tick_shown = False
-            else:
-                if self.green_tick_shown:
-                    self.on_draw()
-                self.green_tick_shown = False
 
         def isRefLine(line):
             s = self.sp.fieldStrFromLine(line,'ref').strip()
@@ -1358,7 +1457,7 @@ class AppForm(QtGui.QMainWindow):
             if line == None:
                 return
             editableCols = []
-            if self.sp.get_conf('allow_editing_lines', False):
+            if self.sp.get_conf('qt_allow_editing_lines', False):
                 if cat == 'sat':
                     if do_cosmetics:
                         editableCols = ['l_shift', 'i_cor', 'profile', 'vitesse', 'comment']
@@ -1374,6 +1473,17 @@ class AppForm(QtGui.QMainWindow):
             for j in range(0,len(fieldItems)):
                 s = self.sp.fieldStrFromLine(line, fieldItems[j])
                 s = s.strip()
+                if j == col_ion:
+                    if self.show_true_ions: 
+                        s = self.sp.true_ion(s).replace('_',' ').strip()
+                    isPseudoIon = self.sp.isPseudoIon(s)
+                if j == fieldItems.index('proc'):                    
+                    if isRefLine(line):
+                        s = ''
+                    elif isPseudoIon:
+                        s = ''
+                    else:
+                        s = self.sp.process[s]
                 item = QtGui.QTableWidgetItem(s)
                 if fieldItems[j] in editableCols:
                     item.setBackgroundColor(self.editableCells_bg_color)
@@ -1610,7 +1720,9 @@ class AppForm(QtGui.QMainWindow):
        
         def get_line_from_table(row):
             line = ' '*85
-            for j in range(0,len(fieldItems)):
+            jList = range(0,len(fieldItems))
+            jList.remove(col_proc)
+            for j in jList:
                 s = self.line_info_table.item(row,j).text()
                 width = self.sp.field_width[fieldItems[j]]
                 align = self.sp.field_align[fieldItems[j]]
@@ -1628,7 +1740,7 @@ class AppForm(QtGui.QMainWindow):
                 filename = self.sp.fic_cosmetik
             self.sp.replace_line(filename, line)
             if col != self.sp.fields.index('comment') and \
-               self.sp.get_conf('update_after_editing_lines', False):
+               self.sp.get_conf('qt_update_after_editing_lines', False):
                 self.adjust()
                 self.nearbyLines = self.sp.get_nearby_lines(self.cursor_w1, self.cursor_w2, do_print=False)
                 if self.nearbyLines is not None and self.nearbyLines_dialog.isVisible():
@@ -1668,20 +1780,31 @@ class AppForm(QtGui.QMainWindow):
         self.line_info_dialog.resize(self.line_info_dialog_width,self.line_info_dialog_height)
         self.line_info_dialog.move(self.line_info_dialog_x,self.line_info_dialog_y)
         self.line_info_table = QtGui.QTableWidget()
-        self.line_info_table.setColumnCount(10)
         fieldItems = self.sp.fields
         fieldNames = [ self.sp.field_abbr[item] for item in fieldItems ]
+        col_num = fieldItems.index('num')
+        col_ion = fieldItems.index('id')
+        col_wave = fieldItems.index('lambda')
+        col_proc = fieldItems.index('proc')
+        col_lshift = fieldItems.index('l_shift')
+        col_irel = fieldItems.index('i_rel')
+        col_icor = fieldItems.index('i_cor')
+        col_ref = fieldItems.index('ref')
+        col_prof =  fieldItems.index('profile')              
+        col_vel =  fieldItems.index('vitesse')              
+        col_comm = fieldItems.index('comment')                          
+        self.line_info_table.setColumnCount(len(fieldItems))
         self.line_info_table.setHorizontalHeaderLabels(fieldNames)
         if self.enable_tooltips_action.isChecked():
             for j in range(0,len(fieldItems)):
                 self.line_info_table.horizontalHeaderItem(j).setToolTip(self.sp.field_tip[fieldItems[j]])
-        self.line_info_table.horizontalHeaderItem(8).setText(u'\u0394v (factor)')
-        s = 'For a reference line, it is the thermal broadening parameter, in km/s. \n' \
-            'For satellite line, it is the dimensionless correction factor for the thermal broadening parameter with respect to the reference line.'
+        self.line_info_table.horizontalHeaderItem(col_vel).setText(u'\u0394v (factor)')
         if self.enable_tooltips_action.isChecked():
-            self.line_info_table.horizontalHeaderItem(8).setToolTip(s)
-        self.line_info_table.horizontalHeaderItem(9).setTextAlignment(QtCore.Qt.AlignLeft)
-        self.line_info_table.horizontalHeaderItem(9).setText('  comment')
+            s = 'For a reference line, it is the thermal broadening parameter, in km/s. \n' \
+                'For satellite line, it is the dimensionless correction factor for the thermal broadening parameter with respect to the reference line.'
+            self.line_info_table.horizontalHeaderItem(col_vel).setToolTip(s)
+        self.line_info_table.horizontalHeaderItem(col_comm).setTextAlignment(QtCore.Qt.AlignLeft)
+        self.line_info_table.horizontalHeaderItem(col_comm).setText('  comment')
         init_lines()
 
         do_cosmetics = self.sp.get_conf('do_cosmetik')
@@ -1716,37 +1839,66 @@ class AppForm(QtGui.QMainWindow):
         self.line_info_dialog.setWindowTitle('line info dialog')
         self.line_info_dialog.setWindowModality(QtCore.Qt.NonModal)
         self.line_info_dialog.show()
-
+    
     def fill_nearbyLines_table(self):
         if self.nearbyLines is None or self.nearbyLines_table is None:
             return
-        fieldItems = self.sp.fields   
-        self.nearbyLines_table.setRowCount(len(self.nearbyLines))         
-        for i in range(0,len(self.nearbyLines)):
-            for j in range(0,len(fieldItems)):
-                s = self.sp.field_format[fieldItems[j]].format(self.nearbyLines[i][j])
-                s = s.strip()
-                fmt = self.sp.field_format[fieldItems[j]]
-                if 'f' in fmt:
-                    s = self.rightFormat(str(s), self.sp.fields[j])
+        k = self.sp.get_conf('diff_lines_by')
+        fieldItems = self.sp.fields
+        jList = range(0,len(fieldItems))
+        jProc = fieldItems.index('proc')
+        jList.remove(jProc)
+        if self.nearbyDialogFilterIsActive:
+            #selected_ions = self.sp.get_conf('selected_ions')
+            selected_ions = self.nearbyLines_selected_ions
+            
+            selected_true_ions = [self.sp.true_ion(ion) for ion in selected_ions]
+            nearbyLines = []
+            for line in self.nearbyLines:
+                ion = str(line[fieldItems.index('id')]).strip()
+                true_ion = self.sp.true_ion(ion)
+                selectThisIon = (( ion in selected_ions or true_ion in selected_ions ) and k == 1) or (true_ion in selected_true_ions and k != 1)
+                if selectThisIon:
+                    nearbyLines.append(line)
+        else:
+            nearbyLines = self.nearbyLines
+        self.nearbyLines_table.setRowCount(len(nearbyLines))                 
+        for i in range(0,len(nearbyLines)):
+            ion = self.sp.true_ion(nearbyLines[i][fieldItems.index('id')])
+            for j in jList:
+                if j > jProc:
+                    k = j - 1
                 else:
-                    s = fmt.format(self.nearbyLines[i][j])
-                s = str(s)
-                s = s.strip()
+                    k = j
+                fmt = self.sp.field_format[fieldItems[j]]
+                s = fmt.format(nearbyLines[i][k])
+                s = str(s).strip()
+                if j == fieldItems.index('num'):
+                    if self.sp.isPseudoIon(ion):
+                        proc_str = ''
+                    else:
+                        proc_str = self.sp.process[s[-9]]
+                if j == fieldItems.index('id'):
+                    if self.show_true_ions: 
+                        s = self.sp.true_ion(s).replace('_',' ').strip()    
                 item = QtGui.QTableWidgetItem(s)
                 item.setFlags(item.flags() ^ QtCore.Qt.ItemIsEditable)
                 item.setBackgroundColor(self.readOnlyCells_bg_color)
                 self.nearbyLines_table.setItem(i,j,item)
+            item = QtGui.QTableWidgetItem(proc_str)
+            item.setFlags(item.flags() ^ QtCore.Qt.ItemIsEditable)
+            item.setBackgroundColor(self.readOnlyCells_bg_color)
+            self.nearbyLines_table.setItem(i,jProc,item)
         self.nearbyLines_table.resizeColumnsToContents()
         self.nearbyLines_table.resizeRowsToContents()
+        self.nearbyLines_table.clearSelection()
                 
     def show_nearbyLines_dialog(self):
 
         def get_window_size_and_position():
             if self.nearbyLines_dialog is None:
                 font = QtGui.QFont()
-                width = 800
-                width = QtGui.QFontMetrics(font).width('='*100)
+                width = QtGui.QFontMetrics(font).width('='*120)
                 self.nearbyLines_dialog_width = width
                 self.nearbyLines_dialog_height = 470
                 sG = QtGui.QApplication.desktop().screenGeometry()
@@ -1757,7 +1909,58 @@ class AppForm(QtGui.QMainWindow):
                 self.nearbyLines_dialog_height = self.nearbyLines_dialog.height()
                 self.nearbyLines_dialog_x = self.nearbyLines_dialog.pos().x()
                 self.nearbyLines_dialog_y = self.nearbyLines_dialog.pos().y()
-      
+
+        def do_reset():
+            self.curr_line_num = self.init_nearby_line_num
+            #get_info(self.curr_line_num)
+            #fill_line_info_table()
+            self.nearbyDialogFilterIsActive = True
+            #self.nearbyLines_selected_ions = []
+            toggle_filter()
+            redo_initial_plot()
+
+        def toggle_filter():
+            self.nearbyLines_selected_ions = []
+            if not self.nearbyDialogFilterIsActive:
+                get_selected_ions()
+                if len(self.nearbyLines_selected_ions) > 0:
+                    self.nearbyDialogFilterIsActive = True
+                    self.buttonBox_nearbyLines.button(QtGui.QDialogButtonBox.RestoreDefaults).setStyleSheet('background-color:red;')
+                    self.buttonBox_nearbyLines.button(QtGui.QDialogButtonBox.RestoreDefaults).setText('deactivate ion filter')        
+
+                else:        
+                    QtGui.QMessageBox.critical(self, 'nearby lines dialog: ion filter', 'No ion selected.', QtGui.QMessageBox.Ok )
+            else:
+                self.nearbyDialogFilterIsActive = False
+                self.buttonBox_nearbyLines.button(QtGui.QDialogButtonBox.RestoreDefaults).setStyleSheet('')
+                self.buttonBox_nearbyLines.button(QtGui.QDialogButtonBox.RestoreDefaults).setText('Filter selected ions')        
+            self.fill_nearbyLines_table()
+
+        def save_initial_plot_pars():
+            self.init_nearby_line_num = self.line_info_box.text()
+            self.init_nearby_ion = self.ion_box.text()
+            self.init_nearby_xmin = self.xlim_min_box.text()
+            self.init_nearby_xmax = self.xlim_max_box.text()
+            self.init_nearby_y1min = self.y1lim_min_box.text()
+            self.init_nearby_y1max = self.y1lim_max_box.text()
+            self.init_nearby_y3min = self.y3lim_min_box.text()
+            self.init_nearby_y3max = self.y3lim_max_box.text()
+            self.init_nearby_legend_fontsize = self.sp.legend_fontsize
+            self.init_nearby_legend_loc = self.sp.legend_loc
+
+        def redo_initial_plot():
+            #self.line_info_box.setText(self.init_line_num)
+            self.ion_box.setText(self.init_nearby_ion)
+            self.xlim_min_box.setText(self.init_nearby_xmin)
+            self.xlim_max_box.setText(self.init_nearby_xmax)
+            self.y1lim_min_box.setText(self.init_nearby_y1min)
+            self.y1lim_max_box.setText(self.init_nearby_y1max)
+            self.y3lim_min_box.setText(self.init_nearby_y3min)
+            self.y3lim_max_box.setText(self.init_nearby_y3max)
+            self.sp.legend_fontsize = self.init_nearby_legend_fontsize
+            self.sp.legend_loc = self.init_nearby_legend_loc
+            self.set_plot_limits_and_draw()
+
         def toggle_statusbar():
             self.showStatusBar = not self.showStatusBar
             statusBar.setVisible(self.showStatusBar)
@@ -1766,10 +1969,10 @@ class AppForm(QtGui.QMainWindow):
             item = self.nearbyLines_table.currentItem()
             row = item.row()
             col = item.column()
-            if col in [0,6]:
+            if col in [col_num, col_ref]:
                 self.line_info_box.setText(item.text())
                 self.show_line_info_dialog()
-            elif col == 1:
+            elif col == col_ion:
                 self.ion_box.setText(item.text())
                 self.draw_ion()
 
@@ -1784,29 +1987,74 @@ class AppForm(QtGui.QMainWindow):
             self.selected_item = item
             row = item.row()
             col = item.column()
-            if col == 2:
+            if col == col_wave:
                 wavelength = np.float(item.text())
-                l_shift = np.float(self.nearbyLines_table.item(row,3).text())
+                l_shift = np.float(self.nearbyLines_table.item(row,col_lshift).text())
                 wavelength = wavelength + l_shift
-                line_num = str(self.nearbyLines_table.item(row,0).text())
-                ion = str(self.nearbyLines_table.item(row,1).text())
+                line_num = str(self.nearbyLines_table.item(row,col_num).text())
+                ion = str(self.nearbyLines_table.item(row,col_ion).text())
+                max_wave = np.float(self.sp_max_box.text())
+                min_wave = np.float(self.sp_min_box.text())
+                r =  (self.x_plot_lims[1] - self.x_plot_lims[0])/2
+                f = 0.05
+                if (wavelength < self.x_plot_lims[0] + f*r) or (wavelength > self.x_plot_lims[1] - f*r):
+                    if wavelength-r < min_wave:
+                        self.x_plot_lims = (min_wave-r*f, min_wave-r*f+2*r)
+                    elif wavelength+r > max_wave:
+                        self.x_plot_lims = (max_wave+r*f-2*r , max_wave+r*f)
+                    else:
+                        self.x_plot_lims = (wavelength-r,wavelength+r)
+                    if not self.axes_fixed:
+                        self.update_lim_boxes()
+                    self.restore_axes()
+
                 self.plot_tick_at(wavelength, ion, line_num)
             else:
                 if self.green_tick_shown:
                     self.on_draw()
                     self.green_tick_shown = False
-               
+
+        def do_header_clicked(col):
+            if col == col_ion:
+                self.toggle_show_true_ions()
+                self.fill_nearbyLines_table()
+        
+        def do_header_doubleClicked(col):
+            sort = fieldItems[col]
+            if sort == self.nearbyLines_sort_by:
+                self.nearbyLines_sort_reverse = not self.nearbyLines_sort_reverse
+            else:
+                self.nearbyLines_sort_reverse = False
+                self.nearbyLines_sort_by = sort
+            self.sort_nearbyLines(sort, self.nearbyLines_sort_reverse)
+            self.fill_nearbyLines_table()
+
+        def get_selected_ions():
+            selectedItems = self.nearbyLines_table.selectedItems()
+            selected_ions = []
+            for item in selectedItems:
+                col = item.column()
+                if col == col_ion:
+                    ion = str(item.text())
+                    if not ion in selected_ions:
+                        selected_ions.append(ion)
+            if len(selected_ions) > 0:
+                self.nearbyLines_selected_ions = selected_ions
+            else:
+                #self.nearbyLines_selected_ions = self.sp.get_conf('selected_ions')
+                self.nearbyLines_selected_ions = []
+                            
         def do_selection():
             selectedItems = self.nearbyLines_table.selectedItems()
             selected_ions = []
             selected_lines = []
             for item in selectedItems:
                 col = item.column()
-                if col == 1:
+                if col == col_ion:
                     ion = str(item.text())
                     if not ion in selected_ions:
                         selected_ions.append(ion)
-                if col in [0,6]:
+                if col in [col_num, col_ref]:
                     line = item.text()
                     selected_lines.append(line)
             if len(selected_ions) > 0:
@@ -1829,44 +2077,68 @@ class AppForm(QtGui.QMainWindow):
         s = 'Double-click on a line number (or select the line number and press \"Apply\") to show line info dialog. \n' \
             'Double-click on an ion to plot line ticks and spectrum for that single ion. \n' \
             'Click or select a wavelength to draw a tick at that position. \n' \
-            'Select multiple ions (using click, Shift+click, and Ctrl+click) and press \"Plot ions\" plot line ticks and spectra for a list of ions. \n' \
-            'Click on the ion header to select all ions.'
+            'Select multiple ions (using click, Shift+click, and Ctrl+click) and press \"Plot selected ions\" plot line ticks and spectra for a list of ions. \n' \
+            'Click on the ion header to select all ions. \n' \
+            'Double-click on a column header to sort the table; Double-click again to toggle between ascending and descending order. \n' \
+            'Click on \"Reset\" to return to the original selected ions and plot settings. \n' \
+            'Click on \"Filter selected ions\" to activate/deactivate ion selection.'
         statusBar.addWidget(QtGui.QLabel(s),1)
         self.showStatusBar = False
         statusBar.setVisible(self.showStatusBar)
         self.nearbyLines_table = QtGui.QTableWidget()   
         self.nearbyLines_table.setRowCount(len(self.nearbyLines))
-        self.nearbyLines_table.setColumnCount(10)
         fieldItems = self.sp.fields
         fieldNames = [ self.sp.field_abbr[item] for item in fieldItems ]
+        col_num = fieldItems.index('num')
+        col_ion = fieldItems.index('id')
+        col_wave = fieldItems.index('lambda')
+        col_proc = fieldItems.index('proc')
+        col_lshift = fieldItems.index('l_shift')
+        col_irel = fieldItems.index('i_rel')
+        col_icor = fieldItems.index('i_cor')
+        col_ref = fieldItems.index('ref')
+        col_prof =  fieldItems.index('profile')              
+        col_vel =  fieldItems.index('vitesse')              
+        col_comm = fieldItems.index('comment')                          
+        self.nearbyLines_table.setColumnCount(len(fieldNames))
         self.nearbyLines_table.setHorizontalHeaderLabels(fieldNames)
         if self.enable_tooltips_action.isChecked():
             for j in range(0,len(fieldItems)):
                 self.nearbyLines_table.horizontalHeaderItem(j).setToolTip(self.sp.field_tip[fieldItems[j]])
-        self.nearbyLines_table.horizontalHeaderItem(9).setTextAlignment(QtCore.Qt.AlignLeft);
-        self.nearbyLines_table.horizontalHeaderItem(8).setText(u'\u0394v')
+        self.nearbyLines_table.horizontalHeaderItem(col_comm).setTextAlignment(QtCore.Qt.AlignLeft)
+        self.nearbyLines_table.horizontalHeaderItem(col_vel).setText(u'\u0394v')
         if self.enable_tooltips_action.isChecked():
             s = u'\u0394v is the thermal broadening parameter of the line, in km/s. \n' \
                  'For a single Gaussian profile, it is the half-width of the line at the level of 1/e of the peak, \n' \
                  'related to the full-width at half maximum and the Gaussian standard deviation by:\n\n' \
                 u'     \u0394v = FWHM/(2(ln2)^\u00BD) = FWHM/1.665\n' \
                 u'     \u0394v = \u221A2 \u03C3\n' 
-            self.nearbyLines_table.horizontalHeaderItem(8).setToolTip(s)
-        self.nearbyLines_table.horizontalHeaderItem(9).setText('  comment')
+            self.nearbyLines_table.horizontalHeaderItem(col_vel).setToolTip(s)
+        self.nearbyLines_table.horizontalHeaderItem(col_comm).setText('  comment')
+        #self.nearbyDialogFilterIsActive = False
         self.fill_nearbyLines_table()
-        self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Help|
+        save_initial_plot_pars()
+        self.buttonBox_nearbyLines = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Help|
+                                                QtGui.QDialogButtonBox.Reset|
+                                                QtGui.QDialogButtonBox.RestoreDefaults|
                                                 QtGui.QDialogButtonBox.Apply|
                                                 QtGui.QDialogButtonBox.Close)
-        self.buttonBox.rejected.connect(self.nearbyLines_dialog.close)
-        self.buttonBox.button(QtGui.QDialogButtonBox.Apply).clicked.connect(do_selection)
-        self.buttonBox.button(QtGui.QDialogButtonBox.Help).clicked.connect(toggle_statusbar)
+        self.buttonBox_nearbyLines.button(QtGui.QDialogButtonBox.RestoreDefaults).setText('Filter selected ions')        
+        self.buttonBox_nearbyLines.button(QtGui.QDialogButtonBox.Apply).setText('Plot selected ions')
+        self.buttonBox_nearbyLines.rejected.connect(self.nearbyLines_dialog.close)
+        self.buttonBox_nearbyLines.button(QtGui.QDialogButtonBox.Apply).clicked.connect(do_selection)
+        self.buttonBox_nearbyLines.button(QtGui.QDialogButtonBox.Help).clicked.connect(toggle_statusbar)
+        self.buttonBox_nearbyLines.button(QtGui.QDialogButtonBox.Reset).clicked.connect(do_reset)
+        self.buttonBox_nearbyLines.button(QtGui.QDialogButtonBox.RestoreDefaults).clicked.connect(toggle_filter)
         self.nearbyLines_table.doubleClicked.connect(on_doubleClick)
         self.nearbyLines_table.itemSelectionChanged.connect(on_itemSelectionChanged)
         self.nearbyLines_table.itemClicked.connect(on_itemClicked)
         self.nearbyLines_table.verticalHeader().sectionDoubleClicked.connect(do_selection)
+        #self.nearbyLines_table.horizontalHeader().sectionClicked.connect(do_header_clicked)
+        self.nearbyLines_table.horizontalHeader().sectionDoubleClicked.connect(do_header_doubleClicked)
         vbox = QtGui.QVBoxLayout()
         vbox.addWidget(self.nearbyLines_table)
-        vbox.addWidget(self.buttonBox)
+        vbox.addWidget(self.buttonBox_nearbyLines)
         vbox.addWidget(statusBar)
         self.nearbyLines_dialog.setLayout(vbox)
         s = 'nearby line dialog: list of lines between {0:.2f} and {1:.2f} angstroms'.format(self.sp.cursor_w1, self.sp.cursor_w2)
@@ -1874,6 +2146,10 @@ class AppForm(QtGui.QMainWindow):
         self.nearbyLines_dialog.setWindowModality(QtCore.Qt.NonModal)
         self.cursor_w1 = self.sp.cursor_w1
         self.cursor_w2 = self.sp.cursor_w2
+        if self.nearbyDialogFilterIsActive:
+            self.buttonBox_nearbyLines.button(QtGui.QDialogButtonBox.RestoreDefaults).setStyleSheet('background-color:red;')
+        else:
+            self.buttonBox_nearbyLines.button(QtGui.QDialogButtonBox.RestoreDefaults).setStyleSheet('')
         self.nearbyLines_dialog.show()
 
     def cont_dialog(self):
@@ -1894,7 +2170,6 @@ class AppForm(QtGui.QMainWindow):
                  ( 'cont_lambda'    , 'List of wavelenghs of the interpolated continuum' ),    
                  ( 'cont_pix'       , 'List of pixels of the interpolated continuum' ),       
                  ( 'cont_intens'    , 'List of intensities of the interpolated continuum' ) ]
-
       
         def toggle_statusbar():
             self.showStatusBar = not self.showStatusBar
@@ -2005,25 +2280,32 @@ class AppForm(QtGui.QMainWindow):
                 y2 = 0.95
         return y1, y2
 
+    def getTickPosOfSelectedLine(self):
+        posTick = self.sp.get_conf('line_tick_pos_selectedLine',3)
+        if posTick not in [0,1,2]:
+            posOtherTicks = self.sp.get_conf('line_tick_pos')
+            if posTick == 4:
+                if posOtherTicks == 2:
+                   posTick = 0
+                else:
+                    posTick = 2
+            else:
+                posTick = posOtherTicks
+        return posTick    
+    
     def plot_line_ticks_for(self, satellites, ion, line_num, refline):
-        self.on_draw()
         k = self.sp.get_conf('line_tick_ax')    
-        posTick = self.sp.get_conf('line_tick_pos')
-        if posTick == 2:
-            posTick = 0
-        else:
-            posTick = 2
+        if not (k == 1 and self.residual_GroupBox.isChecked()):
+            k = 0
+        posTick = self.getTickPosOfSelectedLine()
         y1, y2 = self.get_line_tick_lim(posTick)
-        #if self.show_line_ticks_action.isChecked() and len(satellites) > 0:
         if len(satellites) > 0:
             if ( k == 0 ):
-              self.sp.plot_line_ticks_for(satellites, ion, line_num, refline, self.axes, y1, y2, self.x_plot_lims[0], self.x_plot_lims[1])
+                self.sp.plot_line_ticks_for(satellites, ion, line_num, refline, self.axes, y1, y2, self.x_plot_lims[0], self.x_plot_lims[1], self.addGreenTickToLegend)
             elif ( k == 1 ):
-                if self.residual_GroupBox.isChecked():
-                    self.sp.plot_ax3(self.axes3)
-                    self.sp.plot_line_ticks_for(satellites, ion, line_num, refline, self.axes3, y1, y2)
+                self.sp.plot_line_ticks_for(satellites, ion, line_num, refline, self.axes3, y1, y2, self.addGreenTickToLegend)
             elif ( k == 2 ):
-                self.sp.plot_line_ticks_for(satellites, ion, line_num, refline, self.axes2, 0.2, 0.8)     
+                self.sp.plot_line_ticks_for(satellites, ion, line_num, refline, self.axes2, 0.2, 0.8, self.addGreenTickToLegend)     
             self.green_tick_shown = True
         self.canvas.draw()                
                              
@@ -2056,7 +2338,7 @@ class AppForm(QtGui.QMainWindow):
         
         if self.residual_GroupBox.isChecked():
             self.axes3.cla()
-            self.sp.plot_ax3(self.axes3)
+            self.sp.plot_ax3(self.axes3, show_legend)
             if self.show_line_ticks_action.isChecked() and ( k == 1 ):
                 y1, y2 = self.get_line_tick_lim(self.sp.get_conf('line_tick_pos'))
                 self.sp.plot_line_ticks(self.axes3, y1, y2)
@@ -2068,7 +2350,9 @@ class AppForm(QtGui.QMainWindow):
         
         if self.residual_GroupBox.isChecked():
             self.axes3.set_xlabel(r'Wavelength ($\AA$)')
-        elif self.show_line_ticks_action.isChecked() and self.sp.get_conf('plot_ax2') and self.axes2 is not None:
+            self.axes3.set_ylabel(r'Residual')
+        #elif self.show_line_ticks_action.isChecked() and self.sp.get_conf(') and self.axes2 is not None:
+        elif self.show_line_ticks_action.isChecked() and ( k == 2 ):
             self.axes2.set_xlabel(r'Wavelength ($\AA$)')
         else:
             self.axes.set_xlabel(r'Wavelength ($\AA$)')
@@ -2076,9 +2360,12 @@ class AppForm(QtGui.QMainWindow):
         
         self.restore_axes()
         # self.update_lim_boxes()
+        if self.adjust_fig_action.isChecked(): 
+            plt.tight_layout(0.1)
         self.canvas.draw()
         self.statusBar().showMessage('Redraw is finished.', 4000) 
         log_.debug('Exit on_drawn', calling=self.calling)
+        self.magenta_tick_shown = False
         
     def show_lines_clicked(self):
         if self.lineIDs_GroupBox.isChecked():
@@ -2097,7 +2384,10 @@ class AppForm(QtGui.QMainWindow):
         self.sp.set_conf('line_tick_color', str(color.name()))
         if self.show_line_ticks_action.isChecked():
             self.make_axes()
-        
+
+    def toggle_show_true_ions(self):
+        self.show_true_ions = not self.show_true_ions
+           
     def toggle_legend_clicked(self):
         fontsize_list = ['small', 'medium', 'large']
         i = fontsize_list.index(self.sp.legend_fontsize) + 1
@@ -2111,11 +2401,27 @@ class AppForm(QtGui.QMainWindow):
     def enable_tooltips_action_clicked(self):
         if self.enable_tooltips_action.isChecked():   
             self.enableToolTips()         
+            self.sp.set_conf('qt_enable_tooltips', True)
             log_.debug('Tooltips enabled', calling=self.calling)
         else:
             self.disableToolTips()
+            self.sp.set_conf('qt_enable_tooltips', False)
             log_.debug('Tooltips disabled', calling=self.calling)
 
+    def adjust_fig_action_clicked(self):
+        if self.adjust_fig_action.isChecked():   
+            self.sp.set_conf('fig_adjust', True)
+            log_.debug('Adjust figure enabled', calling=self.calling)
+        else:
+            self.fig.subplots_adjust(hspace=self.sp.get_conf('fig_hspace'), 
+                                 bottom=self.sp.get_conf('fig_bottom'), 
+                                 right=self.sp.get_conf('fig_right'), 
+                                 top=self.sp.get_conf('fig_top'), 
+                                 left=self.sp.get_conf('fig_left'))
+ 
+            log_.debug('Adjust figure disabled', calling=self.calling)
+        self.draw_ion()
+        
     def disableToolTips(self):
         self.lineIDs_GroupBox.setToolTip('')        
         self.residual_GroupBox.setToolTip('')        
@@ -2239,15 +2545,15 @@ class AppForm(QtGui.QMainWindow):
 
     def editing_lines_clicked(self):
         if self.editing_lines_action.isChecked():
-            self.sp.set_conf('allow_editing_lines', True) 
+            self.sp.set_conf('qt_allow_editing_lines', True) 
         else:  
-            self.sp.set_conf('allow_editing_lines', False) 
+            self.sp.set_conf('qt_allow_editing_lines', False) 
 
     def update_lines_clicked(self):
         if self.update_lines_action.isChecked():
-            self.sp.set_conf('update_after_editing_lines', True) 
+            self.sp.set_conf('qt_update_after_editing_lines', True) 
         else:  
-            self.sp.set_conf('update_after_editing_lines', False) 
+            self.sp.set_conf('qt_update_after_editing_lines', False) 
 
     def cycle_forwards_ions(self):
         j = self.sp.get_conf('index_of_current_ion')
@@ -2270,7 +2576,55 @@ class AppForm(QtGui.QMainWindow):
         self.sp.set_conf('index_of_current_ion', j)
         self.set_refline_to_info_box(j)
         self.make_axes()
-          
+         
+    def show_line_ticks_from_file(self):
+        file_choices = "Text files (*.txt *.dat) (*.txt *.dat);;Tex files (*.tex) (*.tex);;CSV files (*.csv) (*.csv);;All Files (*) (*)"
+        if self.tick_file is None:
+            path = ''
+        else:
+            path = self.tick_file
+        path = unicode(QtGui.QFileDialog.getOpenFileName(self, 'Open file', path, file_choices))
+        if path:
+            self.tick_file = path
+        else:
+            return
+        f = open(self.tick_file, 'r')
+        lines = f.readlines()
+        f.close()
+        color = 'darkmagenta'
+        posTick = self.sp.get_conf('line_tick_pos')
+        y1, y2 = self.get_line_tick_lim(posTick)
+        k = self.sp.get_conf('line_tick_ax')    
+        if k == 2: 
+            k = 1
+            y1 = 0.2
+            y2 = 0.8
+        elif k == 1 and self.residual_GroupBox.isChecked():
+            k = 1
+        else:
+            k = 0
+        dy = (y2-y1)*0.30
+        if self.magenta_tick_shown == True:
+            self.draw_ion()
+        for line in lines:
+            line = line.strip()
+            line = line.split(' ')[0]
+            if self.isFloat(line):
+                wavelength = np.float(line)
+                if wavelength > self.x_plot_lims[0] and wavelength < self.x_plot_lims[1]:
+                    self.fig.axes[k].axvline( wavelength, y1+dy, y2-dy, color = color, linestyle = 'solid', linewidth = 1.5 ) 
+        self.fig.axes[k].step( [0,0], [0,100], color = color, linestyle = 'solid', linewidth = 1.5, label = self.tick_file.split('/')[-1] )
+        self.fig.axes[k].legend(loc=self.sp.legend_loc, fontsize=self.sp.legend_fontsize)
+        self.fig.canvas.draw()         
+        self.magenta_tick_shown = True
+        
+    def residual_box_clicked(self):
+        if self.residual_GroupBox.isChecked():
+            self.sp.set_conf('qt_plot_residuals', True)
+        else:
+            self.sp.set_conf('qt_plot_residuals', False)
+        self.make_axes()
+        
     def make_axes(self):
         log_.debug('Entering make_axes', calling=self.calling)
         if self.call_on_draw: 
@@ -2318,7 +2672,11 @@ class AppForm(QtGui.QMainWindow):
         else:
             self.axes3 = None
             self.sp.ax3 = self.axes3
-        self.fig.subplots_adjust(hspace=0.0, bottom=0.11, right=0.98, top=0.99, left=0.1)
+        self.fig.subplots_adjust(hspace=self.sp.get_conf('fig_hspace'), 
+                                 bottom=self.sp.get_conf('fig_bottom'), 
+                                 right=self.sp.get_conf('fig_right'), 
+                                 top=self.sp.get_conf('fig_top'), 
+                                 left=self.sp.get_conf('fig_left'))
         if self.call_on_draw: 
             log_.debug('Calling on_draw from make_axes', calling=self.calling)
             self.do_save = False
@@ -2441,27 +2799,83 @@ class AppForm(QtGui.QMainWindow):
             self.exec_init()
         else:
             self.init_file_name = old_name
-               
-    def apply_instr_prof(self):
-        if self.instr_prof_file == None or self.ask_instr_prof_file_action.isChecked():
-            file_choices = "Python files (*.py) (*.py);;All files (*) (*)"
-            title = 'Open instrumental profile file'
-            self.instr_prof_file = str(QtGui.QFileDialog.getOpenFileName(self, title, '', file_choices))
-        if self.instr_prof_file:
-            try:
-                user_module = {}
-                execfile(self.instr_prof_file, user_module)
-                prof = user_module['prof']
-                self.sp.conf['prof'] = prof
-                log_.message('instrumental profile read from {}'.format(self.instr_prof_file), calling = self.calling)
-            except:
-                log_.warn('instrumental profile NOT read from {}'.format(self.instr_prof_file), calling = self.calling)
-                self.instr_prof_file = None
+
+    def save_pars(self):
+        path = self.sp.get_conf('save_parameters_filename')
+        keys = self.sp.conf.keys()
+        if '__builtins__' in keys:
+            keys.remove('__builtins__')
+        keys.sort()
+        with open(path, 'w') as f:
+            for key in keys:
+                value = self.sp.conf[key]
+                if isinstance(value, basestring):
+                    value = '\"{}\"'.format(value)
+                f.write('{} = {}\n'.format(key, value))
+        self.statusBar().showMessage('Parameters saved to file %s' % path, 4000)
+
+    def save_pars_as(self):
+        path = self.sp.get_conf('save_parameters_filename')
+        keys = self.sp.conf.keys()
+        if '__builtins__' in keys:
+            keys.remove('__builtins__')
+        keys.sort()
+        file_choices = "pySSN initialization files (*init.py) (*init.py);;Python files (*.py) (*.py);;All files (*) (*)"
+        title = 'Save synthesis and plot parameters'
+        """
+        extension = os.path.splitext(path)[1][1:].lower()
+        if extension in ['txt','dat']:
+            selectedFilter = 'Text files (*.txt *.dat) (*.txt *.dat)'
+        elif extension in ['tex']:
+            selectedFilter = 'Tex files (*.tex) (*.tex)'
+        elif extension in ['csv']:
+            selectedFilter = 'CSV files (*.csv) (*.csv)'
         else:
-            self.instr_prof_file = None
-        if self.instr_prof_file is not None:
-            self.update_profile()
-            
+            selectedFilter = 'All Files (*) (*)'
+        """
+        selectedFilter = 'pySSN initialization files (*init.py) (*init.py)'
+        path = unicode(QtGui.QFileDialog.getSaveFileName(self, title, path, file_choices, selectedFilter))
+        if path:
+            with open(path, 'w') as f:
+                for key in keys:
+                    if key == 'prof':
+                        value = self.sp.format_prof(self.sp.conf['prof'])
+                    else:
+                        value = self.sp.conf[key]
+                        if isinstance(value, basestring):
+                            value = '\"{}\"'.format(value)
+                    f.write('{} = {}\n'.format(key, value))
+            self.sp.set_conf('save_parameters_filename', path)
+            self.statusBar().showMessage('Parameters saved to file %s' % path, 4000)
+                       
+    def apply_instr_prof(self):
+        path = str(self.instr_prof_file or '')
+        file_choices = "Python files (*.py) (*.py);;All files (*) (*)"
+        title = 'Open instrumental profile file'
+        path = str(QtGui.QFileDialog.getOpenFileName(self, title, path, file_choices))
+        path = path.split('/')[-1]
+        if not path:
+            return
+        try:
+            user_module = {}
+            execfile(path, user_module)
+            prof = user_module['prof']
+            self.sp.conf['prof'] = prof
+            self.sp.set_conf('fic_instr_prof', path)
+            self.instr_prof_file = path
+            log_.message('instrumental profile read from {}'.format(self.instr_prof_file), calling = self.calling)
+        except:
+            title = 'Error reading instrument profile'
+            msg = 'Unable to read instrumental profile from file \'{}\''.format(path)
+            path = None
+            if self.showErrorBox:
+                QtGui.QMessageBox.critical(self, title, msg, QtGui.QMessageBox.Ok)
+            else:
+                log_.warn(msg, calling = self.calling)
+            return
+        self.update_profile()
+        print 'qt_style = ', self.sp.get_conf('qt_style')
+
     def isValidFilename(self, filename):
         if filename is None:
             return False
@@ -2474,33 +2888,6 @@ class AppForm(QtGui.QMainWindow):
                 return True
             except IOError:
                 return False        
-        
-    def test_cosmetic_file(self):
-        self.sp.fic_cosmetik = self.sp.get_conf('fic_cosmetik')
-        cosmetic_file = self.sp.fic_cosmetik
-        if cosmetic_file is None:
-            self.sp.set_conf('do_cosmetik', False)
-            return
-                
-        if self.isValidFilename(cosmetic_file):
-            return
-            
-        title = 'pySSN: cosmetic file'
-        msg = "Line cosmetic file not set or invalid. \n" \
-              "It can be supplied in the initialization file with:\n" \
-              "     fic_cosmetik = <cosmetic_file> . \n\n" \
-              "Click \"Ok\" to open a file dialog to select this file."
-        QtGui.QMessageBox.critical(self, title, msg, QtGui.QMessageBox.Ok )  
-        self.set_cosmetic_file()
-        if self.sp.fic_cosmetik:
-            self.save_par_in_file('fic_cosmetik', self.sp.fic_cosmetik, self.init_file_name, 'line cosmetic file')
-        else:
-            self.sp.set_conf('do_cosmetik', False)
-            msg = "No cosmetic file selected.\n" \
-                  "Line cosmetics is disabled. " \
-                  "(do_cosmetik = False)\n\n"  \
-                  "Select 'File/Open cosmetic file\' in the menu-bar to activate cosmetics"
-            QtGui.QMessageBox.warning(self, 'pySSN: cosmetic file', msg, QtGui.QMessageBox.Ok )
 
     def set_cosmetic_file(self):
         file_choices = "Line cosmetic files (*cosm*.dat) (*cosm*.dat);;Data files (*.dat) (*.dat);;All files (*) (*)"
@@ -2611,8 +2998,8 @@ class AppForm(QtGui.QMainWindow):
 
         if self.sp.fic_cosmetik is None or self.sp.phyat_file is None:
             return
-        if not self.sp.get_conf('clean_cosmetic_file'):
-            return
+        #if not self.sp.get_conf('clean_cosmetic_file'):
+        #    return
         if not os.path.isfile(self.sp.fic_cosmetik):
             return
         f = open(self.sp.fic_cosmetik, 'r')
@@ -2717,21 +3104,21 @@ class AppForm(QtGui.QMainWindow):
             else:
                 answer = []    
             return answer
-
+        
         if self.sp.fic_cosmetik is None:
             return
         if os.path.isfile(self.sp.fic_cosmetik):
-        
             cosmetik_arr, errorMsg = self.sp.read_cosmetik()
             if len(errorMsg) > 0:
+                self.sp.do_cosmetik = False
+                self.sp.set_conf('do_cosmetik', False)        
                 title = 'Error in cosmetic file: '
-                msg = 'Unable to read from file \'{}\':\n{}'.format(self.sp.get_conf('fic_cosmetik'), errorMsg)
+                msg = 'Unable to read cosmetic data from file \'{}\':{}\n\nLine cosmetics will be disabled!'.format(self.sp.get_conf('fic_cosmetik'), errorMsg)
                 if self.showErrorBox:
                     QtGui.QMessageBox.critical(self, title, msg, QtGui.QMessageBox.Ok )
                 else:
                     log_.warn('{}: {}'.format(title, msg), calling=self.calling)
                 return
-
             ret = None
             f = open(self.sp.fic_cosmetik, 'r')
             cosmetic_lines = f.readlines()
@@ -2867,7 +3254,7 @@ class AppForm(QtGui.QMainWindow):
 
         if len(invalidCommands) > 0:
             title = 'Fatal error'
-            msg = 'Error in the initialization file {0}: '.format(self.init_file_name)
+            msg = 'Error in the initialization file \'{0}\': '.format(self.init_file_name)
             for line in invalidCommands:
                 msg = msg + '\n' + line
             if self.showErrorBox:
@@ -2888,30 +3275,33 @@ class AppForm(QtGui.QMainWindow):
         if dir_ == '':
             dir_ = './'
         self.directory = dir_
-        
         if not self.test_init_file():
             if self.sp == None:
                 sys.exit() 
             else:
                 return
-        
         self.sp = spectrum(config_file=self.init_file_name)
+        if self.sp.errorMsg:
+            if self.showErrorBox:
+                msg = 'Synthesis not possible. \n\n{}'.format(self.sp.errorMsg)
+                msg = self.sp.errorMsg
+                ret = QtGui.QMessageBox.critical(self, 'Critical Error', msg, QtGui.QMessageBox.Abort, QtGui.QMessageBox.Ignore)
+                if ret == QtGui.QMessageBox.Abort:
+                    sys.exit()
+            self.sp.errorMsg = ''
         if len(self.sp.read_obs_error) > 0:
-            title = 'Error reading observations: '
+            title = 'Error reading observations'
             msg = self.sp.read_obs_error
             if self.showErrorBox:
                 QtGui.QMessageBox.critical(self, title, msg, QtGui.QMessageBox.Ok )
             else:
                 log_.warn('{}: {}'.format(title, msg), calling=self.calling)
 
-        #sys.exit()
-        
         if ( self.sp.get_conf('fic_cosmetik') is None or
              self.sp.get_conf('fic_cosmetik') == '' ):
             self.sp.set_conf('do_cosmetik', False)
-
+        
         if self.sp.get_conf('do_synth') and self.sp.get_conf('do_cosmetik'):
-            self.test_cosmetic_file()
             self.match_cosmetic_phyat_files()
             if self.sp.get_conf('clean_cosmetic_file'):
                 self.clean_cosmetic_file()
@@ -2969,20 +3359,19 @@ class AppForm(QtGui.QMainWindow):
         self.verbosity_ag.actions()[self.sp.get_conf('log_level', 0)].setChecked(True)
         self.line_tick_ax_ag.actions()[self.sp.get_conf('line_tick_ax', 0)].setChecked(True)
         self.line_tick_pos_ag.actions()[self.sp.get_conf('line_tick_pos', 0)].setChecked(True)
-        self.residual_GroupBox.setChecked(self.sp.get_conf('plot_ax3', True))
+        self.residual_GroupBox.setChecked(self.sp.get_conf('qt_plot_residuals', True))
         self.selected_ions_action.setChecked(self.sp.get_conf('show_selected_ions_only', False))
         self.ion_cb.setChecked(self.sp.get_conf('show_selected_ions_only', False))
         self.selected_intensities_action.setChecked(self.sp.get_conf('show_selected_intensities_only', False))
         self.cut_cb.setChecked(self.sp.get_conf('show_selected_intensities_only', False))
         self.diff_lines_ag.actions()[self.sp.get_conf('diff_lines_by', 0)].setChecked(True)
         self.line_tick_ax_ag.actions()[self.sp.get_conf('line_tick_ax', 0)].setChecked(True)
-        self.editing_lines_action.setChecked(self.sp.get_conf('allow_editing_lines', False))
-        self.update_lines_action.setChecked(self.sp.get_conf('update_after_editing_lines', False))
+        self.editing_lines_action.setChecked(self.sp.get_conf('qt_allow_editing_lines', False))
+        self.update_lines_action.setChecked(self.sp.get_conf('qt_update_after_editing_lines', False))
         self.plot_cont_action.setChecked(self.sp.get_conf('cont_plot', False))
         self.show_line_ticks_action.setChecked(self.sp.get_conf('show_line_ticks', False))
         self.plot_lines_action.setChecked(self.sp.get_conf('plot_lines_of_selected_ions', False))
         self.lineIDs_GroupBox.setChecked(self.sp.get_conf('show_line_ticks', False) or self.sp.get_conf('plot_lines_of_selected_ions', False))
-        self.set_save_plot_action_tip()
         try:
             selected_ions = self.sp.get_conf('selected_ions')
             s = ''
@@ -2994,20 +3383,20 @@ class AppForm(QtGui.QMainWindow):
             self.set_ion()
         except:
             self.ion_box.setText('')
-        self.line_sort_ag.actions()[self.sp.get_conf('line_saved_ordered_by', 0)].setChecked(True)
-        self.show_header_action.setChecked(self.sp.get_conf('line_saved_header', False))
+        self.line_sort_ag.actions()[self.sp.get_conf('save_lines_sort', 0)].setChecked(True)
+        self.show_header_action.setChecked(self.sp.get_conf('save_lines_header', False))
         self.get_line_fields_to_print()
 
         self.readOnlyCells_bg_color = QtGui.QColor('white')
         self.editableCells_bg_color = QtGui.QColor('lightgreen')
-        
+
         if 'linux' in sys.platform and 'Plastique' in self.style_list:
             default_style = 'Plastique'
         elif 'darwin' in sys.platform and 'Macintosh (aqua)' in self.style_list:
             default_style = 'Macintosh (aqua)'
         else:
             default_style = self.style_list[0]
-            
+        
         if self.sp.get_conf('qt_style') not in self.style_list:
             
             if 'QT_STYLE' in os.environ:
@@ -3019,11 +3408,11 @@ class AppForm(QtGui.QMainWindow):
             else:
                 self.sp.set_conf('qt_style', default_style)  
         index_style = self.style_list.index(self.sp.get_conf('qt_style'))
-        
         self.style_ag.actions()[index_style].setChecked(True)
         QtGui.qApp.setStyle(self.sp.get_conf('qt_style'))
-        self.enable_tooltips_action.setChecked(self.sp.get_conf('enable_tooltips', True))
+        self.enable_tooltips_action.setChecked(self.sp.get_conf('qt_enable_tooltips', True))
         self.enable_tooltips_action_clicked()
+        self.adjust_fig_action.setChecked(self.sp.get_conf('fig_adjust', True))
 
     def sp_norm(self):
         if self.sp is None:
@@ -3049,6 +3438,7 @@ class AppForm(QtGui.QMainWindow):
         new_obj_velo = np.float(self.obj_velo_box.text())
         if old_obj_velo == new_obj_velo:
             return
+        self.sp.iterpolate_velocity = False
         self.sp.set_conf('obj_velo', new_obj_velo)
         log_.message('Changing obj_velo. Old: {}, New: {}'.format(old_obj_velo, new_obj_velo), calling=self.calling)
         self.statusBar().showMessage('Executing doppler correction of the observed spectrum ...') 
@@ -3102,18 +3492,24 @@ class AppForm(QtGui.QMainWindow):
     def adjust(self):
         if self.sp is None:
             return
+        self.sp.errorMsg = ''
         self.statusBar().showMessage('Running update ...')
         QtGui.QApplication.processEvents() 
         self.sp_norm()
         self.obj_velo()
         self.ebv()
+        if self.sp.errorMsg:
+            if self.showErrorBox:
+                msg = self.sp.errorMsg
+                QtGui.QMessageBox.warning(self, 'Update error', msg, QtGui.QMessageBox.Ok)
+                return 0
         ndiff, errorMsg = self.sp.adjust()
         if ndiff == -1:
             self.sp.do_cosmetik = False
             self.sp.set_conf('do_cosmetik', False)   
             self.sp.fic_cosmetik      
             self.set_status_text()
-            title = 'Error in cosmetic file: '
+            title = 'Error in cosmetic file'
             msg = 'Unable to read from file \'{}\'\nChanging to \'no cosmetic\':\n{}'.format(self.sp.get_conf('fic_cosmetik'), errorMsg)
             if self.showErrorBox:
                 QtGui.QMessageBox.critical(self, title, msg, QtGui.QMessageBox.Ok )
@@ -3133,33 +3529,38 @@ class AppForm(QtGui.QMainWindow):
         return ndiff 
 
     def apply_post_proc(self):
-        if self.post_proc_file is None or self.ask_postprocfile_action.isChecked():
-            file_choices = "Python files (*.py) (*.py);;All files (*) (*)"
-            if self.post_proc_file is None:
-                path = ''
-            else:
-                path = self.post_proc_file
-            path = unicode(QtGui.QFileDialog.getOpenFileName(self, 'Open file', path, file_choices))
-            if path:
-                self.post_proc_file = path
-            else:
-                return
+        path = str(self.post_proc_file or '')
+        file_choices = "Python files (*.py) (*.py);;All files (*) (*)"
+        title = 'Open post-process file'
+        path = unicode(QtGui.QFileDialog.getOpenFileName(self, title, path, file_choices))
+        path = path.split('/')[-1]
+        if not path:
+            return
         try:
             user_module = {}
-            execfile(self.post_proc_file, user_module)
+            execfile(path, user_module)
             self.post_proc = user_module['post_proc']
+            self.post_proc_file = path
             log_.message('function post_proc read from {}'.format(self.post_proc_file))
         except:
             self.post_proc = None
-            log_.warn('function post_proc NOT read from {}'.format(self.post_proc_file), 
-                          calling = self.calling)
-        if self.post_proc is not None:
-            try:
-                self.post_proc(self.fig)
-                self.canvas.draw()
-            except:
-                log_.warn('Error in {}'.format(self.post_proc_file), 
-                          calling = self.calling)
+            title = 'Error reading post-process file'
+            msg = 'Unable to read post-process file \'{}\''.format(path)
+            if self.showErrorBox:
+                QtGui.QMessageBox.critical(self, title, msg, QtGui.QMessageBox.Ok)
+            else:
+                log_.warn(msg, calling = self.calling)
+            return
+        try:
+            self.post_proc(self.fig)
+            self.canvas.draw()
+        except:
+            title = 'Error executing post-process'
+            msg = 'Error in post-process file \'{}\''.format(self.post_proc_file)
+            if self.showErrorBox:
+                QtGui.QMessageBox.critical(self, title, msg, QtGui.QMessageBox.Ok)
+            else:
+                log_.warn(msg, calling = self.calling)
 
     def update_profile(self):
         if self.sp is None:
@@ -3213,8 +3614,9 @@ class AppForm(QtGui.QMainWindow):
                 item = item[:-1]
                 this_ion_only = False
             else:
-                this_ion_only = True                
-            if item.ljust(9) in self.sp.liste_raies['id']:                
+                this_ion_only = True
+            self.sp.set_ion_list()
+            if item.ljust(9) in self.sp.liste_raies['id']:
                 if self.sp.true_ion(item) == item or this_ion_only:
                     sList = sList + [item]
                     if not this_ion_only:
@@ -3227,7 +3629,6 @@ class AppForm(QtGui.QMainWindow):
             else:
                 ion_list = self.sp.get_ions_from_element(item)
                 sList = sList + ion_list
-        sList = list(set(sList))
         self.sp.set_conf('selected_ions', sList)
         self.ion_box.setText(s)
         
@@ -3274,7 +3675,7 @@ class AppForm(QtGui.QMainWindow):
             s = self.sp.fieldStrFromLine(line,'num').strip()
             self.line_info_box.setText(s) 
             self.line_info_ref = int(s)
-            if self.sp.get_conf('show_dialogs', True):
+            if self.sp.get_conf('qt_show_dialogs', True):
                 self.show_line_info_dialog()
             else:
                 self.sp.line_info(new_ref, sort='i_rel')
@@ -3315,7 +3716,7 @@ class AppForm(QtGui.QMainWindow):
     def diff_lines(self):
         self.sp.set_conf('index_of_current_ion', -1)
         self.set_plot_ax2()
-        if self.sp.get_conf('diff_lines_by') == 0: 
+        if self.sp.get_conf('diff_lines_by') == 0 and len(self.sp.selected_ions_data) > 0:
             s = str(self.sp.selected_ions_data[0][2][0])
             self.line_info_box.setText(s)
         
@@ -3336,14 +3737,14 @@ class AppForm(QtGui.QMainWindow):
             return
         log_.debug('Verbosity changed from {} to {}'.format(log_.level, verbosity), calling=self.calling)
         log_.level = verbosity
+        self.sp.set_conf('log_level', verbosity)
         
     def style(self):
-        new_style_str = self.style_ag.checkedAction().text()
-        old_style_str = self.style_list[self.sp.get_conf('qt_style')]
+        new_style_str = str(self.style_ag.checkedAction().text())
+        old_style_str = self.sp.get_conf('qt_style')
         if new_style_str == old_style_str:
             return
-        style = self.style_list.index(new_style_str)
-        self.sp.set_conf('qt_style', style)
+        self.sp.set_conf('qt_style', new_style_str)
         QtGui.qApp.setStyle(new_style_str)
         log_.debug('Widget style changed from {} to {}'.format(old_style_str, new_style_str), calling=self.calling)
             
@@ -3487,6 +3888,9 @@ class AppForm(QtGui.QMainWindow):
         self.x_plot_lims = (np.float(self.xlim_min_box.text()), np.float(self.xlim_max_box.text()))
         self.y1_plot_lims = (np.float(self.y1lim_min_box.text()), np.float(self.y1lim_max_box.text()))
         self.y3_plot_lims = (np.float(self.y3lim_min_box.text()), np.float(self.y3lim_max_box.text()))
+        self.sp.set_conf('x_plot_lims', self.x_plot_lims)
+        self.sp.set_conf('y1_plot_lims', self.y1_plot_lims)
+        self.sp.set_conf('y3_plot_lims', self.y3_plot_lims)
         self.restore_axes()
         self.draw_ion()
 
@@ -3499,6 +3903,10 @@ class AppForm(QtGui.QMainWindow):
         self.sp.set_conf('limit_sp', limit_sp)
     
     def set_limit_sp_and_run(self):
+        if str(self.sp_min_box.text()).strip() == '':
+            self.sp_min_box.setText('{:.1f}'.format(self.sp.w_min))
+        if str(self.sp_max_box.text()).strip() == '':
+            self.sp_max_box.setText('{:.1f}'.format(self.sp.w_max))
         if not ( self.validate_sp_min() and 
                  self.validate_sp_max() and
                  self.sp_lim_in_range() ):
@@ -3576,7 +3984,7 @@ class AppForm(QtGui.QMainWindow):
             self.axes_fixed = False
             
     def get_line_fields_to_print(self):
-        field_list = self.sp.get_conf('line_field_print')
+        field_list = self.sp.get_conf('save_lines_fields')
         for i in range(0,len(self.line_field_menu.actions())):
             if self.line_print_dic.keys()[i] in field_list:
                 self.line_field_menu.actions()[i].setChecked(True)
@@ -3585,34 +3993,43 @@ class AppForm(QtGui.QMainWindow):
               
     def set_show_header(self):
         if self.show_header_action.isChecked():
-            self.sp.set_conf('line_saved_header', True)
+            self.sp.set_conf('save_lines_header', True)
         else:
-            self.sp.set_conf('line_saved_header', False)
+            self.sp.set_conf('save_lines_header', False)
       
     def set_line_fields_to_print(self):
         s = []
         for i in range(0,len(self.line_field_menu.actions())):
             if self.line_field_menu.actions()[i].isChecked():
                 s.append( self.line_print_dic.keys()[i])
-        self.sp.set_conf('line_field_print', s)
+        self.sp.set_conf('save_lines_fields', s)
         
     def save_lines(self):
         self.sp.save_lines()
-        path = self.sp.get_conf('line_saved_filename')
-        self.statusBar().showMessage('Saved to %s' % path, 4000)
+        path = self.sp.get_conf('save_lines_filename')
+        self.statusBar().showMessage('Lines saved to file %s' % path, 4000)
     
     def save_lines_as(self):
         file_choices = "Text files (*.txt *.dat) (*.txt *.dat);;Tex files (*.tex) (*.tex);;CSV files (*.csv) (*.csv);;All Files (*) (*)"
-        filename = self.sp.get_conf('line_saved_filename')
-        path = unicode(QtGui.QFileDialog.getSaveFileName(self, 'Save lines to file', filename, file_choices))
+        filename = self.sp.get_conf('save_lines_filename')
+        extension = os.path.splitext(filename)[1][1:].lower()
+        if extension in ['txt','dat']:
+            selectedFilter = 'Text files (*.txt *.dat) (*.txt *.dat)'
+        elif extension in ['tex']:
+            selectedFilter = 'Tex files (*.tex) (*.tex)'
+        elif extension in ['csv']:
+            selectedFilter = 'CSV files (*.csv) (*.csv)'
+        else:
+            selectedFilter = 'All Files (*) (*)'
+        path = unicode(QtGui.QFileDialog.getSaveFileName(self, 'Save lines to file', filename, file_choices, selectedFilter))
         if path:
-            self.sp.set_conf('line_saved_filename', path)
+            self.sp.set_conf('save_lines_filename', path)
             self.sp.save_lines()
-            self.statusBar().showMessage('Saved to %s' % path, 4000)
+            self.statusBar().showMessage('Lines saved to file %s' % path, 4000)
 
     def line_sort(self):
         k = self.line_sort_list.index(self.line_sort_ag.checkedAction().text())
-        self.sp.set_conf('line_saved_ordered_by',k)
+        self.sp.set_conf('save_lines_sort',k)
 
 def main_loc(init_filename=None, post_proc_file=None):
     app = QtGui.QApplication(sys.argv)

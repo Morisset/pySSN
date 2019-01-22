@@ -6,33 +6,83 @@
 # set here or sometime in the control panel.
 # This is a python script that will be executed.
 
-# Qt widget style
-# User can specify it using QT_STYLE environment variable. If not set, 0 is used.
+#-------------------------------------------------------------------
+#   Qt (Graphical user interface)
+#-------------------------------------------------------------------
+
+# Qt widget style (ex. Plastique, Windows, ...)
 qt_style = None
 
 # Enable tooltips of Qt widgets
-enable_tooltips = True
+qt_enable_tooltips = True
+
+# Show line infomation on a modal dialog (True) or on the terminal (False)
+qt_show_dialogs = True
+
+# Show plot of residuals
+qt_plot_residuals = True
+
+# Allow editing line parameters in line info dialog
+qt_allow_editing_lines = True
+
+# Automatically update synthesis after editing line parameters in line info dialog
+qt_update_after_editing_lines = True
+
+# The fraction of height reserved for space between subplots
+fig_hspace=0.05
+
+# The bottom limit of the figure
+fig_bottom=0.08 
+
+# The left limit of the figure
+fig_left=0.05
+
+# The right limit of the figure
+fig_right=0.995
+
+# The top limit of the figure
+fig_top=0.995 
+
+# Automatically adjust limits of the figure
+fig_adjust = False
+
+#   Verbosity
+#-------------------------------------------------------------------
 
 # Verbosity level:
-# 1: only errors
-# 2: errors and warnings
-# 3: errors, warnings and comments
+# 0: None
+# 1: Only errors
+# 2: Errors and warnings
+# 3: Errors, warnings and comments
+# 4: Debug messages
 log_level = 2
+
+warn_on_no_cosmetik = True
+warn_on_no_reference = True
 
 #-------------------------------------------------------------------
 #   Observations
 #-------------------------------------------------------------------
-# Observation filename, without the extension (which must be .spr[.gz])
-# If set to None, limit_sp must be given.
+
+# Observed spectrum filename
+# Supported formats: plain text files, zipped text files (.gz), fits files (.fits)
 spectr_obs = None 
 
 # Factor applied to the observations
 sp_norm = 1.0 #  
 # Not sure it works... Better use obj_velo
 lambda_shift = 0.0 # w units. 
-# Velocity of the object, applied to the wavelengths in the
-# calibration of the observations
+
+# Wavelength correction table
+# ex. [(lambda1,delta1), (lambda2,delta2), ... ]
+lambda_shift_table = None
+
+# Velocity of the object, applied to the wavelengths in the calibration of the observations
 obj_velo = 0. # km/s
+
+# Object velocity interpolation table
+# ex. [(lambda1,v1), (lambda2,v2), ... ]
+obj_velo_table = None
 
 # Only used if no observed spectrum given
 lambda_pix = 0.1 
@@ -83,9 +133,6 @@ do_cosmetik = True
 # the same lines (modification of the profiles, lambda-calibration...)
 # Note that if do_synth = False, the following flag has no meaning. 
 do_read_liste = True
-
-warn_on_no_cosmetik = True
-warn_on_no_reference = True
 
 # Applied to the synthese
 
@@ -145,10 +192,6 @@ label_magenta = ''
 plot_cyan = None
 label_cyan = ''
 
-# Plot the second and third panels
-plot_ax2 = True
-plot_ax3 = True
-
 # Show line ticks 
 show_line_ticks = True
 
@@ -158,20 +201,17 @@ line_tick_ax = 0
 # line_tick_pos: 0 - Top, 1 - Middle, 2 - Bottom
 line_tick_pos = 0
 
+# line_tick_pos_selectedLine: 0 - Top, 1 - Middle, 2 - Bottom, 3 - Same position (=line_tick_pos), 4 - alternate position
+line_tick_pos_selectedLine = 3
+
 # Show line ticks for selected ions only
 show_selected_ions_only = True
 
 # Show line ticks for selected ions only
 show_selected_intensities_only = True
 
-# Differentiate line sequences: 0 - by reference line, 1 - by process, 2 - by ion
-diff_lines_by = 0
-
-# Allow editing line parameters in line info dialog
-allow_editing_lines = True
-
-# Automatically update synthesis after editing line parameters in line info dialog
-update_after_editing_lines = True
+# Differentiate lines by: 0 - ion and reference line, 1 - ion and process, 2 - ion, 3 - element 
+diff_lines_by = 2
 
 # Color of line ticks 
 line_tick_color = 'black'
@@ -185,6 +225,9 @@ color_selected_ions = [ 'DeepSkyBlue', 'magenta', 'BlueViolet', 'LightGreen' ]
 # List of selected ions 
 selected_ions = []
 
+# Sort selected ions 
+selected_ions_sort = False
+
 # Index to cycle the selected ions
 index_of_selected_ions = -1
 
@@ -195,7 +238,10 @@ fact_multi_synth =  1.
 # the printed table. Still in devel
 norm_intens = 1.00e4
 
-# instrument
+# File containing the definition of the instrumental profile
+fic_instr_prof = None
+
+# instrument profile
 prof = {'largeur':0.50,
     'B_1r':0.00,'B_1l':0.00,'decroiss_1':2.70,'alpha_1':0.50,
     'B_2r':0.00,'B_2l':0.00,'decroiss_2':1.50,'alpha_2':0.75,
@@ -203,7 +249,7 @@ prof = {'largeur':0.50,
     'B_4r':0.00,'B_4l':0.00,'decroiss_4':0.45,'alpha_4':1.50,
     'comment':' Gauss'   }
 
-ghost =  {"do_ghost":0, "delta_lambda" : 0. , "intens" : [ 0.00]}
+ghost = {"do_ghost":0, "delta_lambda" : 0. , "intens" : [ 0.00]}
 
 #ghost =  {do_ghost:1, $
 #          delta_lambda : [2.74,-2.75,5.2,-5.2] , $
@@ -213,23 +259,59 @@ ghost =  {"do_ghost":0, "delta_lambda" : 0. , "intens" : [ 0.00]}
 #                      3.50000e-05, $
 #                      8.00000e-06] }
 
+# List of plot legend formats for different line processes = [ [ [list of process codes], format ], ... ] 
+"""
+code process
+1    Rec
+2    Dielectronic
+3    Collisional 
+4    Bowen (set to Fluorescence) 
+5    FREE  (set to Rec)
+6    FREE  (set to Rec)
+7    Fluorescence
+8    Charge Exchange
+9    Rec. fixed ones.
+"""
+process_code_format = [ [[0,1,5,6,9], '{} (rec)' ], [[2], '{} (die)'], [[3], '[{}]'], [[7,4], '{} (fl)'], [[8], '{} (chEx)'] ]
 
+#-------------------------------------------------------------------
+#   Save parameters to file
+#-------------------------------------------------------------------
+
+# Automatically save all synthesis and plot parameters at exit
+save_parameters_on_exit = False
+
+# Save parameters filename
+save_parameters_filename = 'last_init.py'
+
+#-------------------------------------------------------------------
+#   Save lines to file
+#-------------------------------------------------------------------
 
 # Fields to be printed 
-line_field_print   = [ 'id', 'lambda', 'l_shift', 'i_rel', 'i_cor' ]
+save_lines_fields = [ 'num', 'id', 'lambda', 'l_shift', 'i_rel', 'i_cor', 'ref', 'profile', 'vitesse', 'comment' ]
 
-# Printed header  
-line_saved_header = True
+# Print header  
+save_lines_header = True
 
-# line_saved_ordered_by: 0 - Wavelength, 1 - Intensity, 2 - ion
-line_saved_ordered_by = 0
+# Lines sorted by: 
+#   0 - wavelength, 
+#   1 - decreasing wavelength 
+#   2 - intensity
+#   3 - decreasing intensity
+#   4 - ion
+#   5 - decreasing ion
+save_lines_sort = 0
 
-line_saved_format = 'tex' # tex or csv
-line_saved_filename = 'lines.dat'
+# Save line filename
+save_lines_filename = 'lines.dat'
 
+#-------------------------------------------------------------------
+#   Save plot to file
+#-------------------------------------------------------------------
+
+# Plot filename
 plot_filename = 'plot.pdf'
-
-show_dialogs = True
 
 # Order the cosmetic_file by line number and remove duplicate lines.
 order_cosmetic_file = False
