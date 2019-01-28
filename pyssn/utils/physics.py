@@ -51,6 +51,7 @@ def make_cont_Ercolano(T_in, case, lam):
     n_lam = len(lam)
     hnu =  CST.CLIGHT * 1e8 / lam * CST.HPLANCK  #!phy.c_ang_sec/lam*!phy.h
     with open(execution_path('../data/coeff_ercolano.pickle'), 'rb') as handle:
+        # python 3 requires pickle.load(open('coeff_ercolano.pickle', 'rb'), encoding="latin-1")
         BE = pickle.load(handle)
     
     if case == 'H':
