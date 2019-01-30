@@ -43,6 +43,10 @@ GENERATE THE `liste_phyat` AND `liste_model` FILES
 
 The optional pynebdatafiles argument is a file containing the list of atomic data files to be used instead of the default ones.
 
+Two files are created describing what has been done:
+1. log.dat : gives the list of the ions used for the collisionally excited lines by PyNeb, as well as the atomic configuration and the atomic data used. If an ion is finally not printed in the phyat file, this log tells why.
+1. help.dat : gives the physical conditions (Te and nH) used to compute the line emissivities.
+
 `pySSN_model --abund_file=abunds.dat --ion_frac_file=50_-2_R_ionfrac.dat --phyat_file=liste_phyat_test1.dat --model_file=liste_model_test1.dat --norm_hbeta=10000 --ion_frac_min=0.0000000001`
 
 
