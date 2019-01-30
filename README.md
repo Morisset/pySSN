@@ -1,5 +1,12 @@
 # pySSN
+pySSN
+====
 
+A pythonic Spectral Synthesis for Nebulae, developped by:
+
+* Ch. Morisset (Instituto de Astronomia, Universidad Nacional Autonoma de Mexico)
+* D. Péquignot (Meudon Observatory, France)
+* M. Copetti (Laboratorio de Analise Numerica e Astrofisica, Departamento de Matematica, Universidade Federal de Santa Maria, Brazil)
 
 Installation
 =======
