@@ -15,7 +15,7 @@ Easily installed form github:
 Dependencies
 =========
 
-pySSN requieres numpy, matplotlib, scipy
+pySSN requieres python 2.7 and decent versions of numpy, matplotlib, scipy
 
 It also requires PyNeb if you want to have reddening correction. https://github.com/Morisset/PyNeb_devel
 
