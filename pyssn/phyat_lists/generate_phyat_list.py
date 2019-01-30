@@ -542,8 +542,8 @@ def config_pyneb(pynebdatafiles=None):
     #
     # 3d7: (fe_ii) ni_iv  lk all but fe. done xcpt ga_vii ge_viii
     #  ** fe_ii elsewhere (4s)
-    # pn.atomicData.setDataFile('fe_ii_atom_....dat')
-    # pn.atomicData.setDataFile('fe_ii_coll_....dat')
+    pn.atomicData.setDataFile('fe_ii_atom_SRKFB19.dat')
+    pn.atomicData.setDataFile('fe_ii_coll_SRKFB19.dat')
     pn.atomicData.setDataFile('co_iii_atom_DP.dat')
     pn.atomicData.setDataFile('co_iii_coll_DP.dat')
     pn.atomicData.setDataFile('ni_iv_atom_DP.dat')
