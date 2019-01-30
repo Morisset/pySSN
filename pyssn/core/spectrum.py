@@ -1081,10 +1081,7 @@ class spectrum(object):
     def make_synth_test(self, liste_raies):
 
         sp_theo = self.sp_theo.copy()
-        
-        if bool(self.conf['do_calcul_aire_ref']):
-            self.aire_ref = 1.0
-                   
+                           
         sp_synth = np.zeros_like(self.w)
         sp_theo['spectr'] *= 0.0 
         sp_theo['correc'] *= 0.0
@@ -1119,9 +1116,6 @@ class spectrum(object):
         return sp_theo, sp_synth
 
     def make_synth(self, liste_raies, sp_theo):
-
-        if bool(self.conf['do_calcul_aire_ref']):
-            self.aire_ref = 1.0
                    
         sp_synth = np.zeros_like(self.w)
         sp_theo['spectr'] *= 0.0 
