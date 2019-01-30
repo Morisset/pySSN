@@ -1,7 +1,4 @@
 # pySSN
-pySSN
-====
-
 A pythonic Spectral Synthesis for Nebulae, developped by:
 
 * Ch. Morisset (Instituto de Astronomia, Universidad Nacional Autonoma de Mexico)
