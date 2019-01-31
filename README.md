@@ -5,45 +5,7 @@ A pythonic Spectral Synthesis for Nebulae, developped by:
 * D. Péquignot (Meudon Observatory, France)
 * M. Copetti (Laboratorio de Analise Numerica e Astrofisica, Departamento de Matematica, Universidade Federal de Santa Maria, Brazil)
 
-Installation
-=======
-
-Easily installed form github:
-
-`pip install -U git+https://github.com/Morisset/pySSN.git`
-
-Dependencies
-=========
-
-pySSN requieres python 2.7 and decent versions of numpy, matplotlib, scipy
-
-It also requires PyNeb if you want to have reddening correction. https://github.com/Morisset/PyNeb_devel
-
-pySSN is better running with Qt4.
-
-Qt5 is still not supported
-
-Usage
-====
-
-Once installed, you can call it from command line:
-
-`pySSN [-f s6302_n_c_init.py]`
-
-The init file is optional. If not given, the program will first ask you for one.
-
-You can also call pySSN from within a python session:
-
-`from pyssn.qt.pyssn_qt import main_loc`
-
-`sp = main_loc('./s6302_n_c_init.py')`
-
-You can interact with sp.
-
-
-If you don't have Qt4 installed, you can still call pySSN with an init file (mandatory in this case):
-
-`pySSN -f s6302_n_c_init.py`
+More on the Wiki: https://github.com/Morisset/pySSN/wiki
 
 Acknowledgements
 ================
