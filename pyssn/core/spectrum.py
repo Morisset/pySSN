@@ -359,14 +359,7 @@ class spectrum(object):
     
     def do_profile_dict(self, return_res=False):
         
-        self.fic_profs = self.get_conf('fic_profile', None)
         self.instr_prof_file = self.get_conf('fic_instr_prof', None)
-
-        if self.fic_profs is None:
-            self.fic_profs = execution_path('./')+'../data/default_profiles.dat'
-        else:
-            self.fic_profs = self.directory + self.fic_profs
-
         if self.instr_prof_file is not None:
             try:
                 user_module = {}
@@ -382,6 +375,12 @@ class spectrum(object):
                 # 'instrument profile: do interpolation when needed'
                 self.conf['prof'] = prof                
 
+        self.fic_profs = self.get_conf('fic_profile', None)
+        if self.fic_profs is None:
+            self.fic_profs = execution_path('./')+'../data/default_profiles.dat'
+        else:
+            self.fic_profs = self.directory + self.fic_profs
+
         if not os.path.isfile(self.fic_profs):
             log_.error('File not found {}'.format(self.fic_profs), calling=self.calling)
         emis_profiles = {}
@@ -396,6 +395,9 @@ class spectrum(object):
                         l = l.split(';')[0]
                     if ':' in l:
                         if prof_params is not None:
+                            # T4 and vel are defined at the first round
+                            # prof_params is then defined, and when coming back
+                            # to this loop, emis_prof is setup
                             emis_profiles[key] = {'T4': T4,
                                                   'vel': vel,
                                                   'params' : prof_params}
@@ -750,27 +752,28 @@ class spectrum(object):
         self.w = self.w[lims]
         self.f = self.f[lims]
 
-        w_corr = None
-        w_shift = None
+        do_shift = False
         if self.get_conf('lambda_shift_table') is not None:
             try:
                 x = np.array([i[0] for i in list(self.get_conf('lambda_shift_table'))])
                 y = np.array([i[1] for i in list(self.get_conf('lambda_shift_table'))])
                 f = interpolate.interp1d(x, y, fill_value=0, bounds_error=False)
                 w_shift = f(self.w)
+                do_shift = True
             except:
                 log_.warn('Error interpolating wavelengh correction table \'lambda_shift_table\'', calling = self.calling)
-                
+        
         self.w_obs = self.w.copy()
         self.f_ori = self.f.copy()
 
-        if w_shift != None:
+        if do_shift:
             correction_is_valid = True 
             for i in range(1,len(self.w)):
                 if ((self.w[i]+w_shift[i])-(self.w[i-1]+w_shift[i-1]))*(self.w[i]-self.w[i-1]) <= 0:
                     correction_is_valid = False 
             if correction_is_valid:
                 self.w += w_shift
+                log_.message('Wavelengths shifted', calling = self.calling)
             else:
                 log_.warn('Error interpolating wavelengh correction table \'lambda_shift_table\'.\nThe order of pixels must be preserved.', calling = self.calling)
 
