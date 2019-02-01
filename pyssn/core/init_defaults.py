@@ -119,8 +119,10 @@ wave_unit = 'Angstrom'
 # Here are the 2 filenames of the data. The filename 
 # of the atomic database is hard-coded 
 fic_modele = 'liste_modele.dat'
-fic_cosmetik = 'liste_cosmetik.dat'
 fic_cosmetik = None
+
+# File containing the definition of the intrinsc line profile
+fic_profile = None
 
 # File containing the definition of the instrumental profile
 fic_instr_prof = None
