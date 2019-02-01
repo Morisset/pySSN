@@ -786,8 +786,8 @@ class spectrum(object):
         self.n_lambda = len(self.f)
         self.tab_pix = change_size(self.tab_pix, resol)
         self.lambda_pix = (np.max(self.w) - np.min(self.w)) / self.n_lambda
-        log_.debug('n_lambda = {}, tab_pix = {}, lambda_pix = {}'.format(self.n_lambda, self.tab_pix, self.lambda_pix), 
-                   calling = self.calling)
+        #log_.debug('n_lambda = {}, tab_pix = {}, lambda_pix = {}'.format(self.n_lambda, self.tab_pix, self.lambda_pix), 
+        #           calling = self.calling)
         
     def renorm(self, new_norm):
         self.f /= self.get_conf('sp_norm', undefined = 1.)
@@ -2063,13 +2063,14 @@ class spectrum(object):
     def plot_ax1(self, ax, xlims=None, show_legend=True):
         
         # mvfc: uncomment to compare the corrected (with lambda_shift_table = []) and original wavelengths
-        # ax.step(self.w_obs, self.f_ori, where='mid', label='Uncorr', c='yellow', linewidth=1.5)
+        if log_.level == 4:        
+            ax.step(self.w_obs, self.f_ori, where='mid', label='Uncorr', c='yellow', linewidth=1.5)
         ax.step(self.w_ori, self.f_ori, where='mid', label='Obs', c='red', linewidth=1.5)
         
         if self.sp_synth_lr is None:
             return
 
-        self.ax1_line_synth = ax.step(self.w_ori, self.sp_synth_lr, where='mid', label='Synth', c='blue', linewidth=1.5)[0]
+        self.ax1_line_synth = ax.step(self.w_ori, self.sp_synth_lr, where='mid', label='Synth', c='blue', linewidth=1.5)[0]        
 
         if self.hr:
             ax.step(self.w, self.sp_synth, where='mid', c='green')
