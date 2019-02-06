@@ -2818,10 +2818,10 @@ class AppForm(QtGui.QMainWindow):
 
     def save_pars_as(self):
         path = self.sp.get_conf('save_parameters_filename')
+        keys = self.sp.default_keys
         
         """ mvfc: to get the obsolete keys
         keys0 = self.sp.conf.keys()
-        keys = self.sp.default_keys
         obsolete_keys = sorted(list(set(keys0)-set(keys)))
         print obsolete_keys
         for key in obsolete_keys:
