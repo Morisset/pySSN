@@ -235,11 +235,8 @@ fact_multi_synth =  1.
 # the printed table. Still in devel
 norm_intens = 1.00e4
 
-# File containing the definition of the instrumental profile
-fic_instr_prof = None
-
 # instrument profile
-prof = {'largeur':0.50,
+instr_prof = {'largeur':0.50,
     'B_1r':0.00,'B_1l':0.00,'decroiss_1':2.70,'alpha_1':0.50,
     'B_2r':0.00,'B_2l':0.00,'decroiss_2':1.50,'alpha_2':0.75,
     'B_3r':0.00,'B_3l':0.00,'decroiss_3':1.15,'alpha_3':1.00,
