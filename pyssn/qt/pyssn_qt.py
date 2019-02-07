@@ -147,6 +147,7 @@ class AppForm(QtGui.QMainWindow):
         self.yscale = None        
         self.post_proc_file = post_proc_file
         self.tick_file = None
+        self.save_parameters_file = None
         self.do_save = True
         self.cont_par_changed = False
         self.axes_fixed = False
@@ -2781,6 +2782,7 @@ class AppForm(QtGui.QMainWindow):
             self.do_save = True
             self.restore_axes()
             self.update_lim_boxes()
+            self.save_parameters_file = None
         else:
             log_.warn('A filename must be given', calling=self.calling)
             sys.exit('An initialization filename must be given')
@@ -2788,7 +2790,7 @@ class AppForm(QtGui.QMainWindow):
     def get_init_filename(self):
         file_choices = "Python initialization files (*init.py) (*init.py);;Python files (*.py) (*.py);;All files (*) (*)"
         title = 'Open pySSN initialization file'
-        init_file = str(QtGui.QFileDialog.getOpenFileName(self, title, '', file_choices))
+        init_file = str(QtGui.QFileDialog.getOpenFileName(self, title, self.init_file_name, file_choices))
         if init_file and os.path.isfile(init_file):
             self.init_file_name = init_file
         else:
@@ -2817,33 +2819,18 @@ class AppForm(QtGui.QMainWindow):
         self.statusBar().showMessage('Parameters saved to file %s' % path, 4000)
 
     def save_pars_as(self):
-        path = self.sp.get_conf('save_parameters_filename')
+        if self.save_parameters_file is None:
+            path = self.init_file_name
+        else:
+            path = self.save_parameters_file        
         keys = self.sp.default_keys
-        
-        """ mvfc: to get the obsolete keys
-        keys0 = self.sp.conf.keys()
-        obsolete_keys = sorted(list(set(keys0)-set(keys)))
-        print obsolete_keys
-        for key in obsolete_keys:
-            print key
-        """
-            
-        if '__builtins__' in keys:
-            keys.remove('__builtins__')
+        keys_to_be_removed = ['__builtins__', 'plot_magenta', 'label_magenta', 'plot_cyan', 'label_cyan']
+        for key in keys_to_be_removed: 
+            if key in keys:
+                keys.remove(key)
         keys.sort()
         file_choices = "pySSN initialization files (*init.py) (*init.py);;Python files (*.py) (*.py);;All files (*) (*)"
         title = 'Save synthesis and plot parameters'
-        """
-        extension = os.path.splitext(path)[1][1:].lower()
-        if extension in ['txt','dat']:
-            selectedFilter = 'Text files (*.txt *.dat) (*.txt *.dat)'
-        elif extension in ['tex']:
-            selectedFilter = 'Tex files (*.tex) (*.tex)'
-        elif extension in ['csv']:
-            selectedFilter = 'CSV files (*.csv) (*.csv)'
-        else:
-            selectedFilter = 'All Files (*) (*)'
-        """
         selectedFilter = 'pySSN initialization files (*init.py) (*init.py)'
         path = unicode(QtGui.QFileDialog.getSaveFileName(self, title, path, file_choices, selectedFilter))
         if path:
@@ -2856,7 +2843,7 @@ class AppForm(QtGui.QMainWindow):
                         if isinstance(value, basestring):
                             value = '\"{}\"'.format(value)
                     f.write('{} = {}\n'.format(key, value))
-            self.sp.set_conf('save_parameters_filename', path)
+            self.save_parameters_file = path
             self.statusBar().showMessage('Parameters saved to file %s' % path, 4000)
                        
     def teste_instr_prof(self, prof):
