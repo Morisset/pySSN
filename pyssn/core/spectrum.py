@@ -485,32 +485,41 @@ class spectrum(object):
             self.config_file = config_file
 
         self.conf = {}
+        init_conf = {}
         execfile(execution_path('./')+'init_defaults.py', self.conf)
         self.default_keys = self.conf.keys()
-
         if self.config_file is not None:
             if not os.path.exists(self.directory + self.config_file):
                 log_.error('File {} not found'.format(self.directory + self.config_file))
             try:
-                execfile(self.directory + self.config_file, self.conf)
+                execfile(self.directory + self.config_file, init_conf)
                 log_.message('configuration read from {0}'.format(self.config_file), 
                                    calling = self.calling)
             except:
                 log_.warn('configuration NOT read from {0}'.format(self.config_file),
                                 calling = self.calling)
         
-        # to change automatically from prof to instr_prof 
+        obsolete_keys = list(set(init_conf.keys())-set(self.default_keys))
+        obsolete_keys.sort()
+        if len(obsolete_keys) > 0:
+            log_.message('list of variables read from {} that changed name or are obsolete:\n{}'.format(self.config_file, obsolete_keys),
+                                   calling = self.calling)        
+
+        # to change keys automatically
         old_keys = ['allow_editing_lines',    'gcont_pl_alpha', 'index_of_current_ion',   'prof',       'line_field_print',  'line_saved_filename', 'line_saved_header', 'line_saved_ordered_by', 'qt_fig_adjust', 'qt_fig_bottom', 'qt_fig_hspace', 'qt_fig_left', 'qt_fig_right', 'qt_fig_top', 'show_dialogs',    'update_after_editing_lines']
         new_keys = ['qt_allow_editing_lines', 'cont_pl_alpha',  'index_of_selected_ions', 'instr_prof', 'save_lines_fields', 'save_lines_filename', 'save_lines_header', 'save_lines_sort',       'fig_adjust',    'fig_bottom',    'fig_hspace',    'fig_left',    'fig_right',    'fig_top',    'qt_show_dialogs', 'qt_update_after_editing_lines']
-        old_key = ['prof']
-        new_key = ['instr_prof']
-        key_dict = dict(zip(new_keys, old_keys))
-        for key in new_keys:
-            if key not in self.default_keys:
-                s = self.get_conf(key_dict[key])
-                self.set_conf(key, s)
-                self.default_keys.append(key)
-        
+        new_name = dict(zip(old_keys, new_keys))
+        for key in old_keys:
+            if key in init_conf.keys():
+                if new_name[key] not in init_conf.keys():
+                    init_conf[new_name[key]] = init_conf[key]
+                    log_.message('variable \'{}\' get from old name \'{}\' from init file {}'.format(new_name[key], key, self.config_file),
+                                   calling = self.calling)
+                del init_conf[key]
+
+        self.conf.update(init_conf)
+
+        # Obsolete for qt
         self.plot_magenta = self.get_conf('plot_magenta', None)
         self.label_magenta = self.get_conf('label_magenta', None)      
         self.plot_cyan = self.get_conf('plot_cyan', None)
