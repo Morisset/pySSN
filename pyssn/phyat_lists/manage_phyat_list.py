@@ -561,7 +561,8 @@ def make_phyat_list(filename, cut=1e-4, E_cut=20, cut_inter=1e-5,
     log_file.write('\n')
     log_file.close()
 
-def phyat2model(phyat_file, model_file, ion_frac_file, norm_hbeta=1e4, abund_file='asplund_2009.dat', ion_frac_min=1e-4, verbose=False):
+def phyat2model(phyat_file, model_file, ion_frac_file, norm_hbeta=1e4, 
+                abund_file='asplund_2009.dat', ion_frac_min=1e-4, verbose=False):
     """  
     generate a model_file file from a phyat_file, setting all the master lines to I=i_rel/norm
     norm by default corresponds to Hbeta = 1e4
