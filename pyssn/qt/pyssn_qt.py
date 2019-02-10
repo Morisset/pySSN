@@ -136,7 +136,6 @@ class AppForm(QtGui.QMainWindow):
         self.init_nearby_legend_fontsize = None
         self.init_nearby_legend_loc = None
 
-        self.instr_prof_file = None
         self.call_on_draw = True
         self.cursor_on = False
         self.line_info_ref = 0
@@ -148,6 +147,7 @@ class AppForm(QtGui.QMainWindow):
         self.yscale = None        
         self.post_proc_file = post_proc_file
         self.tick_file = None
+        self.save_parameters_file = None
         self.do_save = True
         self.cont_par_changed = False
         self.axes_fixed = False
@@ -165,6 +165,7 @@ class AppForm(QtGui.QMainWindow):
         self.nearbyLines_dialog = None
         self.nearbyLines_selected_ions = None
         self.line_info_dialog = None
+        self.instr_prof_dialog = None
         self.fig_prof = None
         self.green_tick_shown = False
         self.magenta_tick_shown = False
@@ -182,6 +183,8 @@ class AppForm(QtGui.QMainWindow):
         if self.line_info_dialog is not None:
             self.line_info_dialog.close()
             self.line_info_table.close()
+        if self.instr_prof_dialog is not None:
+            self.instr_prof_dialog.close()
 
     def image_extension_list(self):
         filetypes = self.canvas.get_supported_filetypes()
@@ -2779,6 +2782,7 @@ class AppForm(QtGui.QMainWindow):
             self.do_save = True
             self.restore_axes()
             self.update_lim_boxes()
+            self.save_parameters_file = None
         else:
             log_.warn('A filename must be given', calling=self.calling)
             sys.exit('An initialization filename must be given')
@@ -2786,7 +2790,7 @@ class AppForm(QtGui.QMainWindow):
     def get_init_filename(self):
         file_choices = "Python initialization files (*init.py) (*init.py);;Python files (*.py) (*.py);;All files (*) (*)"
         title = 'Open pySSN initialization file'
-        init_file = str(QtGui.QFileDialog.getOpenFileName(self, title, '', file_choices))
+        init_file = str(QtGui.QFileDialog.getOpenFileName(self, title, self.init_file_name, file_choices))
         if init_file and os.path.isfile(init_file):
             self.init_file_name = init_file
         else:
@@ -2802,7 +2806,7 @@ class AppForm(QtGui.QMainWindow):
 
     def save_pars(self):
         path = self.sp.get_conf('save_parameters_filename')
-        keys = self.sp.conf.keys()
+        keys = self.sp.default_keys
         if '__builtins__' in keys:
             keys.remove('__builtins__')
         keys.sort()
@@ -2815,66 +2819,169 @@ class AppForm(QtGui.QMainWindow):
         self.statusBar().showMessage('Parameters saved to file %s' % path, 4000)
 
     def save_pars_as(self):
-        path = self.sp.get_conf('save_parameters_filename')
-        keys = self.sp.conf.keys()
-        if '__builtins__' in keys:
-            keys.remove('__builtins__')
+        if self.save_parameters_file is None:
+            path = self.init_file_name
+        else:
+            path = self.save_parameters_file        
+        keys = self.sp.default_keys
+        keys_to_be_removed = ['__builtins__', 'plot_magenta', 'label_magenta', 'plot_cyan', 'label_cyan']
+        for key in keys_to_be_removed: 
+            if key in keys:
+                keys.remove(key)
         keys.sort()
         file_choices = "pySSN initialization files (*init.py) (*init.py);;Python files (*.py) (*.py);;All files (*) (*)"
         title = 'Save synthesis and plot parameters'
-        """
-        extension = os.path.splitext(path)[1][1:].lower()
-        if extension in ['txt','dat']:
-            selectedFilter = 'Text files (*.txt *.dat) (*.txt *.dat)'
-        elif extension in ['tex']:
-            selectedFilter = 'Tex files (*.tex) (*.tex)'
-        elif extension in ['csv']:
-            selectedFilter = 'CSV files (*.csv) (*.csv)'
-        else:
-            selectedFilter = 'All Files (*) (*)'
-        """
         selectedFilter = 'pySSN initialization files (*init.py) (*init.py)'
         path = unicode(QtGui.QFileDialog.getSaveFileName(self, title, path, file_choices, selectedFilter))
         if path:
             with open(path, 'w') as f:
                 for key in keys:
-                    if key == 'prof':
-                        value = self.sp.format_prof(self.sp.conf['prof'])
+                    if key == 'instr_prof':
+                        value = self.sp.format_instr_prof()
                     else:
                         value = self.sp.conf[key]
                         if isinstance(value, basestring):
                             value = '\"{}\"'.format(value)
                     f.write('{} = {}\n'.format(key, value))
-            self.sp.set_conf('save_parameters_filename', path)
+            self.save_parameters_file = path
             self.statusBar().showMessage('Parameters saved to file %s' % path, 4000)
                        
+    def teste_instr_prof(self, prof):
+        if prof is None:
+            return 'not defined'
+        keys = prof.keys()
+        keys.remove('comment')
+        if not 'width' in keys:
+            return 'The parameter \'width\' was not found.'       
+        if prof['width'] == 0.0:
+            return 'The value of \'width\' can not be zero'
+        if not (self.sp.get_key_indexes('Bb', prof)==self.sp.get_key_indexes('Br', prof)==
+           self.sp.get_key_indexes('beta', prof)==self.sp.get_key_indexes('alpha', prof)):
+           return 'Invalid indexes por the parameters \'Bb\', \'Br\', \'alpha\', or \'beta\''  
+        if not all((type(prof[key])==float or type(prof[key])==int) for key in keys):
+            return 'The values of parameters must be numbers.'
+        return ''
+                    
     def apply_instr_prof(self):
-        path = str(self.instr_prof_file or '')
-        file_choices = "Python files (*.py) (*.py);;All files (*) (*)"
-        title = 'Open instrumental profile file'
-        path = str(QtGui.QFileDialog.getOpenFileName(self, title, path, file_choices))
-        path = path.split('/')[-1]
-        if not path:
-            return
-        try:
-            user_module = {}
-            execfile(path, user_module)
-            prof = user_module['prof']
-            self.sp.conf['prof'] = prof
-            self.sp.set_conf('fic_instr_prof', path)
-            self.instr_prof_file = path
-            log_.message('instrumental profile read from {}'.format(self.instr_prof_file), calling = self.calling)
-        except:
-            title = 'Error reading instrument profile'
-            msg = 'Unable to read instrumental profile from file \'{}\''.format(path)
-            path = None
-            if self.showErrorBox:
-                QtGui.QMessageBox.critical(self, title, msg, QtGui.QMessageBox.Ok)
+
+        def do_update():
+            path = str(prof_box.toPlainText()).strip()
+            try:
+                user_module = {}
+                exec(path) in user_module
+                prof = user_module['instr_prof']
+                self.sp.set_conf('instr_prof', prof)
+                log_.message('new instrumental profile is ok', calling = self.calling)
+            except:
+                title = 'Error reading instrument profile'
+                msg = 'Unable to read instrumental profile'
+                path = None
+                if self.showErrorBox:
+                    QtGui.QMessageBox.critical(self, title, msg, QtGui.QMessageBox.Ok)
+                else:
+                    log_.warn(msg, calling = self.calling)
+                return
+            msg = self.teste_instr_prof(prof)
+            if not msg:
+                self.update_profile()
             else:
-                log_.warn(msg, calling = self.calling)
-            return
-        self.update_profile()
-        print 'qt_style = ', self.sp.get_conf('qt_style')
+                title = 'Error in the instrument profile'
+                if self.showErrorBox:
+                    QtGui.QMessageBox.critical(self, title, msg, QtGui.QMessageBox.Ok)
+                else:
+                    log_.warn(msg, calling = self.calling)            
+            
+        def toggle_statusbar():
+            self.showHelpBrowser = not self.showHelpBrowser
+            helpBrowser.setVisible(self.showHelpBrowser)
+            if self.showHelpBrowser:
+                self.instr_prof_dialog.resize(self.instr_prof_dialog_width, 2.1*self.instr_prof_dialog_height)
+            else:
+                self.instr_prof_dialog.resize(self.instr_prof_dialog_width, self.instr_prof_dialog_height)
+                
+        def get_window_size_and_position():
+            if self.instr_prof_dialog is None:
+                font = QtGui.QFont("Courier")
+                width = QtGui.QFontMetrics(font).width('='*80)
+                height = 15*QtGui.QFontMetrics(font).height()
+                self.instr_prof_dialog_width = width
+                self.instr_prof_dialog_height = height
+                sG = QtGui.QApplication.desktop().screenGeometry()
+                self.instr_prof_dialog_x = sG.width()-self.instr_prof_dialog_width
+                self.instr_prof_dialog_y = sG.height()
+            else:
+                if not self.showHelpBrowser:
+                    self.instr_prof_dialog_width = self.instr_prof_dialog.width()
+                    self.instr_prof_dialog_height = self.instr_prof_dialog.height()
+                    self.instr_prof_dialog_x = self.instr_prof_dialog.pos().x()
+                    self.instr_prof_dialog_y = self.instr_prof_dialog.pos().y()
+            
+        get_window_size_and_position()
+        self.instr_prof_dialog = QtGui.QDialog()
+        self.instr_prof_dialog.resize(self.instr_prof_dialog_width, self.instr_prof_dialog_height)
+        self.instr_prof_dialog.move(self.instr_prof_dialog_x,self.instr_prof_dialog_y)
+        self.instr_prof_dialog.setWindowTitle('instrument profile dialog')
+        prof_box = QtGui.QTextEdit()
+        prof_box.setFontFamily("Courier")
+        prof_box.setText('instr_prof = ' + self.sp.format_instr_prof())
+        linkLabel = QtGui.QLabel('<a href="https://github.com/Morisset/pySSN/wiki">More help online</a>')
+        linkLabel.setOpenExternalLinks(True)
+        helpBrowser = QtGui.QTextBrowser()
+        
+        # text=open('instr_prof.html').read()
+        # This text should go to a file open with text=open('instr_prof.html').read()
+        text = """<title> Instrumental profile help</title>
+<p>The instrumental profile if defined by the <a href="https://en.wikibooks.org/wiki/Python_Programming/Dictionaries">python dictionary</a> <b>instr_prof</b>.
+
+<p>The main component of the instrumental profile is set by the parameter <b>width</b>, which is the only indispensable parameters.</p>
+
+<p>If <b>width</b> > 0, the main component profile follows a <a href="https://en.wikipedia.org/wiki/Normal_distribution">Gaussian distribution</a>, P &prop; exp(-(&lambda;/<b>width</b>)<sup>2</sup>).
+In this case, <b>width</b> is related to the normal full-width at half maximum by <b>width</b> = FWHM/(2(ln2)<sup>1/2</sup>) = FWHM/1.665.</p>
+
+<p>If <b>width</b> &lt; 0, the main component profile follows a <a href="https://en.wikipedia.org/wiki/rectangular_distribution">rectangular distribution</a>, P = 1 for -|<b>width</b>|/2  &lt; &lambda; &lt; |<b>width</b>|/2, and P = 0 for all other values of &lambda;.</p>
+
+<p>A variable number of optional components can be included, each defined by four parameters, <b>Bb</b>, <b>Br</b>, <b>alpha</b>, and <b>beta</b>, and following P &prop;  <b>B</b>exp(-(&lambda;/<b>beta</b>)<sup><b>alpha</b></sup>).
+<b>Bb</b> and <b>Br</b> are the intensity scale parameters for the bluish and reddish sides of the profile, respectively.</p>
+
+<p>If more than one optional component is in use, the parameters must be indexed as <b>alpha_1</b> <b>alpha_2</b>, etc.</p>
+
+Special cases for the optional components:
+<ul>
+  <li><b>alpha</b> = 2 produces a <a href="https://en.wikipedia.org/wiki/Normal_distribution">Gaussian distribution</a>.
+  <li><b>alpha</b> = 2, <b>Bb</b> = 0 (or <b>Br</b> = 0) produces a <a href="https://en.wikipedia.org/wiki/Half_normal_distribution">half-Gaussian distribution</a>.
+  <li><b>alpha</b> = 1 produces an <a href="https://en.wikipedia.org/wiki/Exponential_distribution">exponential distribution</a>.
+</ul>
+
+<p>A comment may be included in <b>instr_prof</b>.</p>
+<p>Examples:</p>
+<ol>
+<li>instr_prof = {'width': 0.5}<br>
+<li>instr_prof = {'width': 0.5, 'comment': 'Gaussian profle'}<br>
+<li>Example: instr_prof = {'width': 0.5, 'Bb':0.00016, 'Br':9e-05, 'beta': 2.2, 'alpha': 0.45}<br>
+<li>instr_prof = {'width': 0.5, 'Bb_1':0.00016, 'Br_1':9e-05, 'beta_1': 2.2, 'alpha_1': 0.45, 'Bb_2': 0.0014, 'Br_2':0.001, 'beta_2':  1.4, 'alpha_2':  0.75}<br>
+</ol>"""
+        helpBrowser.document().setHtml(text)
+        helpBrowser.setOpenExternalLinks(True)
+        self.showHelpBrowser = False
+        helpBrowser.setVisible(self.showHelpBrowser)
+        policy = helpBrowser.sizePolicy()
+        policy.setVerticalStretch(20)
+        helpBrowser.setSizePolicy(policy)
+        vbox = QtGui.QVBoxLayout()
+        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Help|
+                                           QtGui.QDialogButtonBox.Close|
+                                           QtGui.QDialogButtonBox.Apply)
+        buttonBox.button(QtGui.QDialogButtonBox.Apply).setText("Update")
+        vbox.addWidget(prof_box,0)
+        vbox.addWidget(buttonBox)
+        vbox.addWidget(linkLabel)
+        vbox.addWidget(helpBrowser)
+        buttonBox.button(QtGui.QDialogButtonBox.Help).clicked.connect(toggle_statusbar)
+        buttonBox.button(QtGui.QDialogButtonBox.Apply).clicked.connect(do_update)
+        buttonBox.rejected.connect(self.instr_prof_dialog.close)
+        self.instr_prof_dialog.setLayout(vbox)
+        self.instr_prof_dialog.setWindowModality(QtCore.Qt.NonModal)
+        self.instr_prof_dialog.show()
 
     def isValidFilename(self, filename):
         if filename is None:
@@ -3309,10 +3416,6 @@ class AppForm(QtGui.QMainWindow):
                 self.order_cosmetic_file()
         
         self.set_status_text()
-        self.instr_prof_file = self.sp.get_conf('fic_instr_prof', None)
-        if self.instr_prof_file is not None:
-            self.instr_prof_file = self.instr_prof_file.split('/')[-1]
-            
         self.axes = None
         self.sp.ax2_fontsize = 6
         self.sp_norm_box.setText('{}'.format(self.sp.get_conf('sp_norm')))   

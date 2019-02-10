@@ -117,15 +117,10 @@ limit_sp = [0, 1.0e+10]
 wave_unit = 'Angstrom'
 
 # Here are the 2 filenames of the data. The filename 
-# of the atomic database is hard-coded 
 fic_modele = 'liste_modele.dat'
+fic_cosmetik = 'liste_cosmetik.dat'
 fic_cosmetik = None
-
-# File containing the definition of the intrinsc line profile
-fic_profile = None
-
-# File containing the definition of the instrumental profile
-fic_instr_prof = None
+phyat_file = None
 
 # To take into account 'fic_cosmetik' data
 do_cosmetik = True
@@ -154,7 +149,6 @@ profil_emis_name = 'profil_emis'
 # each side.
 #
 delta_limit_sp =  0.1 # %
-
 
 # initialisation of the continuum flux 
 cont_plot = False #Set True to plot continuum spectrum
@@ -240,16 +234,13 @@ fact_multi_synth =  1.
 # the printed table. Still in devel
 norm_intens = 1.00e4
 
-# File containing the definition of the instrumental profile
-fic_instr_prof = None
-
 # instrument profile
-prof = {'largeur':0.50,
+instr_prof = {'largeur':0.50,
     'B_1r':0.00,'B_1l':0.00,'decroiss_1':2.70,'alpha_1':0.50,
     'B_2r':0.00,'B_2l':0.00,'decroiss_2':1.50,'alpha_2':0.75,
     'B_3r':0.00,'B_3l':0.00,'decroiss_3':1.15,'alpha_3':1.00,
     'B_4r':0.00,'B_4l':0.00,'decroiss_4':0.45,'alpha_4':1.50,
-    'comment':' Gauss'   }
+    'comment':'default profile'}
 
 ghost = {"do_ghost":0, "delta_lambda" : 0. , "intens" : [ 0.00]}
 
@@ -282,9 +273,6 @@ process_code_format = [ [[0,1,5,6,9], '{} (rec)' ], [[2], '{} (die)'], [[3], '[{
 
 # Automatically save all synthesis and plot parameters at exit
 save_parameters_on_exit = False
-
-# Save parameters filename
-save_parameters_filename = 'last_init.py'
 
 #-------------------------------------------------------------------
 #   Save lines to file

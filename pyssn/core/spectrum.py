@@ -341,41 +341,43 @@ class spectrum(object):
         self.sp_synth_tot = self.convol_synth(self.cont, self.sp_synth)
         self.cont_lr, self.sp_synth_lr = self.rebin_on_obs()
         
-    def format_prof(self, prof):
+    def get_key_indexes(self, key, prof):        
+        return sorted([indexed_key.replace(key,'') for indexed_key in prof.keys() if key in indexed_key])
+        
+    def format_instr_prof(self):
+        def get_indexes(key):
+            l = self.get_key_indexes(key, self.conf['instr_prof'])      
+            return l
+        
+        prof = self.conf['instr_prof']
         if prof is None:
             return 'instrumental profile not defined'
-        s = '\'largeur\': {},\n    ' \
-            '\'B_1r\':{:5}, \'B_1l\':{:5}, \'decroiss_1\':{:5}, \'alpha_1\':{:5},\n    ' \
-            '\'B_2r\':{:5}, \'B_2l\':{:5}, \'decroiss_2\':{:5}, \'alpha_2\':{:5},\n    ' \
-            '\'B_3r\':{:5}, \'B_3l\':{:5}, \'decroiss_3\':{:5}, \'alpha_3\':{:5},\n    ' \
-            '\'B_4r\':{:5}, \'B_4l\':{:5}, \'decroiss_4\':{:5}, \'alpha_4\':{:5},\n    ' \
-            '\'comment\': \'{}\''.format(prof['largeur'], 
-                      prof['B_1r'], prof['B_1l'], prof['decroiss_1'], prof['alpha_1'], 
-                      prof['B_2r'], prof['B_2l'], prof['decroiss_2'], prof['alpha_2'],
-                      prof['B_3r'], prof['B_3l'], prof['decroiss_3'], prof['alpha_3'], 
-                      prof['B_4r'], prof['B_4l'], prof['decroiss_4'], prof['alpha_4'],
-                      prof['comment'].strip()) 
-        return '{'+s+'}'
+
+        keys = prof.keys()
+        if not 'width' in keys:
+            return 'invalid instrumental profile: width parameter is missing'
+
+        indexes = get_indexes('Bb')    
+        if not indexes == get_indexes('Br') == get_indexes('alpha') == get_indexes('beta'):
+            return 'invalid instrumental profile: error in indexes'
+
+        w1 = max([len(str(prof[key])) for key in keys if 'Bb' in key])
+        w2 = max([len(str(prof[key])) for key in keys if 'Br' in key])
+        w3 = max([len(str(prof[key])) for key in keys if 'beta' in key])
+        w4 = max([len(str(prof[key])) for key in keys if 'alpha' in key])
+        s = '\'width\': {}'.format(prof['width'])
+        for i in indexes:
+            s += ',\n    \'Bb{0}\':{1:{w1}}, \'Br{0}\':{2:{w2}}, \'beta{0}\':{3:{w3}}, \'alpha{0}\':{4:{w4}}'.format(i,
+                     prof['Bb'+i], prof['Br'+i], prof['beta'+i], prof['alpha'+i], w1 = w1, w2 = w2, w3 = w3, w4 = w4)
+        if 'comment' in keys:
+            s += ',\n    \'comment\': \'{}\''.format(prof['comment'].strip())
+        s = '{{{}}}'.format(s)
+        return s
     
     def do_profile_dict(self, return_res=False):
-        
-        self.instr_prof_file = self.get_conf('fic_instr_prof', None)
-        if self.instr_prof_file is not None:
-            try:
-                user_module = {}
-                execfile(self.instr_prof_file, user_module)
-                prof = user_module['prof']
-                #self.conf['prof'] = prof
-                log_.message('instrumental profile read from {}'.format(self.instr_prof_file))
-            except:
-                log_.warn('instrumental profile NOT read from {}. Check it contains only ASCII characters.'.format(self.instr_prof_file), 
-                              calling = self.calling)
-                self.instr_prof_file = None
-            if self.instr_prof_file is not None:
-                # 'instrument profile: do interpolation when needed'
-                self.conf['prof'] = prof                
 
         self.fic_profs = self.get_conf('fic_profile', None)
+        
         if self.fic_profs is None:
             self.fic_profs = execution_path('./')+'../data/default_profiles.dat'
         else:
@@ -384,7 +386,7 @@ class spectrum(object):
         if not os.path.isfile(self.fic_profs):
             log_.error('File not found {}'.format(self.fic_profs), calling=self.calling)
         emis_profiles = {}
-        emis_profiles['1'] = {'T4': 1e4, 'vel':0.0, 'params': [['G', '1.00', '0.0', '1.0']]}
+        emis_profiles['1'] = {'T4': 1.0, 'vel':0.0, 'params': [['G', 1.0, 0.0, 1.0]]}
         prof_params = None
         with open(self.fic_profs) as f:
             for l in f:
@@ -395,9 +397,6 @@ class spectrum(object):
                         l = l.split(';')[0]
                     if ':' in l:
                         if prof_params is not None:
-                            # T4 and vel are defined at the first round
-                            # prof_params is then defined, and when coming back
-                            # to this loop, emis_prof is setup
                             emis_profiles[key] = {'T4': T4,
                                                   'vel': vel,
                                                   'params' : prof_params}
@@ -477,8 +476,7 @@ class spectrum(object):
             profile = convolgauss(profile, self.w, lambda_0, fwhm_therm)
         profile[~np.isfinite(profile)] = 0.0
         return profile
-                    
-                    
+
     def read_conf(self, config_file=None):
         
         if config_file is None:
@@ -487,19 +485,41 @@ class spectrum(object):
             self.config_file = config_file
 
         self.conf = {}
+        init_conf = {}
         execfile(execution_path('./')+'init_defaults.py', self.conf)
-        
+        self.default_keys = self.conf.keys()
         if self.config_file is not None:
             if not os.path.exists(self.directory + self.config_file):
                 log_.error('File {} not found'.format(self.directory + self.config_file))
             try:
-                execfile(self.directory + self.config_file, self.conf)
+                execfile(self.directory + self.config_file, init_conf)
                 log_.message('configuration read from {0}'.format(self.config_file), 
                                    calling = self.calling)
             except:
                 log_.warn('configuration NOT read from {0}'.format(self.config_file),
                                 calling = self.calling)
         
+        obsolete_keys = list(set(init_conf.keys())-set(self.default_keys))
+        obsolete_keys.sort()
+        if len(obsolete_keys) > 0:
+            log_.message('list of variables read from {} that changed name or are obsolete:\n{}'.format(self.config_file, obsolete_keys),
+                                   calling = self.calling)        
+
+        # to change keys automatically
+        old_keys = ['allow_editing_lines',    'gcont_pl_alpha', 'index_of_current_ion',   'prof',       'line_field_print',  'line_saved_filename', 'line_saved_header', 'line_saved_ordered_by', 'qt_fig_adjust', 'qt_fig_bottom', 'qt_fig_hspace', 'qt_fig_left', 'qt_fig_right', 'qt_fig_top', 'show_dialogs',    'update_after_editing_lines']
+        new_keys = ['qt_allow_editing_lines', 'cont_pl_alpha',  'index_of_selected_ions', 'instr_prof', 'save_lines_fields', 'save_lines_filename', 'save_lines_header', 'save_lines_sort',       'fig_adjust',    'fig_bottom',    'fig_hspace',    'fig_left',    'fig_right',    'fig_top',    'qt_show_dialogs', 'qt_update_after_editing_lines']
+        new_name = dict(zip(old_keys, new_keys))
+        for key in old_keys:
+            if key in init_conf.keys():
+                if new_name[key] not in init_conf.keys():
+                    init_conf[new_name[key]] = init_conf[key]
+                    log_.message('variable \'{}\' get from old name \'{}\' from init file {}'.format(new_name[key], key, self.config_file),
+                                   calling = self.calling)
+                del init_conf[key]
+
+        self.conf.update(init_conf)
+
+        # Obsolete for qt
         self.plot_magenta = self.get_conf('plot_magenta', None)
         self.label_magenta = self.get_conf('label_magenta', None)      
         self.plot_cyan = self.get_conf('plot_cyan', None)
@@ -762,7 +782,7 @@ class spectrum(object):
                 do_shift = True
             except:
                 log_.warn('Error interpolating wavelengh correction table \'lambda_shift_table\'', calling = self.calling)
-        
+                
         self.w_obs = self.w.copy()
         self.f_ori = self.f.copy()
 
@@ -1084,7 +1104,7 @@ class spectrum(object):
     def make_synth_test(self, liste_raies):
 
         sp_theo = self.sp_theo.copy()
-                           
+                   
         sp_synth = np.zeros_like(self.w)
         sp_theo['spectr'] *= 0.0 
         sp_theo['correc'] *= 0.0
@@ -1252,7 +1272,7 @@ class spectrum(object):
                 filter_size += 1
             if filter_size > self.n_lambda:
                 break
-            self.filter_ = self.profil_instr(filter_size, self.conf['prof'], self.lambda_pix)
+            self.filter_ = self.profil_instr(filter_size, self.conf['instr_prof'], self.lambda_pix)
             if (abs(self.filter_[0]) < detect_limit) and (abs(self.filter_[-1]) < detect_limit):
                 break
             
@@ -2062,7 +2082,6 @@ class spectrum(object):
 
     def plot_ax1(self, ax, xlims=None, show_legend=True):
         
-        # mvfc: uncomment to compare the corrected (with lambda_shift_table = []) and original wavelengths
         if log_.level == 4:        
             ax.step(self.w_obs, self.f_ori, where='mid', label='Uncorr', c='yellow', linewidth=1.5)
         ax.step(self.w_ori, self.f_ori, where='mid', label='Obs', c='red', linewidth=1.5)
@@ -2070,7 +2089,7 @@ class spectrum(object):
         if self.sp_synth_lr is None:
             return
 
-        self.ax1_line_synth = ax.step(self.w_ori, self.sp_synth_lr, where='mid', label='Synth', c='blue', linewidth=1.5)[0]        
+        self.ax1_line_synth = ax.step(self.w_ori, self.sp_synth_lr, where='mid', label='Synth', c='blue', linewidth=1.5)[0]
 
         if self.hr:
             ax.step(self.w, self.sp_synth, where='mid', c='green')
