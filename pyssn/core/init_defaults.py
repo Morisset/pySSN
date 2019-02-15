@@ -118,8 +118,8 @@ wave_unit = 'Angstrom'
 
 # Here are the 2 filenames of the data. The filename 
 fic_modele = 'liste_modele.dat'
-fic_cosmetik = 'liste_cosmetik.dat'
 fic_cosmetik = None
+fic_profile = None
 phyat_file = None
 
 # To take into account 'fic_cosmetik' data
