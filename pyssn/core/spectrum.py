@@ -771,8 +771,8 @@ class spectrum(object):
         self.w_min = self.w[0]
         self.w_max = self.w[-1]
         self.w = self.w[lims]
-        self.f = self.f[lims]                
-        
+        self.f = self.f[lims]
+
         do_shift = False
         if self.get_conf('lambda_shift_table') is not None:
             try:
