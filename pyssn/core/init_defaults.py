@@ -240,7 +240,7 @@ instr_prof = {'largeur':0.50,
     'B_2r':0.00,'B_2l':0.00,'decroiss_2':1.50,'alpha_2':0.75,
     'B_3r':0.00,'B_3l':0.00,'decroiss_3':1.15,'alpha_3':1.00,
     'B_4r':0.00,'B_4l':0.00,'decroiss_4':0.45,'alpha_4':1.50,
-    'comment':'default profile'}
+    'comment':'default profile'   }
 
 ghost = {"do_ghost":0, "delta_lambda" : 0. , "intens" : [ 0.00]}
 

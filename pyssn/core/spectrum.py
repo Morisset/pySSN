@@ -248,7 +248,8 @@ class spectrum(object):
             self.phyat_file = self.get_conf('phyat_file', 'liste_phyat.dat')
         if do_run:
             self.run(do_synth = self.do_synth, do_read_liste = do_read_liste)
-        
+        self.show_uncor_spec = False            
+
     def init_vars(self):
         self.fig1 = None
         self.fig2 = None
@@ -413,11 +414,11 @@ class spectrum(object):
                             params = l.split()
                             params[1::] = [np.float(p.strip()) for p in params[1::]]
                             prof_params.append(params)
-        log_.message('profile read from {0}'.format(self.fic_profs), 
-                                   calling = self.calling)
         emis_profiles[key] = {'T4': T4, 
                               'vel': vel,
                               'params' : prof_params}
+        log_.message('line profiles read from {0}'.format(self.fic_profs), 
+                                   calling = self.calling)
         if return_res:
             return emis_profiles
         self.emis_profiles = emis_profiles
@@ -770,8 +771,8 @@ class spectrum(object):
         self.w_min = self.w[0]
         self.w_max = self.w[-1]
         self.w = self.w[lims]
-        self.f = self.f[lims]
-
+        self.f = self.f[lims]                
+        
         do_shift = False
         if self.get_conf('lambda_shift_table') is not None:
             try:
@@ -781,11 +782,11 @@ class spectrum(object):
                 w_shift = f(self.w)
                 do_shift = True
             except:
-                log_.warn('Error interpolating wavelengh correction table \'lambda_shift_table\'', calling = self.calling)
-                
+                self.read_obs_error = 'Error interpolating wavelengh correction table'
+                log_.warn(self.read_obs_error, calling = self.calling)
+
         self.w_obs = self.w.copy()
         self.f_ori = self.f.copy()
-
         if do_shift:
             correction_is_valid = True 
             for i in range(1,len(self.w)):
@@ -795,8 +796,9 @@ class spectrum(object):
                 self.w += w_shift
                 log_.message('Wavelengths shifted', calling = self.calling)
             else:
-                log_.warn('Error interpolating wavelengh correction table \'lambda_shift_table\'.\nThe order of pixels must be preserved.', calling = self.calling)
-
+                self.read_obs_error = 'Invalid wavelengh correction table.\nThe order of pixels must be preserved.'
+                log_.warn(self.read_obs_error, calling = self.calling)
+        
         self.w_ori = self.w.copy()       
         resol = self.get_conf('resol', undefined = 1, message=None)
         log_.message('Observations resized from {0} by a factor of {1}'.format(len(self.w), resol), 
@@ -2082,7 +2084,7 @@ class spectrum(object):
 
     def plot_ax1(self, ax, xlims=None, show_legend=True):
         
-        if log_.level == 4:        
+        if self.show_uncor_spec:            
             ax.step(self.w_obs, self.f_ori, where='mid', label='Uncorr', c='yellow', linewidth=1.5)
         ax.step(self.w_ori, self.f_ori, where='mid', label='Obs', c='red', linewidth=1.5)
         

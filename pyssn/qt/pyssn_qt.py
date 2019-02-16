@@ -166,7 +166,9 @@ class AppForm(QtGui.QMainWindow):
         self.nearbyLines_selected_ions = None
         self.line_info_dialog = None
         self.instr_prof_dialog = None
-        self.fig_prof = None
+        self.refine_wave_dialog = None
+        self.refine_wave_as_table = False
+        self.fig_prof = None 
         self.green_tick_shown = False
         self.magenta_tick_shown = False
         self.addGreenTickToLegend = True
@@ -185,6 +187,8 @@ class AppForm(QtGui.QMainWindow):
             self.line_info_table.close()
         if self.instr_prof_dialog is not None:
             self.instr_prof_dialog.close()
+        if self.refine_wave_dialog is not None:
+            self.refine_wave_dialog.close()
 
     def image_extension_list(self):
         filetypes = self.canvas.get_supported_filetypes()
@@ -812,9 +816,14 @@ class AppForm(QtGui.QMainWindow):
                                               shortcut="F7", 
                                               slot=self.apply_instr_prof, 
                                               tip="Open the instrumental profile file and run the synthesis")
-
+                                              
+        refine_wavelengths_action = self.create_action("Wavelength-refining", 
+                                         slot=self.refine_wavelengths, 
+                                         shortcut="F6", 
+                                         tip="Refine the wavelength calibration")
+                                         
         self.add_actions(self.run_menu, (update_action, run_action, draw_action, None, 
-                                         post_proc_action, open_profile_action))
+                                         post_proc_action, open_profile_action, refine_wavelengths_action))
 
         self.line_menu = self.menuBar().addMenu('Lines')
         
@@ -912,7 +921,7 @@ class AppForm(QtGui.QMainWindow):
             tip='Check to update synthesis after editing line parameters in line info dialog')
        
         self.show_line_ticks_from_file_action = self.create_action('Plot line ticks from file', 
-            shortcut='F6', slot=self.show_line_ticks_from_file,  
+            shortcut='F4', slot=self.show_line_ticks_from_file,  
             tip='Check to show line ticks defined in an external file')
         
         self.ask_tickfile_action = self.create_action("Ask for file name",
@@ -978,9 +987,13 @@ class AppForm(QtGui.QMainWindow):
         self.adjust_fig_action = self.create_action('Adjust figure', 
             slot=self.adjust_fig_action_clicked, checkable=True, 
             tip='Automatically adjust figure to avoid overlaps and to minimize the empty borders.')
+                
+        self.show_uncor_obs_action = self.create_action('Show uncorrected spectrum', 
+            slot=self.show_uncor_obs_action_clicked, checkable=True, 
+            tip='Show observational spectrum without the wavelength refining.')
             
         self.add_actions(self.settings_menu, 
-            (None, self.enable_tooltips_action, self.adjust_fig_action, None, self.editing_lines_action, self.update_lines_action))         
+            (None, self.enable_tooltips_action, self.adjust_fig_action, None, self.editing_lines_action, self.update_lines_action, self.show_uncor_obs_action))         
         
         self.help_menu = self.menuBar().addMenu("&Help")
         
@@ -2425,6 +2438,14 @@ class AppForm(QtGui.QMainWindow):
             log_.debug('Adjust figure disabled', calling=self.calling)
         self.draw_ion()
         
+    def show_uncor_obs_action_clicked(self):
+        if self.show_uncor_obs_action.isChecked():
+            self.sp.show_uncor_spec = True
+        else:
+            self.sp.show_uncor_spec = False
+        self.set_plot_limits_and_draw()
+
+    
     def disableToolTips(self):
         self.lineIDs_GroupBox.setToolTip('')        
         self.residual_GroupBox.setToolTip('')        
@@ -2982,6 +3003,190 @@ Special cases for the optional components:
         self.instr_prof_dialog.setLayout(vbox)
         self.instr_prof_dialog.setWindowModality(QtCore.Qt.NonModal)
         self.instr_prof_dialog.show()
+                   
+    def refine_wavelengths(self):
+
+        def table2list(text):
+            text = str(text)
+            text = text.splitlines()
+            s = ''
+            for i in range(len(text)):
+                line = text[i].split()
+                if len(line) == 2 and sum([self.isFloat(x) for x in line]) == 2: 
+                    s += '({}, {}), '.format(line[0], line[1])
+                else:
+                    if len(line) > 0:
+                        title = 'Error in table'
+                        msg = 'Error in line \'{}\'.\nEach line must have two numbers separated by whitespaces.'.format(text[i])
+                        if self.showErrorBox:
+                            QtGui.QMessageBox.critical(self, title, msg, QtGui.QMessageBox.Ok)
+                        else:
+                            log_.warn(msg, calling = self.calling)
+                        return ''
+
+            s = s.strip(' ,')
+            if s == '':
+                return 'lambda_shift_table = None'
+            else:
+                return 'lambda_shift_table = [{}]'.format(s)
+        
+        def toggle_table():
+            self.refine_wave_as_table = not self.refine_wave_as_table
+            if self.refine_wave_as_table:
+                text = str(edit_box.toPlainText()).strip()
+                edit_box.clear()
+                text = text.replace('lambda_shift_table','')
+                text = text.strip(' =[]')
+                text = text.split(')')
+                for i in range(len(text)-1):
+                    line = text[i].strip(' (,')
+                    line = line.split(',')
+                    line = '{:<7} {}'.format(line[0].strip(),line[1].strip())
+                    edit_box.append(line)
+                buttonBox.button(QtGui.QDialogButtonBox.RestoreDefaults).setText("Show as list")
+            else:
+                text = table2list(edit_box.toPlainText())
+                if text == '':
+                    self.refine_wave_as_table = True
+                    return
+                edit_box.clear()
+                edit_box.setText(text)
+                buttonBox.button(QtGui.QDialogButtonBox.RestoreDefaults).setText("Show as table")
+
+        def do_update():
+            old_value = self.sp.get_conf('lambda_shift_table')
+            if self.refine_wave_as_table:
+                path = table2list(edit_box.toPlainText())
+                if path == 'error':
+                    return
+            else:
+                path = str(edit_box.toPlainText()).strip()
+            try:
+                user_module = {}
+                exec(path) in user_module
+                value = user_module['lambda_shift_table']
+                self.sp.set_conf('lambda_shift_table', value)
+                log_.message('new \'lambda_shit_table\' is ok', calling = self.calling)
+            except:
+                title = 'Error'
+                msg = 'Unable to read \'lambda_shit_table\''
+                path = None
+                if self.showErrorBox:
+                    QtGui.QMessageBox.critical(self, title, msg, QtGui.QMessageBox.Ok)
+                else:
+                    log_.warn(msg, calling = self.calling)
+                return
+            self.sp.show_uncor_spec = True            
+            self.sp.init_obs()
+            if self.sp.read_obs_error:
+                self.sp.set_conf('lambda_shift_table', old_value)
+                if self.showErrorBox:
+                    title = 'Error'
+                    msg = self.sp.read_obs_error
+                    QtGui.QMessageBox.critical(self, title, msg, QtGui.QMessageBox.Ok)
+                else:
+                    log_.warn(msg, calling = self.calling)
+            else:
+                """
+                self.sp.init_red_corr()
+                self.sp.make_continuum()
+                self.sp.run()
+                self.set_plot_limits_and_draw()
+                """
+                self.rerun()
+            if not self.show_uncor_obs_action.isChecked():
+                self.sp.show_uncor_spec = False
+            
+        def toggle_help():
+            self.showHelpBrowser = not self.showHelpBrowser
+            helpBrowser.setVisible(self.showHelpBrowser)
+            if self.showHelpBrowser:
+                self.refine_wave_dialog.resize(self.refine_wave_dialog_width, 2.5*self.refine_wave_dialog_height)
+            else:
+                self.refine_wave_dialog.resize(self.refine_wave_dialog_width, self.refine_wave_dialog_height)
+                
+        def get_window_size_and_position():
+            if self.refine_wave_dialog is None:
+                font = QtGui.QFont("Courier")
+                width = QtGui.QFontMetrics(font).width('='*80)
+                height = 15*QtGui.QFontMetrics(font).height()
+                self.refine_wave_dialog_width = width
+                self.refine_wave_dialog_height = height
+                sG = QtGui.QApplication.desktop().screenGeometry()
+                self.refine_wave_dialog_x = sG.width()-self.refine_wave_dialog_width
+                self.refine_wave_dialog_y = sG.height()
+            else:
+                if not self.showHelpBrowser:
+                    self.refine_wave_dialog_width = self.refine_wave_dialog.width()
+                    self.refine_wave_dialog_height = self.refine_wave_dialog.height()
+                    self.refine_wave_dialog_x = self.refine_wave_dialog.pos().x()
+                    self.refine_wave_dialog_y = self.refine_wave_dialog.pos().y()
+            
+        get_window_size_and_position()
+        self.refine_wave_dialog = QtGui.QDialog()
+        self.refine_wave_dialog.resize(self.refine_wave_dialog_width, self.refine_wave_dialog_height)
+        self.refine_wave_dialog.move(self.refine_wave_dialog_x,self.refine_wave_dialog_y)
+        self.refine_wave_dialog.setWindowTitle('wavelength-refining dialog')
+        edit_box = QtGui.QTextEdit()
+        edit_box.setFontFamily("Courier")
+        self.refine_wave_as_table = False
+        edit_box.setText('lambda_shift_table = ' + str(self.sp.get_conf('lambda_shift_table')))
+        linkLabel = QtGui.QLabel('<a href="https://github.com/Morisset/pySSN/wiki">More help online</a>')
+        linkLabel.setOpenExternalLinks(True)
+        helpBrowser = QtGui.QTextBrowser()
+        
+        # text=open('wave_refining.html').read()
+        # This text should go to a file open with text=open('wave-refining').read()
+        text = """<title> Wavelength-refining help</title>
+<p>The wavelength calibration of the observational spectrum can be refined with the use of 
+the <a href="https://en.wikibooks.org/wiki/Python_Programming/Lists">python list</a> <b>lambda_shift_table</b>. 
+Each element of this list is an ordered pair of numbers (&lambda;, &Delta;&lambda;), where &Delta;&lambda; is the wavelength shift at the wavelength &lambda; needed to improve the calibration, after the Doppler correction.</p>
+
+<p>The data in <b>lambda_shit_table</b> will be linearly interpolated to provide the corrected wavelengths. 
+Outside the range of wavelenghts given in <b>lambda_shit_table</b>, the correction will be extrapolated to zero.</p>
+
+<p>To set aside the wavelength-refining, set <b>lambda_shit_table</b> to None.</p>
+
+<p>Examples:</p>
+<ol>
+<li><p>lambda_shift_table = [(4674, 0.05), (4690, 0.1), (9000, 1)]</p></li>
+<li><p>lambda_shift_table = None (to set aside the wavelength-refining)</p></li>
+</ol>
+
+<p>Button functions:</p>
+<ul>   
+<li><p>Click on <b><span style="color:red">Show as table</span></b> to display and edit the data contained in <b>lambda_shit_table</b> as a two columns table.</p></li>
+
+<li><p>Click on <b><span style="color:red">Show as list</span></b> to get back the <b>lambda_shit_table</b> list from the two columns table.</p></li>
+
+<li><p>Click on <b><span style="color:red">Update</span></b> to refine the wavelength calibration and redo the synthesis.</p></li>
+</ul>
+"""
+        helpBrowser.document().setHtml(text)
+        helpBrowser.setOpenExternalLinks(True)
+        self.showHelpBrowser = False
+        helpBrowser.setVisible(self.showHelpBrowser)
+        policy = helpBrowser.sizePolicy()
+        policy.setVerticalStretch(20)
+        helpBrowser.setSizePolicy(policy)
+        vbox = QtGui.QVBoxLayout()
+        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Help|
+                                           QtGui.QDialogButtonBox.RestoreDefaults|
+                                           QtGui.QDialogButtonBox.Close|
+                                           QtGui.QDialogButtonBox.Apply)
+        buttonBox.button(QtGui.QDialogButtonBox.Apply).setText("Update")
+        buttonBox.button(QtGui.QDialogButtonBox.RestoreDefaults).setText("Show as table")
+        vbox.addWidget(edit_box,0)
+        vbox.addWidget(buttonBox)
+        vbox.addWidget(linkLabel)
+        vbox.addWidget(helpBrowser)
+        buttonBox.button(QtGui.QDialogButtonBox.Help).clicked.connect(toggle_help)
+        buttonBox.button(QtGui.QDialogButtonBox.RestoreDefaults).clicked.connect(toggle_table)
+        buttonBox.button(QtGui.QDialogButtonBox.Apply).clicked.connect(do_update)
+        buttonBox.rejected.connect(self.refine_wave_dialog.close)
+        self.refine_wave_dialog.setLayout(vbox)
+        self.refine_wave_dialog.setWindowModality(QtCore.Qt.NonModal)
+        self.refine_wave_dialog.show()
 
     def isValidFilename(self, filename):
         if filename is None:
@@ -3841,7 +4046,11 @@ Special cases for the optional components:
         log_.debug('Verbosity changed from {} to {}'.format(log_.level, verbosity), calling=self.calling)
         log_.level = verbosity
         self.sp.set_conf('log_level', verbosity)
-        
+        if log_.level >= 4:
+            self.show_uncor_spec = True
+        else:
+            self.show_uncor_spec = False
+
     def style(self):
         new_style_str = str(self.style_ag.checkedAction().text())
         old_style_str = self.sp.get_conf('qt_style')
