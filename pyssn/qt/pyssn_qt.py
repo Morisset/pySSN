@@ -4046,10 +4046,6 @@ Outside the range of wavelenghts given in <b>lambda_shit_table</b>, the correcti
         log_.debug('Verbosity changed from {} to {}'.format(log_.level, verbosity), calling=self.calling)
         log_.level = verbosity
         self.sp.set_conf('log_level', verbosity)
-        if log_.level >= 4:
-            self.show_uncor_spec = True
-        else:
-            self.show_uncor_spec = False
 
     def style(self):
         new_style_str = str(self.style_ag.checkedAction().text())
