@@ -3364,6 +3364,9 @@ Outside the range of wavelenghts given in <b>lambda_shit_table</b>, the correcti
             else:
                 self.get_user_cont_points = False
                 buttonBox.button(QtGui.QDialogButtonBox.Retry).setStyleSheet('')
+                self.del_user_cont_points = False
+                buttonBox.button(QtGui.QDialogButtonBox.Ignore).setStyleSheet('')
+                self.on_draw()
                 text = self.user_cont_table2list(self.user_cont_editBox.toPlainText())
                 if text == '':
                     self.interpol_cont_as_table = True
