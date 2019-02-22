@@ -517,6 +517,26 @@ class spectrum(object):
                     log_.message('variable \'{}\' get from old name \'{}\' from init file {}'.format(new_name[key], key, self.config_file),
                                    calling = self.calling)
                 del init_conf[key]
+                
+        # to get 'cont_user_table' from old {'cont_in_lambda', 'cont_intens', 'cont_lambda'}
+        if {'cont_in_lambda', 'cont_intens', 'cont_lambda'}.issubset(set(init_conf.keys())) and 'cont_user_table' not in init_conf.keys():
+            x = init_conf['cont_lambda']
+            y = init_conf['cont_intens']
+            if isinstance(x, (list,)) and isinstance(y, (list,)) and len(x) == len(y):
+                s = ''
+                for i in range(len(x)):
+                    s += '({}, {}), '.format(x[i], y[i])
+                s = s.strip(' ,')
+                if s != '':
+                    path = 'cont_user_table = [{}]'.format(s)                                        
+                    try:
+                        user_module = {}
+                        exec(path) in user_module
+                        value = user_module['cont_user_table']
+                        self.set_conf('cont_user_table', value)
+                        log_.message('\'cont_user_table\' get from \'cont_lambda\' and \'cont_intens\'', calling = self.calling)
+                    except:
+                        log_.warn('Can not get \'cont_user_table\' from \'cont_lambda\' and \'cont_intens\'', calling = self.calling)
 
         self.conf.update(init_conf)
 
@@ -828,25 +848,71 @@ class spectrum(object):
         else:
             self.red_corr = np.ones_like(self.w)
         
+    def update_user_cont(self):
+    
+        user_cont = np.zeros_like(self.w)
+        if self.get_conf('cont_user_table') is not None:
+            try:
+                x = np.array([i[0] for i in list(self.get_conf('cont_user_table'))])
+                y = np.array([i[1] for i in list(self.get_conf('cont_user_table'))])
+                kind = self.get_conf('cont_user_func')
+                if kind == 'cubic' and len(x) < 4:
+                    kind = 'quadratic'
+                if kind == 'quadratic' and len(x) < 3:
+                    kind = 'linear'
+                if kind == 'linear' and len(x) < 2:
+                    kind = 'zero'
+                user_cont_int = interpolate.interp1d(x, y, kind=kind, fill_value=0, bounds_error=False)
+                user_cont = user_cont_int(self.w)
+            except:
+                self.errorMsg = 'Problem in user-defined continuum interpolation.'
+                kinds = {'nearest', 'zero', 'linear', 'slinear', 'quadratic', 'cubic'}
+                if kind not in kinds:
+                    self.errorMsg += '\nInvalid function' 
+                log_.message(self.errorMsg, calling = self.calling)
+        self.cont /= self.aire_ref
+        self.cont *= self.red_corr
+        self.cont = self.cont - self.conts['user'] + user_cont
+        self.cont *= self.aire_ref
+        self.cont /= self.red_corr
+        self.sp_synth_tot = self.convol_synth(self.cont, self.sp_synth)
+        self.cont_lr, self.sp_synth_lr = self.rebin_on_obs()
+        self.conts['user'] = user_cont
+
+    def cont_at(self, wave, side = '-'):
+        i_list = [i for i in range(len(self.w)-1) if self.w[i] <= wave <= self.w[i+1] or self.w[i+1] <= wave <= self.w[i]]
+        if len(i_list) == 1:
+            i = i_list[0]
+            if side == '+' and i+1 in range(len(self.w)):
+                return self.cont[i+1]
+            else:
+                return self.cont[i]
+        else:
+            return None
+
     def make_continuum(self):
         
         self.conts = {}
-        
         user_cont = np.zeros_like(self.w)
-        if bool(self.get_conf("cont_in_lambda", False)):
-            x = self.conf["cont_lambda"]
-            y = self.conf["cont_intens"]
+        if self.get_conf('cont_user_table') is not None:
             try:
-                user_cont_int = interpolate.interp1d(x, y, fill_value=0, bounds_error=False)
+                x = np.array([i[0] for i in list(self.get_conf('cont_user_table'))])
+                y = np.array([i[1] for i in list(self.get_conf('cont_user_table'))])
+                kind = self.get_conf('cont_user_func')
+                if kind == 'cubic' and len(x) < 4:
+                    kind = 'quadratic'
+                if kind == 'quadratic' and len(x) < 3:
+                    kind = 'linear'
+                if kind == 'linear' and len(x) < 2:
+                    kind = 'zero'
+                user_cont_int = interpolate.interp1d(x, y, kind=kind, fill_value=0, bounds_error=False)
                 user_cont = user_cont_int(self.w)
             except:
-                self.errorMsg = 'Problem in continuum interpolation.'
-                log_.warn('Problem in continuum interpolation', calling = self.calling)
-            if self.errorMsg:
-                if len(self.conf["cont_lambda"]) != len(self.conf["cont_intens"]):
-                    self.errorMsg += '\n\'cont_lambda\' and \'cont_intens\' must be equal in length.'
-                #if min(x) > min(self.w) or max(x) < max(self.w):
-                #    self.errorMsg += '\n\'cont_lambda\' must completely cover the wavelength range of the synthesis.'
+                self.errorMsg = 'Problem in user-defined continuum interpolation.'
+                kinds = {'nearest', 'zero', 'linear', 'slinear', 'quadratic', 'cubic'}
+                if kind not in kinds:
+                    self.errorMsg += '\nInvalid function' 
+                log_.message(self.errorMsg, calling = self.calling)
                 
         cont_pix = self.get_conf("cont_pix", 0.)
         if cont_pix != 0:
@@ -855,7 +921,6 @@ class spectrum(object):
                                                          np.array(self.get_conf("cont_intens", message='error'))[arg_sort])
             user_cont = user_cont_int(self.tab_pix)    
         self.conts['user'] = user_cont
-        
         bb_cont = np.zeros_like(self.w)        
         if "cont_bb_t" in self.conf:
             if np.ndim(self.conf["cont_bb_t"]) == 0:
@@ -947,23 +1012,34 @@ class spectrum(object):
         self.cont *= self.aire_ref
         self.cont /= self.red_corr
         
-    def plot_conts(self, ax):
+    def plot_conts(self, ax, keys = None):
+
         if self.sp_synth_lr is None:
             return
         colors = {'bb': 'cyan', 'pl': 'green', '2photons': 'blue', 'FF': 'red',
                   'H': 'red', 'He1': 'green', 'He2': 'blue', 'user': 'black'}        
         labels = {'bb': 'bb', 'pl': 'pl', '2photons': '2q', 'FF': 'ff',
-                  'H': 'H I', 'He1': 'He I', 'He2': 'He II', 'user': 'interpol'}
-        for key in self.conts:
+                  'H': 'H I', 'He1': 'He I', 'He2': 'He II', 'user': 'user cont'}
+        if keys == None:
+            keys = self.conts.keys()
+        for key in keys:
             if key[0] == 'H':
                 style=':'
             else:
                 style = '-'
             ax.plot(self.w, self.conts[key], linestyle=style, label = labels[key], color = colors[key])
-        ax.plot(self.w, self.cont, label = 'total cont', linestyle='--', linewidth = 2)
+        if 'user' in keys:
+            if self.get_conf('cont_user_table') is not None:
+                x = np.array([i[0] for i in self.get_conf('cont_user_table')])
+                y = np.array([i[1] for i in self.get_conf('cont_user_table')])
+                ax.plot(x, y, marker='o', ms=6, color = colors['user'], ls = '')
+                y = [self.cont_at(w) for w in x] 
+                y[0] = self.cont_at(x[0], '+')
+                ax.plot(x, y, marker='o', ms=8, color = 'green', ls = '')
+
+        ax.plot(self.w, self.cont, label = 'total cont', linestyle='--', linewidth = 1.5, color = 'green')
         ax.legend()
                     
-        
     def append_lists(self, phyat_arr, model_arr, cosmetik_arr):
         
         n_models = len(model_arr)

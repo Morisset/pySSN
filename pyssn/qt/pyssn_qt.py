@@ -101,7 +101,7 @@ class NavigationToolbar( NavigationToolbar2QT ):
 
 
 class AppForm(QtGui.QMainWindow):
-    
+
     def __init__(self, parent=None, init_filename=None, post_proc_file=None, use_workspace=False):
         
         self.calling = 'pySSN GUI'
@@ -136,6 +136,17 @@ class AppForm(QtGui.QMainWindow):
         self.init_nearby_legend_fontsize = None
         self.init_nearby_legend_loc = None
 
+        self.init_cont_line_num = None
+        self.init_cont_ion = None
+        self.init_cont_xmin = None
+        self.init_cont_xmax = None
+        self.init_cont_y1min = None
+        self.init_cont_y1max = None
+        self.init_cont_y3min = None
+        self.init_cont_y3max = None
+        self.init_cont_legend_fontsize = None
+        self.init_cont_legend_loc = None
+
         self.call_on_draw = True
         self.cursor_on = False
         self.line_info_ref = 0
@@ -168,12 +179,19 @@ class AppForm(QtGui.QMainWindow):
         self.instr_prof_dialog = None
         self.refine_wave_dialog = None
         self.refine_wave_as_table = False
+        self.interpol_cont_dialog = None
+        self.interpol_cont_as_table = False
         self.fig_prof = None 
         self.green_tick_shown = False
         self.magenta_tick_shown = False
         self.addGreenTickToLegend = True
         self.show_true_ions = False
         self.nearbyDialogFilterIsActive = False
+        self.get_user_cont_points = False
+        self.del_user_cont_points = False
+        self.user_cont_editBox = None
+        self.showHelpBrowser = False
+
         
     def closeEvent(self, evnt):
         if self.sp.get_conf('save_parameters_on_exit'):
@@ -189,6 +207,8 @@ class AppForm(QtGui.QMainWindow):
             self.instr_prof_dialog.close()
         if self.refine_wave_dialog is not None:
             self.refine_wave_dialog.close()
+        if self.interpol_cont_dialog is not None:
+            self.interpol_cont_dialog.close()
 
     def image_extension_list(self):
         filetypes = self.canvas.get_supported_filetypes()
@@ -255,7 +275,24 @@ class AppForm(QtGui.QMainWindow):
         self.sp.firstClick = True
                 
     def on_click(self, event):
-        if self.cursor_on:
+        if self.get_user_cont_points and self.user_cont_editBox is not None:
+            wave = event.xdata
+            i_list = [i for i in range(len(self.sp.w)-1) if self.sp.w[i] <= wave <= self.sp.w[i+1] or self.sp.w[i+1] <= wave <= self.sp.w[i]]
+            if len(i_list) == 1:
+                i = i_list[0]
+                c = self.sp.cont[i] - self.sp.conts['user'][i]
+                self.user_cont_editBox.append('{:<7.1f} {:.2f}'.format(event.xdata, event.ydata-c))
+                self.update_user_cont()
+        elif ( self.del_user_cont_points and 
+               self.user_cont_editBox is not None and 
+               self.sp.get_conf('cont_user_table') is not None ):
+            wave = event.xdata
+            points = self.sp.get_conf('cont_user_table')[:]
+            if points is not None and len(points) > 0:
+                points.remove(min(points, key=lambda x:abs(x[0]-wave)))
+                self.user_cont_list2table(points)
+                self.update_user_cont()
+        elif self.cursor_on:
             do_print = not self.sp.get_conf('qt_show_dialogs', True)
             nearbyLines = self.sp.nearby_lines(event, do_print, sort='i_tot', reverse=True)
             if nearbyLines is None:
@@ -343,12 +380,7 @@ class AppForm(QtGui.QMainWindow):
         self.y3lim_max_box.setMinimumWidth(50)
         #self.connect(self.y3lim_max_box, QtCore.SIGNAL('editingFinished()'), self.validate_y3lim_max)
         self.connect(self.y3lim_max_box, QtCore.SIGNAL('returnPressed()'), self.set_plot_limits_and_draw)
-        
-        """
-        self.select_init_button = QtGui.QPushButton("Init file")
-        self.connect(self.select_init_button, QtCore.SIGNAL('clicked()'), self.select_init)
-        """
-        
+
         self.run_button = QtGui.QPushButton("Run")
         self.connect(self.run_button, QtCore.SIGNAL('clicked()'), self.rerun)
         
@@ -940,10 +972,15 @@ class AppForm(QtGui.QMainWindow):
         self.cont_action = self.create_action('Parameters',
                                           shortcut="Shift+Alt+C", 
                                           slot=self.cont_dialog, 
-                                          tip='Paremeters of the continuum spectrum')
+                                          tip='Parameters of the continuum spectrum')
+
+        self.interpol_cont_action = self.create_action('User-defined continuum',
+                                          shortcut="F5", 
+                                          slot=self.user_continuum, 
+                                          tip='Open dialog to set the user-defined continuum spectrum')
         
         self.add_actions(self.cont_menu, 
-             (self.plot_cont_action, self.cont_action,))
+             (self.plot_cont_action, self.cont_action, self.interpol_cont_action,))
 
 
         self.settings_menu = self.menuBar().addMenu('Settings')
@@ -1131,8 +1168,8 @@ class AppForm(QtGui.QMainWindow):
         return output
             
     def ConvStrToValidTypes(self, str_):
-        str_ = str_.strip(' ')
         str_ = str_.replace('Error in ','')
+        str_ = str_.replace(' ','')
         if str_ == '':
             result = None
         elif str_.isdigit():
@@ -1143,6 +1180,14 @@ class AppForm(QtGui.QMainWindow):
             result = True
         elif str_.capitalize() == 'False':
             result = False
+        elif str_.find('(') >= 0:
+            try:
+                str_ = str_.replace('[','')
+                str_ = str_.replace(']','')
+                str_ = str_.strip('[]()')
+                result = [(float(s.split(',')[0]),float(s.split(',')[1])) for s in str_.split('),(')]
+            except:
+                result = None
         elif str_.find(',') >= 0:
             try:
                 str_ = str_.replace('[','')
@@ -1151,7 +1196,7 @@ class AppForm(QtGui.QMainWindow):
             except:
                 result = None
         else:      
-            result = None
+            result = str_
         return result
 
     def save_par_in_file(self, field, value, path, help_=None):
@@ -1942,7 +1987,7 @@ class AppForm(QtGui.QMainWindow):
                 if len(self.nearbyLines_selected_ions) > 0:
                     self.nearbyDialogFilterIsActive = True
                     self.buttonBox_nearbyLines.button(QtGui.QDialogButtonBox.RestoreDefaults).setStyleSheet('background-color:red;')
-                    self.buttonBox_nearbyLines.button(QtGui.QDialogButtonBox.RestoreDefaults).setText('deactivate ion filter')        
+                    self.buttonBox_nearbyLines.button(QtGui.QDialogButtonBox.RestoreDefaults).setText('Deactivate ion filter')        
 
                 else:        
                     QtGui.QMessageBox.critical(self, 'nearby lines dialog: ion filter', 'No ion selected.', QtGui.QMessageBox.Ok )
@@ -2170,22 +2215,20 @@ class AppForm(QtGui.QMainWindow):
 
     def cont_dialog(self):
 
-        Pars = [ ( 'cont_unred'     , 'Set to True if reddening is to be applied to the continuum' ),
-                 ( 'cont_edens'     , u'Electron density, in cm\u207B\u00B3' ), 
-                 ( 'cont_hi_t'      , 'Temperature for the H I continuum, in K' ),       
-                 ( 'cont_hi_i'      , u'Intensity of the H I continuum (in theory, intensity of H\u03B2)' ),       
-                 ( 'cont_hei_t'     , 'Temperature for the He I continuum, in K' ),      
-                 ( 'cont_hei_i'     , 'Intensity of the He I continuum (in theory, intensity of He I 4471)' ),      
-                 ( 'cont_heii_t'    , 'Temperature for the He II continuum, in K' ),     
-                 ( 'cont_heii_i'    , 'Intensity of the He II continuum (in theory, intensity of He I 4686)' ),     
-                 ( 'cont_bb_t'      , 'Temperature of the blackbody continuum, in K' ),      
-                 ( 'cont_bb_i'      , 'Intensity of the blackbody continuum' ),      
-                 ( 'cont_pl_alpha'  , u'Index \u03B1 of the power-law continuum F = I*(\u03BB/5000 \u212B)**\u03B1' ),   
-                 ( 'cont_pl_i'      , 'Intensity I of the power-law continuum' ),      
-                 ( 'cont_in_lambda' , 'True (False) to interpolate continuum using list of wavelengths (pixels)' ),  
-                 ( 'cont_lambda'    , 'List of wavelenghs of the interpolated continuum' ),    
-                 ( 'cont_pix'       , 'List of pixels of the interpolated continuum' ),       
-                 ( 'cont_intens'    , 'List of intensities of the interpolated continuum' ) ]
+        Pars = [ ( 'cont_unred'      , 'Set to True if reddening is to be applied to the continuum' ),
+                 ( 'cont_edens'      , u'Electron density, in cm\u207B\u00B3' ), 
+                 ( 'cont_hi_t'       , 'Temperature for the H I continuum, in K' ),       
+                 ( 'cont_hi_i'       , u'Intensity of the H I continuum (in theory, intensity of H\u03B2)' ),       
+                 ( 'cont_hei_t'      , 'Temperature for the He I continuum, in K' ),      
+                 ( 'cont_hei_i'      , 'Intensity of the He I continuum (in theory, intensity of He I 4471)' ),      
+                 ( 'cont_heii_t'     , 'Temperature for the He II continuum, in K' ),     
+                 ( 'cont_heii_i'     , 'Intensity of the He II continuum (in theory, intensity of He I 4686)' ),     
+                 ( 'cont_bb_t'       , 'Temperature of the blackbody continuum, in K' ),      
+                 ( 'cont_bb_i'       , 'Intensity of the blackbody continuum' ),      
+                 ( 'cont_pl_alpha'   , u'Index \u03B1 of the power-law continuum F = I*(\u03BB/5000 \u212B)**\u03B1' ),   
+                 ( 'cont_pl_i'       , 'Intensity I of the power-law continuum' ),      
+                 ( 'cont_user_table' , 'Interpolation table for the user-defined continuum' ), 
+                 ( 'cont_user_func'  , 'Interpolation function for the user-defined continuum' ) ]   
       
         def toggle_statusbar():
             self.showStatusBar = not self.showStatusBar
@@ -2223,6 +2266,8 @@ class AppForm(QtGui.QMainWindow):
             value = self.ConvStrToValidTypes(s)
             if value != None:
                 self.sp.set_conf(Pars[row][0], value)
+                #if isinstance(value, basestring):
+                #    value = '\'{}\''.format(value)
                 self.table.setItem(row, 1, QtGui.QTableWidgetItem(str(value)))
                 self.table.item(row, 1).setBackgroundColor(self.editableCells_bg_color)
                 self.cont_par_changed = True
@@ -2251,7 +2296,11 @@ class AppForm(QtGui.QMainWindow):
             item.setFlags(item.flags() ^ QtCore.Qt.ItemIsEditable)
             item.setBackgroundColor(self.readOnlyCells_bg_color)
             self.table.setItem(j,0,item)
-            item = QtGui.QTableWidgetItem(str(self.sp.get_conf(Pars[j][0])))
+            value = self.sp.get_conf(Pars[j][0])
+            #if isinstance(value, basestring):
+            #    value = '\'{}\''.format(value)
+            item = QtGui.QTableWidgetItem(str(value))
+            #item = QtGui.QTableWidgetItem(str(self.sp.get_conf(Pars[j][0])))
             item.setBackgroundColor(self.editableCells_bg_color)
             self.table.setItem(j,1,item)
             item = QtGui.QTableWidgetItem(Pars[j][1])
@@ -2937,8 +2986,10 @@ class AppForm(QtGui.QMainWindow):
                     self.instr_prof_dialog_x = self.instr_prof_dialog.pos().x()
                     self.instr_prof_dialog_y = self.instr_prof_dialog.pos().y()
             
+        self.showHelpBrowser = False
         get_window_size_and_position()
         self.instr_prof_dialog = QtGui.QDialog()
+        self.instr_prof_dialog.setWindowFlags(self.instr_prof_dialog.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
         self.instr_prof_dialog.resize(self.instr_prof_dialog_width, self.instr_prof_dialog_height)
         self.instr_prof_dialog.move(self.instr_prof_dialog_x,self.instr_prof_dialog_y)
         self.instr_prof_dialog.setWindowTitle('instrument profile dialog')
@@ -2983,7 +3034,6 @@ Special cases for the optional components:
 </ol>"""
         helpBrowser.document().setHtml(text)
         helpBrowser.setOpenExternalLinks(True)
-        self.showHelpBrowser = False
         helpBrowser.setVisible(self.showHelpBrowser)
         policy = helpBrowser.sizePolicy()
         policy.setVerticalStretch(20)
@@ -3087,12 +3137,6 @@ Special cases for the optional components:
                 else:
                     log_.warn(msg, calling = self.calling)
             else:
-                """
-                self.sp.init_red_corr()
-                self.sp.make_continuum()
-                self.sp.run()
-                self.set_plot_limits_and_draw()
-                """
                 self.rerun()
             if not self.show_uncor_obs_action.isChecked():
                 self.sp.show_uncor_spec = False
@@ -3122,8 +3166,10 @@ Special cases for the optional components:
                     self.refine_wave_dialog_x = self.refine_wave_dialog.pos().x()
                     self.refine_wave_dialog_y = self.refine_wave_dialog.pos().y()
             
+        self.showHelpBrowser = False
         get_window_size_and_position()
         self.refine_wave_dialog = QtGui.QDialog()
+        self.refine_wave_dialog.setWindowFlags(self.refine_wave_dialog.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
         self.refine_wave_dialog.resize(self.refine_wave_dialog_width, self.refine_wave_dialog_height)
         self.refine_wave_dialog.move(self.refine_wave_dialog_x,self.refine_wave_dialog_y)
         self.refine_wave_dialog.setWindowTitle('wavelength-refining dialog')
@@ -3164,7 +3210,6 @@ Outside the range of wavelenghts given in <b>lambda_shit_table</b>, the correcti
 """
         helpBrowser.document().setHtml(text)
         helpBrowser.setOpenExternalLinks(True)
-        self.showHelpBrowser = False
         helpBrowser.setVisible(self.showHelpBrowser)
         policy = helpBrowser.sizePolicy()
         policy.setVerticalStretch(20)
@@ -3187,6 +3232,306 @@ Outside the range of wavelenghts given in <b>lambda_shit_table</b>, the correcti
         self.refine_wave_dialog.setLayout(vbox)
         self.refine_wave_dialog.setWindowModality(QtCore.Qt.NonModal)
         self.refine_wave_dialog.show()
+
+    def plot_user_cont(self):
+        self.fig.axes[0].step( [0,0], [0,100], color = color, linestyle = 'solid', label = label, linewidth = 2.5 )
+        self.fig.axes[0].legend(loc=current_legend_loc, fontsize=self.sp.legend_fontsize)
+        self.fig.canvas.draw()
+    
+        
+    def user_cont_table2list(self, text):
+        text = str(text)
+        text = text.splitlines()
+        text = sorted(text)
+        s = ''
+        for i in range(len(text)):
+            line = text[i].split()
+            if len(line) == 2 and sum([self.isFloat(x) for x in line]) == 2: 
+                s += '({}, {}), '.format(line[0], line[1])
+            else:
+                if len(line) > 0:
+                    title = 'Error in table'
+                    msg = 'Error in line \'{}\'.\nEach line must have two numbers separated by whitespaces.'.format(text[i])
+                    if self.showErrorBox:
+                        QtGui.QMessageBox.critical(self, title, msg, QtGui.QMessageBox.Ok)
+                    else:
+                        log_.warn(msg, calling = self.calling)
+                    return ''
+        s = s.strip(' ,')
+        if s == '':
+            s = 'None'
+        else:
+            s = '[{}]'.format(s)
+        return 'cont_user_func = \'{}\'\n\ncont_user_table = {}'.format(self.sp.get_conf('cont_user_func'), s)
+
+    def update_user_cont(self):
+        msg = ''
+        old_value = self.sp.get_conf('cont_user_table')
+        old_kind = self.sp.get_conf('cont_user_func')
+        if self.interpol_cont_as_table:
+            path = self.user_cont_table2list(self.user_cont_editBox.toPlainText())
+            if path == 'error':
+                return
+        else:
+            path = str(self.user_cont_editBox.toPlainText()).strip()
+        try:
+            user_module = {}
+            exec(path) in user_module
+            kind = user_module['cont_user_func']
+            log_.message('new \'cont_user_func\' is ok', calling = self.calling)
+            value = user_module['cont_user_table']
+            log_.message('new \'cont_user_table\' is ok', calling = self.calling)
+        except:
+            msg = 'Unable to read \'cont_user_func\' or \'cont_user_table\''
+            path = None
+                
+        kinds = {'nearest', 'zero', 'linear', 'slinear', 'quadratic', 'cubic'}   
+        if msg == '':
+            if kind not in kinds:
+                msg = 'Invalid function'
+        if msg != '':  
+            title = 'Error'
+            msg = 'Problem in user-defined continuum interpolation.\n{}'.format(msg)
+            if self.showErrorBox:
+                QtGui.QMessageBox.critical(self, title, msg, QtGui.QMessageBox.Ok)
+            else:
+                log_.warn(msg, calling = self.calling)
+            return
+                
+        if old_value != value or old_kind != kind:
+            self.cont_par_changed = True
+            if value is not None and len(value) == 0:
+                value = None
+            self.sp.set_conf('cont_user_table', value)
+            self.sp.set_conf('cont_user_func', kind)
+            self.sp.update_user_cont()
+            self.set_plot_limits_and_draw()
+            self.sp.plot_conts(self.axes, ['user'])
+            self.canvas.draw()
+        else:
+            self.set_plot_limits_and_draw()
+
+    def user_cont_list2table(self, points):
+        self.user_cont_editBox.clear()
+        for point in points:
+            line = '{:<7} {}'.format(str(point[0]).strip(),str(point[1]).strip())
+            self.user_cont_editBox.append(line)
+                     
+    def user_continuum(self):
+
+        def save_initial_plot_pars():
+            self.init_cont_line_num = self.line_info_box.text()
+            self.init_cont_ion = self.ion_box.text()
+            self.init_cont_xmin = self.xlim_min_box.text()
+            self.init_cont_xmax = self.xlim_max_box.text()
+            self.init_cont_y1min = self.y1lim_min_box.text()
+            self.init_cont_y1max = self.y1lim_max_box.text()
+            self.init_cont_y3min = self.y3lim_min_box.text()
+            self.init_cont_y3max = self.y3lim_max_box.text()
+            self.init_cont_legend_fontsize = self.sp.legend_fontsize
+            self.init_cont_legend_loc = self.sp.legend_loc
+            self.init_cont_sel_ions_only = self.selected_ions_action.isChecked()
+
+        def redo_initial_plot():
+            self.line_info_box.setText(self.init_cont_line_num)
+            self.ion_box.setText(self.init_cont_ion)
+            self.xlim_min_box.setText(self.init_cont_xmin)
+            self.xlim_max_box.setText(self.init_cont_xmax)
+            self.y1lim_min_box.setText(self.init_cont_y1min)
+            self.y1lim_max_box.setText(self.init_cont_y1max)
+            self.y3lim_min_box.setText(self.init_cont_y3min)
+            self.y3lim_max_box.setText(self.init_cont_y3max)
+            self.sp.legend_fontsize = self.init_cont_legend_fontsize
+            self.sp.legend_loc = self.init_cont_legend_loc
+            self.selected_ions_action.setChecked(self.init_cont_sel_ions_only)
+            self.selected_lines_clicked()
+            self.set_plot_limits_and_draw()
+
+        def toggle_table():
+            self.interpol_cont_as_table = not self.interpol_cont_as_table
+            if self.interpol_cont_as_table:
+                text = str(self.user_cont_editBox.toPlainText()).strip()
+                text = text[text.find('[')+1:text.find(']')]
+                text = text.replace('\n','')
+                self.user_cont_editBox.clear()
+                text = text.split(')')
+                for i in range(len(text)-1):
+                    line = text[i].strip(' (,')
+                    line = line.split(',')
+                    line = '{:<7} {}'.format(line[0].strip(),line[1].strip())
+                    self.user_cont_editBox.append(line)
+                buttonBox.button(QtGui.QDialogButtonBox.RestoreDefaults).setText("Show as list")
+            else:
+                self.get_user_cont_points = False
+                buttonBox.button(QtGui.QDialogButtonBox.Retry).setStyleSheet('')
+                text = self.user_cont_table2list(self.user_cont_editBox.toPlainText())
+                if text == '':
+                    self.interpol_cont_as_table = True
+                    return
+                self.user_cont_editBox.clear()
+                self.user_cont_editBox.setText(text)                
+                buttonBox.button(QtGui.QDialogButtonBox.RestoreDefaults).setText("Show as table")
+
+        def toggle_help():
+            self.showHelpBrowser = not self.showHelpBrowser
+            helpBrowser.setVisible(self.showHelpBrowser)
+            if self.showHelpBrowser:
+                self.interpol_cont_dialog.resize(self.interpol_cont_dialog_width, 2.5*self.interpol_cont_dialog_height)
+            else:
+                self.interpol_cont_dialog.resize(self.interpol_cont_dialog_width, self.interpol_cont_dialog_height)
+                
+        def get_window_size_and_position():
+            if self.interpol_cont_dialog is None:
+                font = QtGui.QFont("Courier")
+                width = QtGui.QFontMetrics(font).width('='*80)
+                height = 15*QtGui.QFontMetrics(font).height()
+                self.interpol_cont_dialog_width = width
+                self.interpol_cont_dialog_height = height
+                sG = QtGui.QApplication.desktop().screenGeometry()
+                self.interpol_cont_dialog_x = sG.width()-self.interpol_cont_dialog_width
+                self.interpol_cont_dialog_y = sG.height()
+            else:
+                if not self.showHelpBrowser:
+                    self.interpol_cont_dialog_width = self.interpol_cont_dialog.width()
+                    self.interpol_cont_dialog_height = self.interpol_cont_dialog.height()
+                    self.interpol_cont_dialog_x = self.interpol_cont_dialog.pos().x()
+                    self.interpol_cont_dialog_y = self.interpol_cont_dialog.pos().y()
+
+        def get_points():
+            self.get_user_cont_points = not self.get_user_cont_points
+            self.del_user_cont_points = False
+            buttonBox.button(QtGui.QDialogButtonBox.Ignore).setStyleSheet('')
+            if self.get_user_cont_points:
+                buttonBox.button(QtGui.QDialogButtonBox.Retry).setStyleSheet('background-color:red;')
+                self.set_plot_limits_and_draw()
+                self.sp.plot_conts(self.axes, ['user'])
+                self.canvas.draw()
+                if self.interpol_cont_as_table == False:
+                    toggle_table()
+            else:
+                buttonBox.button(QtGui.QDialogButtonBox.Retry).setStyleSheet('')
+
+        def del_points():
+            self.del_user_cont_points = not self.del_user_cont_points
+            self.get_user_cont_points = False
+            buttonBox.button(QtGui.QDialogButtonBox.Retry).setStyleSheet('')
+            if self.del_user_cont_points:
+                buttonBox.button(QtGui.QDialogButtonBox.Ignore).setStyleSheet('background-color:red;')
+                self.set_plot_limits_and_draw()
+                self.sp.plot_conts(self.axes, ['user'])
+                self.canvas.draw()
+                if self.interpol_cont_as_table == False:
+                    toggle_table()
+            else:
+                buttonBox.button(QtGui.QDialogButtonBox.Ignore).setStyleSheet('')
+
+        def on_close():
+            redo_initial_plot()
+            self.interpol_cont_dialog.close()
+            
+        def do_update():
+            self.get_user_cont_points = False
+            self.del_user_cont_points = False
+            buttonBox.button(QtGui.QDialogButtonBox.Retry).setStyleSheet('')
+            buttonBox.button(QtGui.QDialogButtonBox.Ignore).setStyleSheet('')
+            self.update_user_cont()
+        
+        self.showHelpBrowser = False
+        get_window_size_and_position()
+        save_initial_plot_pars()
+        self.ion_box.setText('')
+        self.selected_ions_action.setChecked(True)
+        self.selected_lines_clicked()
+        self.set_plot_limits_and_draw()
+        self.interpol_cont_dialog = QtGui.QDialog()
+        self.interpol_cont_dialog.setWindowFlags(self.interpol_cont_dialog.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+        #self.interpol_cont_dialog.setWindowFlags(QtCore.Qt.WindowMinimizeButtonHint | QtCore.Qt.WindowMaximizeButtonHint | QtCore.Qt.WindowStaysOnTopHint)
+        self.interpol_cont_dialog.resize(self.interpol_cont_dialog_width, self.interpol_cont_dialog_height)
+        self.interpol_cont_dialog.move(self.interpol_cont_dialog_x,self.interpol_cont_dialog_y)
+        self.interpol_cont_dialog.setWindowTitle('user-defined continuum dialog')
+        self.user_cont_editBox = QtGui.QTextEdit()
+        self.user_cont_editBox.setFontFamily("Courier")
+        self.interpol_cont_as_table = False
+        self.get_user_cont_points = False
+        self.del_user_cont_points = False
+        text = 'cont_user_func = \'{}\'\n\ncont_user_table = {}'.format(str(self.sp.get_conf('cont_user_func')), self.sp.get_conf('cont_user_table'))
+        self.user_cont_editBox.setText(text)
+        linkLabel = QtGui.QLabel('<a href="https://github.com/Morisset/pySSN/wiki">More help online</a>')
+        linkLabel.setOpenExternalLinks(True)
+        helpBrowser = QtGui.QTextBrowser()
+        
+        # text=open('user_continuum.html').read()
+        # This text should go to a file open with text=open('user_continuum').read()
+        text = """<title> User-defined continuum help</title>
+<p>A user-defined continuum can be added to the continuum calculated from other sources (electron recombination, free-free transition, two-photom, black-body and 
+power-law emission). It is obtained by the interpolation of the data contained in the 
+<a href="https://en.wikibooks.org/wiki/Python_Programming/Lists">python list</a>  <b>cont_user_table</b>. Each element of this list is an ordered pair of numbers 
+(&lambda;, <i>f</i>), where <i>f</i> is the  additional continuum flux at the wavelength &lambda;.</p>
+
+<p>The parameter <b>cont_user_func</b> defines the kind of the interpolation. Possible values are 'linear', 'quadratic', 'cubic', corresponding to linear 
+interpolation, second and third order spline interpolation, respectively. Outside the range of wavelenghts given in <b>cont_user_table</b>, the user continuum 
+component will be extrapolated to zero.</p>
+
+<p>There are three modes of editing the interpolation control points: editing the list <b>cont_user_table</b> directly or as a two columns table, or clicking 
+with the mouse on the figure at the intended level of total continuum (see Button functions below). To set aside the user-defined continuum, set 
+<b>cont_user_table</b> to None.</p>
+
+<p>Examples:</p>
+<ol>
+<li><p>cont_user_func = 'linear'<br>
+cont_user_table = [(4674, 0.05), (4690, 0.1), (9000, 1)]
+</p></li>
+<li><p>cont_user_table = None (to set aside the user-defined continuum)</p></li>
+</ol>
+
+<p>Button functions:</p>
+<ul>   
+<li><p>Click on <b><span style="color:red">Show as table</span></b> to display and edit the data contained in <b>cont_user_table</b> as a two columns table.</p></li>
+
+<li><p>Click on <b><span style="color:red">Show as list</span></b> to get back the <b>cont_user_table</b> list from the two columns table.</p></li>
+
+<li><p>Click on <b><span style="color:red">Add points</span></b> to activate/deactivate the mode that allows to add new controls points by mouse-clicking on the 
+figure. Each time a new control point is included, the interpolation is automatically updated.</p></li>
+
+<li><p>Click on <b><span style="color:red">Del points</span></b> to activate/deactivate the mode that allows to click on the figure to delete the nearest 
+(in wavelength) control point. Each time a control point is deleted, the interpolation is automatically updated</p></li>
+
+<li><p>Click on <b><span style="color:red">Update</span></b> to incorporate the changes in the user-defined continuum.</p></li>
+
+<li><p>Click on <b><span style="color:red">Close</span></b> to close the dialog and return to the preceding plot setting.</p></li>
+</ul>
+"""
+        helpBrowser.document().setHtml(text)
+        helpBrowser.setOpenExternalLinks(True)
+        helpBrowser.setVisible(self.showHelpBrowser)
+        policy = helpBrowser.sizePolicy()
+        policy.setVerticalStretch(20)
+        helpBrowser.setSizePolicy(policy)
+        vbox = QtGui.QVBoxLayout()
+        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Help|
+                                           QtGui.QDialogButtonBox.RestoreDefaults|
+                                           QtGui.QDialogButtonBox.Retry|
+                                           QtGui.QDialogButtonBox.Ignore|
+                                           QtGui.QDialogButtonBox.Close|
+                                           QtGui.QDialogButtonBox.Apply)
+        buttonBox.button(QtGui.QDialogButtonBox.Apply).setText("Update")
+        buttonBox.button(QtGui.QDialogButtonBox.RestoreDefaults).setText("Show as table")
+        buttonBox.button(QtGui.QDialogButtonBox.Retry).setText("Add points")
+        buttonBox.button(QtGui.QDialogButtonBox.Ignore).setText("Del points")
+        vbox.addWidget(self.user_cont_editBox,0)
+        vbox.addWidget(buttonBox)
+        vbox.addWidget(linkLabel)
+        vbox.addWidget(helpBrowser)
+        buttonBox.button(QtGui.QDialogButtonBox.Help).clicked.connect(toggle_help)
+        buttonBox.button(QtGui.QDialogButtonBox.RestoreDefaults).clicked.connect(toggle_table)
+        buttonBox.button(QtGui.QDialogButtonBox.Apply).clicked.connect(do_update)
+        buttonBox.button(QtGui.QDialogButtonBox.Retry).clicked.connect(get_points)
+        buttonBox.button(QtGui.QDialogButtonBox.Ignore).clicked.connect(del_points)
+        buttonBox.rejected.connect(on_close)
+        #self.interpol_cont_dialog.onCloseEvet(on_close)
+        self.interpol_cont_dialog.setLayout(vbox)
+        self.interpol_cont_dialog.setWindowModality(QtCore.Qt.NonModal)
+        self.interpol_cont_dialog.show()
 
     def isValidFilename(self, filename):
         if filename is None:
@@ -3634,36 +3979,13 @@ Outside the range of wavelenghts given in <b>lambda_shit_table</b>, the correcti
         self.cyan_label_box.setText('{}'.format(self.sp.label_cyan))
         self.sp_min_box.setText('{}'.format(self.sp.get_conf('limit_sp')[0]))
         self.sp_max_box.setText('{}'.format(self.sp.get_conf('limit_sp')[1]))
-
-        """
-        if self.sp.get_conf('x_plot_lims') == None:
-            self.sp.set_conf('x_plot_lims', self.sp.get_conf('limit_sp'))
-        if self.sp.get_conf('y1_plot_lims') == None:
-            self.sp.set_conf('y1_plot_lims', [0,1000])
-        if self.sp.get_conf('y3_plot_lims') == None:
-            self.sp.set_conf('y3_plot_lims', [-100,100])
-        
-        self.xlim_min_box.setText('{}'.format(self.sp.get_conf('x_plot_lims')[0]))
-        self.xlim_max_box.setText('{}'.format(self.sp.get_conf('x_plot_lims')[1]))
-        self.y1lim_min_box.setText('{}'.format(self.sp.get_conf('y1_plot_lims')[0]))
-        self.y1lim_max_box.setText('{}'.format(self.sp.get_conf('y1_plot_lims')[1]))
-        self.y3lim_min_box.setText('{}'.format(self.sp.get_conf('y3_plot_lims')[0]))
-        self.y3lim_max_box.setText('{}'.format(self.sp.get_conf('y3_plot_lims')[1]))
-        """
-
         self.init_axes()
-        """
-        log_.debug('x_plot_lims={}'.format(self.x_plot_lims), calling='start_spectrum')
-        log_.debug('y1_plot_lims={}'.format(self.y1_plot_lims), calling='start_spectrum')
-        log_.debug('y3_plot_lims={}'.format(self.y3_plot_lims), calling='start_spectrum')
-        """
         self.xlim_min_box.setText('{}'.format(self.x_plot_lims[0]))
         self.xlim_max_box.setText('{}'.format(self.x_plot_lims[1]))
         self.y1lim_min_box.setText('{}'.format(self.y1_plot_lims[0]))
         self.y1lim_max_box.setText('{}'.format(self.y1_plot_lims[1]))
         self.y3lim_min_box.setText('{}'.format(self.y3_plot_lims[0]))
         self.y3lim_max_box.setText('{}'.format(self.y3_plot_lims[1]))
-
         self.verbosity_ag.actions()[self.sp.get_conf('log_level', 0)].setChecked(True)
         self.line_tick_ax_ag.actions()[self.sp.get_conf('line_tick_ax', 0)].setChecked(True)
         self.line_tick_pos_ag.actions()[self.sp.get_conf('line_tick_pos', 0)].setChecked(True)
@@ -3825,14 +4147,6 @@ Outside the range of wavelenghts given in <b>lambda_shit_table</b>, the correcti
                 log_.warn('{}: {}'.format(title, msg), calling=self.calling)
         if ndiff > 0:
             self.on_draw()
-
-        """
-        mvfc:  QObject::installEventFilter(): Cannot filter events for objects in a different thread.
-               Segmentation fault
-
-        self.line_info()
-        """
-
         self.statusBar().showMessage('Update finished.', 4000)
         return ndiff 
 
@@ -4235,14 +4549,6 @@ Outside the range of wavelenghts given in <b>lambda_shit_table</b>, the correcti
              np.float(self.xlim_max_box.text()) <= new_limit_sp[0] ):
             self.xlim_min_box.setText(self.sp_min_box.text())
             self.xlim_max_box.setText(self.sp_max_box.text())
-        """
-        else:
-            if not self.axes_fixed:
-                if np.float(self.xlim_min_box.text()) < new_limit_sp[0]:
-                    self.xlim_min_box.setText(self.sp_min_box.text())
-                if np.float(self.xlim_max_box.text()) > new_limit_sp[0]:
-                    self.xlim_max_box.setText(self.sp_max_box.text())
-        """
         self.sp.set_conf('limit_sp', new_limit_sp)
         log_.message('Changing limit_sp. Old: {}, New: {}'.format(old_limit_sp, new_limit_sp), calling=self.calling)
         self.statusBar().showMessage('Changing the synthesis wavelength limits ...') 
