@@ -1,4 +1,8 @@
 # pySSN
+
+THIS CODE HAS NOT BEEN PUBLISHED YET, DO NOT USE IT WITHOUT CONTACTING
+THE AUTHORS BEFORE AT CHRIS.MORISSET@GMAIL.COM!!!
+
 A pythonic Spectral Synthesis for Nebulae, developped by:
 
 * Ch. Morisset (Instituto de Astronomia, Universidad Nacional Autonoma de Mexico)
