@@ -303,6 +303,9 @@ save_lines_filename = 'lines.dat'
 # Plot filename
 plot_filename = 'plot.pdf'
 
+# synthesis filename
+synthesis_filename = 'pySSN_spr.csv'
+
 # Order the cosmetic_file by line number and remove duplicate lines.
 order_cosmetic_file = False
 

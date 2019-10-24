@@ -719,6 +719,11 @@ class AppForm(QtGui.QMainWindow):
                                               slot=self.save_plot_as,
                                               tip="Save plot to file")
         
+        save_synthesis_action = self.create_action("Save synthesis",
+                                              shortcut="", 
+                                              slot=self.save_synthesis_as, 
+                                              tip="Save synthesis to file")
+
         save_plot_as_action = self.create_action("Save plot as",
                                               shortcut="Ctrl+Shift+P", 
                                               slot=self.save_plot_as, 
@@ -735,7 +740,7 @@ class AppForm(QtGui.QMainWindow):
                                               tip="Select file name and save list of lines")
 
         self.add_actions(self.file_menu, 
-            (open_init_action, save_pars_action, None, self.save_plot_action, None, save_lines_action))
+            (open_init_action, save_pars_action, None, self.save_plot_action, None, save_synthesis_action, None, save_lines_action))
        
         #(open_init_action, save_pars_action, save_pars_as_action, None, self.save_plot_action, save_plot_as_action, None, save_lines_action, save_lines_as_action))
 
@@ -4643,6 +4648,25 @@ figure. Each time a new control point is included, the interpolation is automati
             self.sp.set_conf('save_lines_filename', path)
             self.sp.save_lines()
             self.statusBar().showMessage('Lines saved to file %s' % path, 4000)
+
+    def save_synthesis_as(self):
+        file_choices = "Text files (*.txt *.dat) (*.txt *.dat);;Tex files (*.tex) (*.tex);;CSV files (*.csv) (*.csv);;All Files (*) (*)"
+        filename = self.sp.get_conf('synthesis_filename')
+        extension = os.path.splitext(filename)[1][1:].lower()
+        if extension in ['txt','dat']:
+            selectedFilter = 'Text files (*.txt *.dat) (*.txt *.dat)'
+        elif extension in ['tex']:
+            selectedFilter = 'Tex files (*.tex) (*.tex)'
+        elif extension in ['csv']:
+            selectedFilter = 'CSV files (*.csv) (*.csv)'
+        else:
+            selectedFilter = 'All Files (*) (*)'
+        path = unicode(QtGui.QFileDialog.getSaveFileName(self, 'Save synthesis to file', filename, file_choices, selectedFilter))
+        with open(path, 'w') as f:
+            for w, fl in zip(self.sp.w_ori, self.sp.sp_synth_lr):
+                f.write('{} {} \n'.format(w, fl))
+        self.statusBar().showMessage('Synhtesis saved to file %s' % path, 2000)
+        
 
     def line_sort(self):
         k = self.line_sort_list.index(self.line_sort_ag.checkedAction().text())
