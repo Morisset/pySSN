@@ -161,21 +161,6 @@ def no_red_corr(raie):
         return False
 
 
-def read_HITRAN_stick(file_):
-    """
-#MI WN,cm-1     S,cm/mol  A,s-1    Vair Vself El,cm-1  TexpAshift  GQNup          GQNlow         LQNup          LQNlow         Ierr  Iref         SWup   SWlow  
-
- 7157027.590000 3.556e-20 3.147e+03.04000.038    0.00000.000.000000       B     19       X      0                R  1R  0     d22020032 7 0 2 0 0     6.0    1.0
-    
-    """
-    data = np.genfromtxt(file_, 
-                         dtype=['a2', 'a1','float', 'float','float', 'float','float'], 
-                         delimiter=[2, 1, 12, 10, 10, 5, 5], 
-                         skip_header=5, 
-                         usecols=(0, 1, 2, 3, 4, 5, 6), 
-                         names=('ID', 'ISO','nu','I','A', 'V', 'Vself'))
-    return data
-
 def vactoair(wl, wl_inf=2000., wl_sup=20000.):
     """
     Allen
@@ -196,6 +181,21 @@ def airtovac(wl, wl_inf=2000., wl_sup=20000.):
     fact = 1. + 6.4328e-5 + 2.94981e-2 / (146. - sigma2) + 2.5540e-4 / (41. - sigma2)   
     return wl * (mask * fact + (1 - mask))
     
+def read_HITRAN_stick(file_):
+    """
+#MI WN,cm-1     S,cm/mol  A,s-1    Vair Vself El,cm-1  TexpAshift  GQNup          GQNlow         LQNup          LQNlow         Ierr  Iref         SWup   SWlow  
+
+ 7157027.590000 3.556e-20 3.147e+03.04000.038    0.00000.000.000000       B     19       X      0                R  1R  0     d22020032 7 0 2 0 0     6.0    1.0
+    
+    """
+    data = np.genfromtxt(file_, 
+                         dtype=['a2', 'a1','float', 'float','float', 'float','float'], 
+                         delimiter=[2, 1, 12, 10, 10, 5, 5], 
+                         skip_header=5, 
+                         usecols=(0, 1, 2, 3, 4, 5, 6), 
+                         names=('ID', 'ISO','nu','I','A', 'V', 'Vself'))
+    return data
+
 def make_abs_from_hitran(file_in, file_out, ID_ref, ID_start, label, fac_tau, cut=1e-4, wl_min=1200, wl_max=14000):
     """
     generate a liste_phyat formated file from an hitran data file.
