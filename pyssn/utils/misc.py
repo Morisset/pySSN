@@ -205,15 +205,15 @@ def make_abs_from_hitran(file_in, file_out, ID_ref, ID_start, label, fac_tau, cu
 
     data = read_HITRAN_stick(file_in)
     wls = vactoair(1e8 / data['nu'])
-    taus = fac_tau *data['I']
+    taus = fac_tau * data['I']
     tau_max = 0.
     ID = ID_start
     count=0
     f = open(file_out, 'w')
-    f.write('{:14d} {:8s}         1.0 0.000 1.000e+00  1.000            999   1   1.00\n'.format(ID_ref+90000000000000, label))
+    f.write('{:14d} {:8s}         1.0 0.000 1.000e+00  1.000            999  -1   1.00\n'.format(ID_ref+90000000000000, label))
     for wl, tau in zip(wls, taus):
         if (tau > cut) & (wl > wl_min ) & (wl < wl_max) :
-            f.write('{:14d} {:8s}  {:10.3f} 0.000 {:9.3e}  1.000  {:13d}   1   1.00\n'.format(ID, label, wl, tau, ID_ref))
+            f.write('{:14d} {:8s}  {:10.3f} 0.000 {:9.3e}  1.000  {:13d}  -1   1.00\n'.format(ID, label, wl, tau, ID_ref))
             count += 1
             if tau > tau_max:
                 tau_max = tau
