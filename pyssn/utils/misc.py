@@ -290,5 +290,10 @@ def extract_line_type(filename, ltype=0):
             if l[5] == ltype:
                 print(l[:-1])
                 
-    
+def execfile_p3(file_, g_vars=None, l_vars=None):
+    with open(file_) as f:
+        code = compile(f.read(), file_, 'exec')
+        exec(code, g_vars, l_vars)
+        
+
     
