@@ -23,7 +23,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from pyssn import log_, __version__
 from ..core.spectrum import spectrum
-from ..utils.misc import get_parser
+from ..utils.misc import get_parser, execfile_p3
 
 from collections import OrderedDict
 from ..utils.physics import CST
@@ -4168,7 +4168,7 @@ figure. Each time a new control point is included, the interpolation is automati
             return
         try:
             user_module = {}
-            execfile(path, user_module)
+            execfile_p3(path, user_module)
             self.post_proc = user_module['post_proc']
             self.post_proc_file = path
             log_.message('function post_proc read from {}'.format(self.post_proc_file))
