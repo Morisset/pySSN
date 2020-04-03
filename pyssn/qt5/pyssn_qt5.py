@@ -2271,7 +2271,7 @@ class AppForm(QtWidgets.QMainWindow):
             value = self.ConvStrToValidTypes(s)
             if value != None:
                 self.sp.set_conf(Pars[row][0], value)
-                #if isinstance(value, basestring):
+                #if isinstance(value, str):
                 #    value = '\'{}\''.format(value)
                 self.table.setItem(row, 1, QtWidgets.QTableWidgetItem(str(value)))
                 self.table.item(row, 1).setBackgroundColor(self.editableCells_bg_color)
@@ -2302,7 +2302,7 @@ class AppForm(QtWidgets.QMainWindow):
             item.setBackgroundColor(self.readOnlyCells_bg_color)
             self.table.setItem(j,0,item)
             value = self.sp.get_conf(Pars[j][0])
-            #if isinstance(value, basestring):
+            #if isinstance(value, str):
             #    value = '\'{}\''.format(value)
             item = QtWidgets.QTableWidgetItem(str(value))
             #item = QtWidgets.QTableWidgetItem(str(self.sp.get_conf(Pars[j][0])))
@@ -2888,7 +2888,7 @@ class AppForm(QtWidgets.QMainWindow):
         with open(path, 'w') as f:
             for key in keys:
                 value = self.sp.conf[key]
-                if isinstance(value, basestring):
+                if isinstance(value, str):
                     value = '\"{}\"'.format(value)
                 f.write('{} = {}\n'.format(key, value))
         self.statusBar().showMessage('Parameters saved to file %s' % path, 4000)
@@ -2915,7 +2915,7 @@ class AppForm(QtWidgets.QMainWindow):
                         value = self.sp.format_instr_prof()
                     else:
                         value = self.sp.conf[key]
-                        if isinstance(value, basestring):
+                        if isinstance(value, str):
                             value = '\"{}\"'.format(value)
                     f.write('{} = {}\n'.format(key, value))
             self.save_parameters_file = path
