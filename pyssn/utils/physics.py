@@ -52,8 +52,9 @@ def make_cont_Ercolano(T_in, case, lam):
     hnu =  CST.CLIGHT * 1e8 / lam * CST.HPLANCK  #!phy.c_ang_sec/lam*!phy.h
     with open(execution_path('../data/coeff_ercolano.pickle'), 'rb') as handle:
         # python 3 requires pickle.load(open('coeff_ercolano.pickle', 'rb'), encoding="latin-1")
-        BE = pickle.load(handle)
-    
+        #BE = pickle.load(handle)
+        BE = pickle.load(handle, encoding="latin-1")
+
     if case == 'H':
         tab_T = 10**BE['th']
         D = BE['dh']
@@ -193,11 +194,3 @@ def make_ion_frac(N, co=None):
                     if ion_frac_str in res.keys():
                         f.write('{} {}\n'.format(ion, res[ion_frac_str][0]))
     f.close()
-            
-            
-            
-            
-            
-            
-            
-    

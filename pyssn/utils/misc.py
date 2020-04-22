@@ -85,7 +85,8 @@ def rebin(tab, fact):
         pyssn.log_.error('Dimension of modified tab ({0}) is not a multiple of fact ({1})'.format(len(tab), fact), 
                          calling = 'pyssn.misc.rebin')
         return None
-    return tab.reshape(len(tab)/fact, fact).sum(1) / fact
+
+    return tab.reshape(len(tab)//fact, fact).sum(1) / fact
     
 def convol(array, kernel, method='numpy'):
     

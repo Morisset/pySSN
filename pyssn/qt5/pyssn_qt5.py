@@ -60,23 +60,18 @@ class NavigationToolbar( NavigationToolbar2QT ):
                 next=None
 
         # create custom button
-        pm=QtWidgets.QPixmap(32,32)
-        pm.fill(QtWidgets.QApplication.palette().color(QtWidgets.QPalette.Normal,QtWidgets.QPalette.Button))
-        painter=QtWidgets.QPainter(pm)
+        pm=QtGui.QPixmap(32,32)
+        pm.fill(QtWidgets.QApplication.palette().color(QtGui.QPalette.Normal,QtGui.QPalette.Button))
+        painter=QtGui.QPainter(pm)
         painter.fillRect(6,6,20,20,QtCore.Qt.red)
         painter.fillRect(15,3,3,26,QtCore.Qt.blue)
         painter.fillRect(3,15,26,3,QtCore.Qt.blue)
         painter.end()
-        icon=QtWidgets.QIcon(pm)
+        icon=QtGui.QIcon(pm)
         
         ac = self.addAction(icon, "Toggle Curs") 
         ac.setCheckable(True)
-        
-        #Ver como inicializar
-        #ac.setChecked(True)
-        
-        ac.toggled.connect(self.curs_toggle)        
-        
+        ac.toggled.connect(self.curs_toggle)
         self.ac = ac
         
         #button=QtWidgets.QToolButton(self)
@@ -212,13 +207,13 @@ class AppForm(QtWidgets.QMainWindow):
 
     def image_extension_list(self):
         filetypes = self.canvas.get_supported_filetypes()
-        file_extensions = filetypes.keys()
+        file_extensions = list(filetypes.keys())
         file_extensions.sort()
         return file_extensions
 
     def image_filter(self, fileExt=''):
         filetypes = self.canvas.get_supported_filetypes_grouped()
-        imagetype_list = filetypes.keys()
+        imagetype_list = list(filetypes.keys())
         imagetype_list.sort()
         s = ''
         k = 0
@@ -245,13 +240,14 @@ class AppForm(QtWidgets.QMainWindow):
         path = self.sp.get_conf('plot_filename')
         extension = os.path.splitext(path)[1][1:].lower()
         file_choices, selectedFilter = self.image_filter(extension)
-        path = str(QtWidgets.QFileDialog.getSaveFileName(self, 'Save plot to file', path, file_choices, selectedFilter))
+        path = str(QtWidgets.QFileDialog.getSaveFileName(self, 'Save plot to file', path, file_choices, selectedFilter)[0])
         if path:
             extension = os.path.splitext(path)[1][1:].lower()
             if extension in self.image_extension_list():
-                self.sp.set_conf('plot_filename', path)
                 self.canvas.print_figure(path, dpi=self.dpi)
                 self.statusBar().showMessage('Plot saved to file %s' % path, 2000)
+                path = os.path.relpath(path, '.')
+                self.sp.set_conf('plot_filename', path)
             else:
                 title = 'Error saving plot'
                 msg = 'Format "{0}" not supported.'.format(extension)
@@ -348,44 +344,37 @@ class AppForm(QtWidgets.QMainWindow):
         
         self.fix_axes_cb = QtWidgets.QCheckBox("fix")
         self.fix_axes_cb.setChecked(False)
-        self.connect(self.fix_axes_cb, QtCore.SIGNAL('stateChanged(int)'), self.fix_axes)
+        self.fix_axes_cb.stateChanged.connect(self.fix_axes)
 
         self.xlim_min_box = QtWidgets.QLineEdit()
         self.xlim_min_box.setMinimumWidth(50)
-        #self.connect(self.xlim_min_box, QtCore.SIGNAL('editingFinished()'), self.validate_xlim_min)
-        self.connect(self.xlim_min_box, QtCore.SIGNAL('returnPressed()'), self.set_plot_limits_and_draw)
+        self.xlim_min_box.returnPressed.connect(self.set_plot_limits_and_draw)
 
         self.xlim_max_box = QtWidgets.QLineEdit()
         self.xlim_max_box.setMinimumWidth(50)
-        #self.connect(self.xlim_max_box, QtCore.SIGNAL('editingFinished()'), self.validate_xlim_max)
-        #self.xlim_max_box.editingFinished.connect(self.validate_xlim_max)
-        self.connect(self.xlim_max_box, QtCore.SIGNAL('returnPressed()'), self.set_plot_limits_and_draw)
+        self.xlim_max_box.returnPressed.connect(self.set_plot_limits_and_draw)
         
         self.y1lim_min_box = QtWidgets.QLineEdit()
         self.y1lim_min_box.setMinimumWidth(50)
-        #self.connect(self.y1lim_min_box, QtCore.SIGNAL('editingFinished()'), self.validate_y1lim_min)
-        self.connect(self.y1lim_min_box, QtCore.SIGNAL('returnPressed()'), self.set_plot_limits_and_draw)
+        self.y1lim_min_box.returnPressed.connect(self.set_plot_limits_and_draw)
         
         self.y1lim_max_box = QtWidgets.QLineEdit()
         self.y1lim_max_box.setMinimumWidth(50)
-        #self.connect(self.y1lim_max_box, QtCore.SIGNAL('editingFinished()'), self.validate_y1lim_max)
-        self.connect(self.y1lim_max_box, QtCore.SIGNAL('returnPressed()'), self.set_plot_limits_and_draw)
+        self.y1lim_max_box.returnPressed.connect(self.set_plot_limits_and_draw)
         
         self.y3lim_min_box = QtWidgets.QLineEdit()
         self.y3lim_min_box.setMinimumWidth(50)
-        #self.connect(self.y3lim_min_box, QtCore.SIGNAL('editingFinished()'), self.validate_y3lim_min)
-        self.connect(self.y3lim_min_box, QtCore.SIGNAL('returnPressed()'), self.set_plot_limits_and_draw)
+        self.y3lim_min_box.returnPressed.connect(self.set_plot_limits_and_draw)
         
         self.y3lim_max_box = QtWidgets.QLineEdit()
         self.y3lim_max_box.setMinimumWidth(50)
-        #self.connect(self.y3lim_max_box, QtCore.SIGNAL('editingFinished()'), self.validate_y3lim_max)
-        self.connect(self.y3lim_max_box, QtCore.SIGNAL('returnPressed()'), self.set_plot_limits_and_draw)
+        self.y3lim_max_box.returnPressed.connect(self.set_plot_limits_and_draw)
 
         self.run_button = QtWidgets.QPushButton("Run")
-        self.connect(self.run_button, QtCore.SIGNAL('clicked()'), self.rerun)
+        self.run_button.clicked.connect(self.rerun)
         
         self.draw_button = QtWidgets.QPushButton("Draw")
-        self.connect(self.draw_button, QtCore.SIGNAL('clicked()'), self.on_draw)
+        self.draw_button.clicked.connect(self.on_draw)
         
         self.Command_GroupBox = QtWidgets.QGroupBox("Execute")
         self.Command_GroupBox.setCheckable(False)
@@ -400,72 +389,70 @@ class AppForm(QtWidgets.QMainWindow):
         self.lineIDs_GroupBox.setCheckable(True)
         self.lineIDs_GroupBox.setChecked(True)
         
-        self.connect(self.lineIDs_GroupBox, QtCore.SIGNAL('clicked()'), self.show_lines_clicked)
+        self.lineIDs_GroupBox.clicked.connect(self.show_lines_clicked)
         self.lineIDs_GroupBox_ToolTip = 'Check to show ticks at the central positions of the spectral lines and plot the lines of selected ions'
 
         self.residual_GroupBox = QtWidgets.QGroupBox("Plot of residuals")
         self.residual_GroupBox.setCheckable(True)
         self.residual_GroupBox.setChecked(True)
-        self.connect(self.residual_GroupBox, QtCore.SIGNAL('clicked()'), self.residual_box_clicked)
+        self.residual_GroupBox.clicked.connect(self.residual_box_clicked)
         self.residual_GroupBox_ToolTip = 'Check to display the residual plot'
 
         self.adjust_button = QtWidgets.QPushButton("Update")
         self.adjust_button.setChecked(False)
-        self.connect(self.adjust_button, QtCore.SIGNAL('clicked()'), self.adjust)
+        self.adjust_button.clicked.connect(self.adjust)
 
         self.post_proc_button = QtWidgets.QPushButton("Post proc")
         self.post_proc_button.setChecked(False)
-        self.connect(self.post_proc_button, QtCore.SIGNAL('clicked()'), self.apply_post_proc)
+        self.post_proc_button.clicked.connect(self.apply_post_proc)
 
         self.update_profile_button = QtWidgets.QPushButton("Update profiles")
         self.update_profile_button.setChecked(False)
-        self.connect(self.update_profile_button, QtCore.SIGNAL('clicked()'), self.update_profile)
+        self.update_profile_button.clicked.connect(self.update_profile)
 
         self.sp_min_box = QtWidgets.QLineEdit()
         self.sp_min_box.setMinimumWidth(50)
-        #self.connect(self.sp_min_box, QtCore.SIGNAL('editingFinished()'), self.set_limit_sp)
-        self.connect(self.sp_min_box, QtCore.SIGNAL('returnPressed()'), self.set_limit_sp_and_run)
+        self.sp_min_box.returnPressed.connect(self.set_limit_sp_and_run)
         
         self.sp_max_box = QtWidgets.QLineEdit()
         self.sp_max_box.setMinimumWidth(50)
-        #self.connect(self.sp_max_box, QtCore.SIGNAL('editingFinished()'), self.set_limit_sp)
-        self.connect(self.sp_max_box, QtCore.SIGNAL('returnPressed()'), self.set_limit_sp_and_run)
+        self.sp_max_box.returnPressed.connect(self.set_limit_sp_and_run)
         
         self.sp_norm_box = QtWidgets.QLineEdit()
         self.sp_norm_box.setMinimumWidth(50)
-        self.connect(self.sp_norm_box, QtCore.SIGNAL('returnPressed()'), self.sp_norm)
+        self.sp_norm_box.returnPressed.connect(self.sp_norm)
 
         self.obj_velo_box = QtWidgets.QLineEdit()
         self.obj_velo_box.setMinimumWidth(50)
-        self.connect(self.obj_velo_box, QtCore.SIGNAL('returnPressed()'), self.obj_velo)
+        self.obj_velo_box.returnPressed.connect(self.obj_velo)
 
         self.ebv_box = QtWidgets.QLineEdit()
         self.ebv_box.setMinimumWidth(50)
-        self.connect(self.ebv_box, QtCore.SIGNAL('returnPressed()'), self.ebv)
+        self.ebv_box.returnPressed.connect(self.ebv)
         
         self.resol_box = QtWidgets.QLineEdit()
         self.resol_box.setMinimumWidth(50)
-        self.connect(self.resol_box, QtCore.SIGNAL('returnPressed()'), self.resol)
+        self.resol_box.returnPressed.connect(self.resol)
         
         self.cut2_box = QtWidgets.QLineEdit()
         self.cut2_box.setMinimumWidth(50)
-        self.connect(self.cut2_box, QtCore.SIGNAL('returnPressed()'), self.cut2)
+        self.cut2_box.returnPressed.connect(self.cut2)
         
         self.cut_cb = QtWidgets.QCheckBox('')
         self.cut_cb.setChecked(False)
-        self.connect(self.cut_cb, QtCore.SIGNAL('clicked()'), self.cut_cb_changed)
+        self.cut_cb.clicked.connect(self.cut_cb_changed)
         
         self.ion_box = QtWidgets.QLineEdit()
         self.ion_box.setMinimumWidth(70)
-        self.connect(self.ion_box, QtCore.SIGNAL('returnPressed()'), self.draw_ion)
+        self.ion_box.returnPressed.connect(self.draw_ion)
         
         self.ion_cb = QtWidgets.QCheckBox('')
         self.ion_cb.setChecked(False)
-        self.connect(self.ion_cb, QtCore.SIGNAL('clicked()'), self.ion_cb_changed)
+        self.ion_cb.clicked.connect(self.ion_cb_changed)
         
         self.line_info_box = QtWidgets.QLineEdit()
         self.line_info_box.setFixedWidth(130)
-        self.connect(self.line_info_box, QtCore.SIGNAL('returnPressed()'), self.line_info)
+        self.line_info_box.returnPressed.connect(self.line_info)
 
         self.mpl_toolbar.addSeparator()
         self.mpl_toolbar.addWidget(QtWidgets.QLabel('   line number '))
@@ -473,19 +460,19 @@ class AppForm(QtWidgets.QMainWindow):
 
         self.magenta_box = QtWidgets.QLineEdit()
         self.magenta_box.setMinimumWidth(50)
-        self.connect(self.magenta_box, QtCore.SIGNAL('returnPressed()'), self.magenta_line)
+        self.magenta_box.returnPressed.connect(self.magenta_line)
 
         self.magenta_label_box = QtWidgets.QLineEdit()
         self.magenta_label_box.setMinimumWidth(50)
-        self.connect(self.magenta_label_box, QtCore.SIGNAL('returnPressed()'), self.magenta_line)
+        self.magenta_label_box.returnPressed.connect(self.magenta_line)
 
         self.cyan_box = QtWidgets.QLineEdit()
         self.cyan_box.setMinimumWidth(50)
-        self.connect(self.cyan_box, QtCore.SIGNAL('returnPressed()'), self.cyan_line)
+        self.cyan_box.returnPressed.connect(self.cyan_line)
         
         self.cyan_label_box = QtWidgets.QLineEdit()
         self.cyan_label_box.setMinimumWidth(50)
-        self.connect(self.cyan_label_box, QtCore.SIGNAL('returnPressed()'), self.cyan_line)
+        self.cyan_label_box.returnPressed.connect(self.cyan_line)
 
 
         self.setStyleSheet("""QToolTip { 
@@ -615,7 +602,7 @@ class AppForm(QtWidgets.QMainWindow):
         for w in wList:
             k = wList.index( w )
             i = k%Nrow
-            j = 1+2*(k/Nrow)
+            j = 1+2*(k//Nrow)
             CommandLayout.addWidget(w,i,j)
             CommandLayout.setAlignment(w,QtCore.Qt.AlignCenter)
 
@@ -631,14 +618,14 @@ class AppForm(QtWidgets.QMainWindow):
             w = QtWidgets.QLabel(l)
             k = lList.index( l )
             i = k%Nrow
-            j = 2*(k/Nrow)
+            j = 2*(k//Nrow)
             ObsSpecLayout.addWidget(w,i,j)
             ObsSpecLayout.setAlignment(w,QtCore.Qt.AlignRight)
 
         for w in wList:
             k = wList.index( w )
             i = k%Nrow
-            j = 1+2*(k/Nrow)
+            j = 1+2*(k//Nrow)
             ObsSpecLayout.addWidget(w,i,j)
             ObsSpecLayout.setAlignment(w,QtCore.Qt.AlignRight)
 
@@ -749,7 +736,8 @@ class AppForm(QtWidgets.QMainWindow):
         for i in range(len(self.line_sort_list)):
             s = s + '    ' + str(i) + ' - ' + self.line_sort_list[i] + '\n'
         s = s + '\nSet with:\n' + '    save_lines_sort = <integer>'
-        self.line_sort_ag = QtWidgets.QActionGroup(self, exclusive=True)
+        self.line_sort_ag = QtWidgets.QActionGroup(self)
+        self.line_sort_ag.setExclusive(True)
 
         self.line_sort_menu = self.file_menu.addMenu("Sort lines by")
         self.line_sort_menu_ToolTip = ''       
@@ -888,7 +876,9 @@ class AppForm(QtWidgets.QMainWindow):
         for i in range(len(self.diff_lines_list)):
             s = s + '    ' + str(i) + ' - ' + self.diff_lines_list[i] + '\n'
         s = s + '\nSet with:\n' + '    diff_lines_by = <integer>'
-        self.diff_lines_ag = QtWidgets.QActionGroup(self, exclusive=True)
+        self.diff_lines_ag = QtWidgets.QActionGroup(self)
+        self.diff_lines_ag.setExclusive(True)
+
 
         self.diff_lines_menu = self.line_menu.addMenu("Differentiate lines by")
         self.diff_lines_menu_ToolTip = ''        
@@ -917,7 +907,8 @@ class AppForm(QtWidgets.QMainWindow):
         for i in range(len(self.line_tick_ax_list)):
             s = s + '    ' + str(i) + ' - ' + self.line_tick_ax_list[i] + '\n'
         s = s + '\nSet with:\n' + '    line_tick_ax = <integer>'
-        self.line_tick_ax_ag = QtWidgets.QActionGroup(self, exclusive=True)
+        self.line_tick_ax_ag = QtWidgets.QActionGroup(self)
+        self.line_tick_ax_ag.setExclusive(True)
         self.line_tick_ax_menu_ToolTip = ''        
 
         for i in range(len(self.line_tick_ax_list)):
@@ -932,7 +923,8 @@ class AppForm(QtWidgets.QMainWindow):
         for i in range(len(self.line_tick_pos_list)):
             s = s + '    ' + str(i) + ' - ' + self.line_tick_pos_list[i] + '\n'
         s = s + '\nSet with:\n' + '    line_tick_pos = <integer>'
-        self.line_tick_pos_ag = QtWidgets.QActionGroup(self, exclusive=True)
+        self.line_tick_pos_ag = QtWidgets.QActionGroup(self)
+        self.line_tick_pos_ag.setExclusive(True)
         self.line_tick_pos_menu_ToolTip = ''        
 
         for i in range(len(self.line_tick_pos_list)):
@@ -995,7 +987,8 @@ class AppForm(QtWidgets.QMainWindow):
         for i in range(len(self.verbosity_list)):
             s = s + '    ' + str(i) + ' - ' + self.verbosity_list[i] + '\n'
         s = s + '\nSet with:\n' + '    log_level = <integer>'
-        self.verbosity_ag = QtWidgets.QActionGroup(self, exclusive=True)
+        self.verbosity_ag = QtWidgets.QActionGroup(self)
+        self.verbosity_ag.setExclusive(True)
         
         #self.verbosity_menu = self.menuBar().addMenu("Verbosity")
         self.verbosity_menu = self.settings_menu.addMenu("Verbosity")
@@ -1011,7 +1004,8 @@ class AppForm(QtWidgets.QMainWindow):
         for i in range(len(self.style_list)):
             s = s + '    ' + str(i) + ' - ' + self.style_list[i] + '\n'
         s = s + '\nSet with:\n' + '    qt_style = <integer>'
-        self.style_ag = QtWidgets.QActionGroup(self, exclusive=True)
+        self.style_ag = QtWidgets.QActionGroup(self)
+        self.style_ag.setExclusive(True)
 
         self.style_menu = self.settings_menu.addMenu('Widget style')
 
@@ -1056,8 +1050,8 @@ class AppForm(QtWidgets.QMainWindow):
                 target.addAction(action)
 
     def create_action(  self, text, slot=None, shortcut=None, 
-                        icon=None, tip=None, checkable=False, 
-                        signal="triggered()"):
+                        icon=None, tip=None, checkable=False):
+        #                signal="triggered()"):
         action = QtWidgets.QAction(text, self)
         if icon is not None:
             action.setIcon(QtWidgets.QIcon(":/%s.png" % icon))
@@ -1067,7 +1061,7 @@ class AppForm(QtWidgets.QMainWindow):
             action.setToolTip(tip)
             action.setStatusTip(tip)
         if slot is not None:
-            self.connect(action, QtCore.SIGNAL(signal), slot)
+            action.triggered.connect(slot)
         if checkable:
             action.setCheckable(True)
         return action          
@@ -1240,7 +1234,7 @@ class AppForm(QtWidgets.QMainWindow):
     def save_cont_pars(self):
         file_choices = "Python files (*.py) (*.py);;Text files (*.txt *.dat) (*.txt *.dat);;All Files (*) (*)"
         filename = self.sp.config_file.split('/')[-1]
-        path = str(QtWidgets.QFileDialog.getSaveFileName(self, 'Save to file', filename, file_choices))
+        path = str(QtWidgets.QFileDialog.getSaveFileName(self, 'Save to file', filename, file_choices)[0])
         if path:
             if os.path.isfile(path):
                 f = open(path, 'r')
@@ -1358,8 +1352,8 @@ class AppForm(QtWidgets.QMainWindow):
 
         def get_window_size_and_position():
             if self.line_info_dialog is None:
-                font = QtWidgets.QFont()
-                width = QtWidgets.QFontMetrics(font).width('='*120)
+                font = QtGui.QFont()
+                width = QtGui.QFontMetrics(font).width('='*120)
                 self.line_info_dialog_width = width
                 self.line_info_dialog_height = 470
                 sG = QtWidgets.QApplication.desktop().screenGeometry()
@@ -1552,18 +1546,20 @@ class AppForm(QtWidgets.QMainWindow):
                         s = self.sp.process[s]
                 item = QtWidgets.QTableWidgetItem(s)
                 if fieldItems[j] in editableCols:
-                    item.setBackgroundColor(self.editableCells_bg_color)
+                    item.setBackground(self.editableCells_bg_color)
                 else:
                     item.setFlags(item.flags() ^ QtCore.Qt.ItemIsEditable)
-                    item.setBackgroundColor(self.readOnlyCells_bg_color)
+                    #item.setBackgroundColor(self.readOnlyCells_bg_color)
+                    item.setBackground(self.readOnlyCells_bg_color)
                 self.line_info_table.setItem(i,j,item)
 
         def fill_text(i, text):
             item = QtWidgets.QTableWidgetItem(text)
             item.setFlags(item.flags() ^ (QtCore.Qt.ItemIsEditable|QtCore.Qt.ItemIsSelectable|QtCore.Qt.ItemIsEnabled))
-            item.setBackgroundColor(self.readOnlyCells_bg_color)
+            item.setBackground(self.readOnlyCells_bg_color)
             item.setTextAlignment(QtCore.Qt.AlignBottom)
-            item.setTextColor(QtCore.Qt.blue)
+            #item.setTextColor(QtCore.Qt.blue)
+            item.setForeground(QtCore.Qt.blue)
             self.line_info_table.setItem(i,0,item)
             self.line_info_table.setSpan(i,0,2,len(fieldItems))
 
@@ -1769,10 +1765,10 @@ class AppForm(QtWidgets.QMainWindow):
             value = self.rightFormat(s, fieldItems[col])
             if value != None:
                 self.line_info_table.setItem(row, col, QtWidgets.QTableWidgetItem(value.strip()))
-                self.line_info_table.item(row, col).setBackgroundColor(self.editableCells_bg_color)
+                self.line_info_table.item(row, col).setBackground(self.editableCells_bg_color)
                 save_change(row,col)
             else:
-                self.line_info_table.item(row, col).setBackgroundColor(QtWidgets.QColor('red'))
+                self.line_info_table.item(row, col).setBackground(QtWidgets.QColor('red'))
                 title = 'Invalid format for the ' + self.sp.field_tip[fieldItems[col]]
                 s0 = self.sp.field_format[fieldItems[col]]
                 s0 = s0[2:-1]
@@ -1786,7 +1782,7 @@ class AppForm(QtWidgets.QMainWindow):
        
         def get_line_from_table(row):
             line = ' '*85
-            jList = range(0,len(fieldItems))
+            jList = list(range(0,len(fieldItems)))
             jList.remove(col_proc)
             for j in jList:
                 s = self.line_info_table.item(row,j).text()
@@ -1911,7 +1907,7 @@ class AppForm(QtWidgets.QMainWindow):
             return
         k = self.sp.get_conf('diff_lines_by')
         fieldItems = self.sp.fields
-        jList = range(0,len(fieldItems))
+        jList = list(range(0,len(fieldItems)))
         jProc = fieldItems.index('proc')
         jList.remove(jProc)
         if self.nearbyDialogFilterIsActive:
@@ -1921,7 +1917,7 @@ class AppForm(QtWidgets.QMainWindow):
             selected_true_ions = [self.sp.true_ion(ion) for ion in selected_ions]
             nearbyLines = []
             for line in self.nearbyLines:
-                ion = str(line[fieldItems.index('id')]).strip()
+                ion = line[fieldItems.index('id')].decode().strip()
                 true_ion = self.sp.true_ion(ion)
                 selectThisIon = (( ion in selected_ions or true_ion in selected_ions ) and k == 1) or (true_ion in selected_true_ions and k != 1)
                 if selectThisIon:
@@ -1930,15 +1926,19 @@ class AppForm(QtWidgets.QMainWindow):
             nearbyLines = self.nearbyLines
         self.nearbyLines_table.setRowCount(len(nearbyLines))                 
         for i in range(0,len(nearbyLines)):
-            ion = self.sp.true_ion(nearbyLines[i][fieldItems.index('id')])
+            ion = nearbyLines[i][fieldItems.index('id')]
+            ion = self.sp.true_ion(ion.decode())
             for j in jList:
                 if j > jProc:
                     k = j - 1
                 else:
                     k = j
+                s = nearbyLines[i][k]
+                if j in [fieldItems.index('id'), fieldItems.index('comment')]:
+                    s = s.decode()
                 fmt = self.sp.field_format[fieldItems[j]]
-                s = fmt.format(nearbyLines[i][k])
-                s = str(s).strip()
+                s = fmt.format(s)
+                s = s.strip()
                 if j == fieldItems.index('num'):
                     if self.sp.isPseudoIon(ion):
                         proc_str = ''
@@ -1946,14 +1946,18 @@ class AppForm(QtWidgets.QMainWindow):
                         proc_str = self.sp.process[s[-9]]
                 if j == fieldItems.index('id'):
                     if self.show_true_ions: 
-                        s = self.sp.true_ion(s).replace('_',' ').strip()    
+                        s = self.sp.true_ion(s).replace('_',' ').strip()
+
+                    
                 item = QtWidgets.QTableWidgetItem(s)
                 item.setFlags(item.flags() ^ QtCore.Qt.ItemIsEditable)
-                item.setBackgroundColor(self.readOnlyCells_bg_color)
+                #item.setBackgroundColor(self.readOnlyCells_bg_color)
+                item.setBackground(self.readOnlyCells_bg_color)
                 self.nearbyLines_table.setItem(i,j,item)
             item = QtWidgets.QTableWidgetItem(proc_str)
             item.setFlags(item.flags() ^ QtCore.Qt.ItemIsEditable)
-            item.setBackgroundColor(self.readOnlyCells_bg_color)
+            #item.setBackgroundColor(self.readOnlyCells_bg_color)
+            item.setBackground(self.readOnlyCells_bg_color)
             self.nearbyLines_table.setItem(i,jProc,item)
         self.nearbyLines_table.resizeColumnsToContents()
         self.nearbyLines_table.resizeRowsToContents()
@@ -1963,8 +1967,8 @@ class AppForm(QtWidgets.QMainWindow):
 
         def get_window_size_and_position():
             if self.nearbyLines_dialog is None:
-                font = QtWidgets.QFont()
-                width = QtWidgets.QFontMetrics(font).width('='*120)
+                font = QtGui.QFont()
+                width = QtGui.QFontMetrics(font).width('='*120)
                 self.nearbyLines_dialog_width = width
                 self.nearbyLines_dialog_height = 470
                 sG = QtWidgets.QApplication.desktop().screenGeometry()
@@ -2244,8 +2248,8 @@ class AppForm(QtWidgets.QMainWindow):
                 self.cont_pars_dialog_width = 800
                 self.cont_pars_dialog_height = 460
                 sG = QtWidgets.QApplication.desktop().screenGeometry()
-                self.cont_pars_dialog_x = sG.width()-self.cont_pars_dialog_width
-                self.cont_pars_dialog_y = sG.height()-self.cont_pars_dialog_height
+                self.cont_pars_dialog_x = (sG.width()-self.cont_pars_dialog_width)//2
+                self.cont_pars_dialog_y = (sG.height()-self.cont_pars_dialog_height)//2
                 self.cont_pars_dialog_x = 0
                 self.cont_pars_dialog_y = 0
             else:
@@ -2274,11 +2278,11 @@ class AppForm(QtWidgets.QMainWindow):
                 #if isinstance(value, str):
                 #    value = '\'{}\''.format(value)
                 self.table.setItem(row, 1, QtWidgets.QTableWidgetItem(str(value)))
-                self.table.item(row, 1).setBackgroundColor(self.editableCells_bg_color)
+                self.table.item(row, 1).setBackground(self.editableCells_bg_color)
                 self.cont_par_changed = True
             else:
                 self.table.setItem(row, 1, QtWidgets.QTableWidgetItem('Error in ' + s))
-                self.table.item(row, 1).setBackgroundColor(QtWidgets.QColor('red'))
+                self.table.item(row, 1).setBackground(QtWidgets.QColor('red'))
             self.table.blockSignals(False)
  
         get_window_size_and_position()
@@ -2299,18 +2303,18 @@ class AppForm(QtWidgets.QMainWindow):
         for j in range(0,len(Pars)):
             item = QtWidgets.QTableWidgetItem(Pars[j][0])
             item.setFlags(item.flags() ^ QtCore.Qt.ItemIsEditable)
-            item.setBackgroundColor(self.readOnlyCells_bg_color)
+            item.setBackground(self.readOnlyCells_bg_color)
             self.table.setItem(j,0,item)
             value = self.sp.get_conf(Pars[j][0])
             #if isinstance(value, str):
             #    value = '\'{}\''.format(value)
             item = QtWidgets.QTableWidgetItem(str(value))
             #item = QtWidgets.QTableWidgetItem(str(self.sp.get_conf(Pars[j][0])))
-            item.setBackgroundColor(self.editableCells_bg_color)
+            item.setBackground(self.editableCells_bg_color)
             self.table.setItem(j,1,item)
             item = QtWidgets.QTableWidgetItem(Pars[j][1])
             item.setFlags(item.flags() ^ QtCore.Qt.ItemIsEditable)
-            item.setBackgroundColor(self.readOnlyCells_bg_color)
+            item.setBackground(self.readOnlyCells_bg_color)
             self.table.setItem(j,2,item)
         self.table.resizeColumnsToContents()
         self.table.resizeRowsToContents()
@@ -2657,11 +2661,8 @@ class AppForm(QtWidgets.QMainWindow):
          
     def show_line_ticks_from_file(self):
         file_choices = "Text files (*.txt *.dat) (*.txt *.dat);;Tex files (*.tex) (*.tex);;CSV files (*.csv) (*.csv);;All Files (*) (*)"
-        if self.tick_file is None:
-            path = ''
-        else:
-            path = self.tick_file
-        path = str(QtWidgets.QFileDialog.getOpenFileName(self, 'Open file', path, file_choices))
+        path = self.tick_file
+        path = str(QtWidgets.QFileDialog.getOpenFileName(self, 'Open file', path, file_choices)[0])
         if path:
             self.tick_file = path
         else:
@@ -2865,7 +2866,7 @@ class AppForm(QtWidgets.QMainWindow):
     def get_init_filename(self):
         file_choices = "Python initialization files (*init.py) (*init.py);;Python files (*.py) (*.py);;All files (*) (*)"
         title = 'Open pySSN initialization file'
-        init_file = str(QtWidgets.QFileDialog.getOpenFileName(self, title, self.init_file_name, file_choices))
+        init_file = str(QtWidgets.QFileDialog.getOpenFileName(self, title, self.init_file_name, file_choices)[0])
         if init_file and os.path.isfile(init_file):
             self.init_file_name = init_file
         else:
@@ -2907,7 +2908,7 @@ class AppForm(QtWidgets.QMainWindow):
         file_choices = "pySSN initialization files (*init.py) (*init.py);;Python files (*.py) (*.py);;All files (*) (*)"
         title = 'Save synthesis and plot parameters'
         selectedFilter = 'pySSN initialization files (*init.py) (*init.py)'
-        path = str(QtWidgets.QFileDialog.getSaveFileName(self, title, path, file_choices, selectedFilter))
+        path = str(QtWidgets.QFileDialog.getSaveFileName(self, title, path, file_choices, selectedFilter)[0])
         if path:
             with open(path, 'w') as f:
                 for key in keys:
@@ -2924,7 +2925,7 @@ class AppForm(QtWidgets.QMainWindow):
     def teste_instr_prof(self, prof):
         if prof is None:
             return 'not defined'
-        keys = prof.keys()
+        keys = list(prof.keys())
         keys.remove('comment')
         if not 'width' in keys:
             return 'The parameter \'width\' was not found.'       
@@ -2932,7 +2933,7 @@ class AppForm(QtWidgets.QMainWindow):
             return 'The value of \'width\' can not be zero'
         if not (self.sp.get_key_indexes('Bb', prof)==self.sp.get_key_indexes('Br', prof)==
            self.sp.get_key_indexes('beta', prof)==self.sp.get_key_indexes('alpha', prof)):
-           return 'Invalid indexes por the parameters \'Bb\', \'Br\', \'alpha\', or \'beta\''  
+           return 'Invalid indexes for the parameters \'Bb\', \'Br\', \'alpha\', or \'beta\''  
         if not all((type(prof[key])==float or type(prof[key])==int) for key in keys):
             return 'The values of parameters must be numbers.'
         return ''
@@ -2943,7 +2944,7 @@ class AppForm(QtWidgets.QMainWindow):
             path = str(prof_box.toPlainText()).strip()
             try:
                 user_module = {}
-                exec(path) in user_module
+                exec(path, user_module)
                 prof = user_module['instr_prof']
                 self.sp.set_conf('instr_prof', prof)
                 log_.message('new instrumental profile is ok', calling = self.calling)
@@ -2976,14 +2977,14 @@ class AppForm(QtWidgets.QMainWindow):
                 
         def get_window_size_and_position():
             if self.instr_prof_dialog is None:
-                font = QtWidgets.QFont("Courier")
-                width = QtWidgets.QFontMetrics(font).width('='*80)
-                height = 15*QtWidgets.QFontMetrics(font).height()
+                font = QtGui.QFont("Courier")
+                width = QtGui.QFontMetrics(font).width('='*80)
+                height = 15*QtGui.QFontMetrics(font).height()
                 self.instr_prof_dialog_width = width
                 self.instr_prof_dialog_height = height
                 sG = QtWidgets.QApplication.desktop().screenGeometry()
-                self.instr_prof_dialog_x = sG.width()-self.instr_prof_dialog_width
-                self.instr_prof_dialog_y = sG.height()
+                self.instr_prof_dialog_x = (sG.width()-self.instr_prof_dialog_width)//2
+                self.instr_prof_dialog_y = (sG.height()-self.instr_prof_dialog_height)//2
             else:
                 if not self.showHelpBrowser:
                     self.instr_prof_dialog_width = self.instr_prof_dialog.width()
@@ -2994,7 +2995,7 @@ class AppForm(QtWidgets.QMainWindow):
         self.showHelpBrowser = False
         get_window_size_and_position()
         self.instr_prof_dialog = QtWidgets.QDialog()
-        self.instr_prof_dialog.setWindowFlags(self.instr_prof_dialog.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+        #self.instr_prof_dialog.setWindowFlags(self.instr_prof_dialog.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
         self.instr_prof_dialog.resize(self.instr_prof_dialog_width, self.instr_prof_dialog_height)
         self.instr_prof_dialog.move(self.instr_prof_dialog_x,self.instr_prof_dialog_y)
         self.instr_prof_dialog.setWindowTitle('instrument profile dialog')
@@ -3118,7 +3119,7 @@ Special cases for the optional components:
                 path = str(edit_box.toPlainText()).strip()
             try:
                 user_module = {}
-                exec(path) in user_module
+                exec(path, user_module)
                 value = user_module['lambda_shift_table']
                 self.sp.set_conf('lambda_shift_table', value)
                 log_.message('new \'lambda_shit_table\' is ok', calling = self.calling)
@@ -3156,25 +3157,24 @@ Special cases for the optional components:
                 
         def get_window_size_and_position():
             if self.refine_wave_dialog is None:
-                font = QtWidgets.QFont("Courier")
-                width = QtWidgets.QFontMetrics(font).width('='*80)
-                height = 15*QtWidgets.QFontMetrics(font).height()
+                font = QtGui.QFont("Courier")
+                width = QtGui.QFontMetrics(font).width('='*80)
+                height = 15*QtGui.QFontMetrics(font).height()
                 self.refine_wave_dialog_width = width
                 self.refine_wave_dialog_height = height
                 sG = QtWidgets.QApplication.desktop().screenGeometry()
-                self.refine_wave_dialog_x = sG.width()-self.refine_wave_dialog_width
-                self.refine_wave_dialog_y = sG.height()
+                self.refine_wave_dialog_x = (sG.width()-self.refine_wave_dialog_width)//2
+                self.refine_wave_dialog_y = (sG.height()-self.refine_wave_dialog_height)//2
             else:
                 if not self.showHelpBrowser:
                     self.refine_wave_dialog_width = self.refine_wave_dialog.width()
                     self.refine_wave_dialog_height = self.refine_wave_dialog.height()
                     self.refine_wave_dialog_x = self.refine_wave_dialog.pos().x()
                     self.refine_wave_dialog_y = self.refine_wave_dialog.pos().y()
-            
         self.showHelpBrowser = False
         get_window_size_and_position()
         self.refine_wave_dialog = QtWidgets.QDialog()
-        self.refine_wave_dialog.setWindowFlags(self.refine_wave_dialog.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+        #self.refine_wave_dialog.setWindowFlags(self.refine_wave_dialog.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
         self.refine_wave_dialog.resize(self.refine_wave_dialog_width, self.refine_wave_dialog_height)
         self.refine_wave_dialog.move(self.refine_wave_dialog_x,self.refine_wave_dialog_y)
         self.refine_wave_dialog.setWindowTitle('wavelength-refining dialog')
@@ -3281,7 +3281,7 @@ Outside the range of wavelenghts given in <b>lambda_shit_table</b>, the correcti
             path = str(self.user_cont_editBox.toPlainText()).strip()
         try:
             user_module = {}
-            exec(path) in user_module
+            exec(path, user_module)
             kind = user_module['cont_user_func']
             log_.message('new \'cont_user_func\' is ok', calling = self.calling)
             value = user_module['cont_user_table']
@@ -3390,14 +3390,14 @@ Outside the range of wavelenghts given in <b>lambda_shit_table</b>, the correcti
                 
         def get_window_size_and_position():
             if self.interpol_cont_dialog is None:
-                font = QtWidgets.QFont("Courier")
-                width = QtWidgets.QFontMetrics(font).width('='*80)
-                height = 15*QtWidgets.QFontMetrics(font).height()
+                font = QtGui.QFont("Courier")
+                width = QtGui.QFontMetrics(font).width('='*80)
+                height = 15*QtGui.QFontMetrics(font).height()
                 self.interpol_cont_dialog_width = width
                 self.interpol_cont_dialog_height = height
                 sG = QtWidgets.QApplication.desktop().screenGeometry()
-                self.interpol_cont_dialog_x = sG.width()-self.interpol_cont_dialog_width
-                self.interpol_cont_dialog_y = sG.height()
+                self.interpol_cont_dialog_x = (sG.width()-self.interpol_cont_dialog_width)//2
+                self.interpol_cont_dialog_y = (sG.height()-self.interpol_cont_dialog_height)//2
             else:
                 if not self.showHelpBrowser:
                     self.interpol_cont_dialog_width = self.interpol_cont_dialog.width()
@@ -3452,7 +3452,7 @@ Outside the range of wavelenghts given in <b>lambda_shit_table</b>, the correcti
         self.selected_lines_clicked()
         self.set_plot_limits_and_draw()
         self.interpol_cont_dialog = QtWidgets.QDialog()
-        self.interpol_cont_dialog.setWindowFlags(self.interpol_cont_dialog.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+        #self.interpol_cont_dialog.setWindowFlags(self.interpol_cont_dialog.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
         #self.interpol_cont_dialog.setWindowFlags(QtCore.Qt.WindowMinimizeButtonHint | QtCore.Qt.WindowMaximizeButtonHint | QtCore.Qt.WindowStaysOnTopHint)
         self.interpol_cont_dialog.resize(self.interpol_cont_dialog_width, self.interpol_cont_dialog_height)
         self.interpol_cont_dialog.move(self.interpol_cont_dialog_x,self.interpol_cont_dialog_y)
@@ -3555,21 +3555,19 @@ figure. Each time a new control point is included, the interpolation is automati
                 return False        
 
     def set_cosmetic_file(self):
+        path = self.sp.get_conf('fic_cosmetik')
         file_choices = "Line cosmetic files (*cosm*.dat) (*cosm*.dat);;Data files (*.dat) (*.dat);;All files (*) (*)"
         title = 'Set the line cosmetic file'
-        cosmetic_file = str(QtWidgets.QFileDialog.getSaveFileName(self, title, '', file_choices, options=QtWidgets.QFileDialog.DontConfirmOverwrite))
-        msg = "Line cosmetic file '{}' not valid!".format(cosmetic_file)
-        if cosmetic_file and not self.isValidFilename(cosmetic_file):
+        path = str(QtWidgets.QFileDialog.getSaveFileName(self, title, path, file_choices, options=QtWidgets.QFileDialog.DontConfirmOverwrite)[0])
+        if path and not self.isValidFilename(path):
+            msg = "Line cosmetic file '{}' not valid!".format(path)
             QtWidgets.QMessageBox.critical(self, 'pySSN', msg, QtWidgets.QMessageBox.Ok )  
-            cosmetic_file = None
-        if cosmetic_file:
+            path = None
+        if path:
             self.sp.set_conf('do_cosmetik', True)
-            dir_ = os.path.dirname(cosmetic_file)
-            if dir_ == os.getcwd():
-                cosmetic_file = cosmetic_file.split('/')[-1]
-            self.sp.set_conf('fic_cosmetik', cosmetic_file)
-            self.sp.fic_cosmetik = cosmetic_file
-            
+            path = os.path.relpath(path, '.')
+            self.sp.set_conf('fic_cosmetik', path)
+            self.sp.fic_cosmetik = path            
             if self.sp is not None:
                 self.set_status_text()
             if self.axes is not None:
@@ -4025,8 +4023,8 @@ figure. Each time a new control point is included, the interpolation is automati
         self.show_header_action.setChecked(self.sp.get_conf('save_lines_header', False))
         self.get_line_fields_to_print()
 
-        self.readOnlyCells_bg_color = QtWidgets.QColor('white')
-        self.editableCells_bg_color = QtWidgets.QColor('lightgreen')
+        self.readOnlyCells_bg_color = QtGui.QColor('white')
+        self.editableCells_bg_color = QtGui.QColor('lightgreen')
 
         if 'linux' in sys.platform and 'Plastique' in self.style_list:
             default_style = 'Plastique'
@@ -4051,6 +4049,7 @@ figure. Each time a new control point is included, the interpolation is automati
         self.enable_tooltips_action.setChecked(self.sp.get_conf('qt_enable_tooltips', True))
         self.enable_tooltips_action_clicked()
         self.adjust_fig_action.setChecked(self.sp.get_conf('fig_adjust', True))
+        self.mpl_toolbar.ac.setChecked(True)
 
     def sp_norm(self):
         if self.sp is None:
@@ -4159,11 +4158,11 @@ figure. Each time a new control point is included, the interpolation is automati
         return ndiff 
 
     def apply_post_proc(self):
+
         path = str(self.post_proc_file or '')
         file_choices = "Python files (*.py) (*.py);;All files (*) (*)"
         title = 'Open post-process file'
-        path = str(QtWidgets.QFileDialog.getOpenFileName(self, title, path, file_choices))
-        path = path.split('/')[-1]
+        path = str(QtWidgets.QFileDialog.getOpenFileName(self, title, path, file_choices)[0])
         if not path:
             return
         try:
@@ -4224,13 +4223,13 @@ figure. Each time a new control point is included, the interpolation is automati
             return
         sList = []
         s = self.ion_box.text()
-        k = s.indexOf(',')
+        k = s.find(',')
         while k >= 0:
             s0 = self.get_ion_str(str(s[:k]))
             if s0 != '' and s0 != '*':
                 sList.append(s0)
             s = s[k+1:]
-            k = s.indexOf(',')
+            k = s.find(',')
         s0 = self.get_ion_str(str(s))
         if s0 != '' and s0 != '*':
             sList.append(s0)
@@ -4246,7 +4245,7 @@ figure. Each time a new control point is included, the interpolation is automati
             else:
                 this_ion_only = True
             self.sp.set_ion_list()
-            if item.ljust(9) in self.sp.liste_raies['id']:
+            if item.ljust(9).encode() in self.sp.liste_raies['id']:
                 if self.sp.true_ion(item) == item or this_ion_only:
                     sList = sList + [item]
                     if not this_ion_only:
@@ -4608,7 +4607,7 @@ figure. Each time a new control point is included, the interpolation is automati
     def get_line_fields_to_print(self):
         field_list = self.sp.get_conf('save_lines_fields')
         for i in range(0,len(self.line_field_menu.actions())):
-            if self.line_print_dic.keys()[i] in field_list:
+            if list(self.line_print_dic.keys())[i] in field_list:
                 self.line_field_menu.actions()[i].setChecked(True)
             else:
                 self.line_field_menu.actions()[i].setChecked(False)
@@ -4623,7 +4622,7 @@ figure. Each time a new control point is included, the interpolation is automati
         s = []
         for i in range(0,len(self.line_field_menu.actions())):
             if self.line_field_menu.actions()[i].isChecked():
-                s.append( self.line_print_dic.keys()[i])
+                s.append(list(self.line_print_dic.keys())[i])
         self.sp.set_conf('save_lines_fields', s)
         
     def save_lines(self):
@@ -4643,8 +4642,9 @@ figure. Each time a new control point is included, the interpolation is automati
             selectedFilter = 'CSV files (*.csv) (*.csv)'
         else:
             selectedFilter = 'All Files (*) (*)'
-        path = str(QtWidgets.QFileDialog.getSaveFileName(self, 'Save lines to file', filename, file_choices, selectedFilter))
+        path = str(QtWidgets.QFileDialog.getSaveFileName(self, 'Save lines to file', filename, file_choices, selectedFilter)[0])
         if path:
+            path = os.path.relpath(path, '.')
             self.sp.set_conf('save_lines_filename', path)
             self.sp.save_lines()
             self.statusBar().showMessage('Lines saved to file %s' % path, 4000)
@@ -4661,13 +4661,15 @@ figure. Each time a new control point is included, the interpolation is automati
             selectedFilter = 'CSV files (*.csv) (*.csv)'
         else:
             selectedFilter = 'All Files (*) (*)'
-        path = str(QtWidgets.QFileDialog.getSaveFileName(self, 'Save synthesis to file', filename, file_choices, selectedFilter))
-        with open(path, 'w') as f:
-            for w, fl in zip(self.sp.w_ori, self.sp.sp_synth_lr):
-                f.write('{} {} \n'.format(w, fl))
-        self.statusBar().showMessage('Synhtesis saved to file %s' % path, 2000)
+        path = str(QtWidgets.QFileDialog.getSaveFileName(self, 'Save synthesis to file', filename, file_choices, selectedFilter)[0])
+        if path:
+            with open(path, 'w') as f:
+                for w, fl in zip(self.sp.w_ori, self.sp.sp_synth_lr):
+                    f.write('{} {} \n'.format(w, fl))
+            path = os.path.relpath(path, '.')
+            self.sp.set_conf('synthesis_filename', path)
+            self.statusBar().showMessage('Synhtesis saved to file %s' % path, 2000)
         
-
     def line_sort(self):
         k = self.line_sort_list.index(self.line_sort_ag.checkedAction().text())
         self.sp.set_conf('save_lines_sort',k)
