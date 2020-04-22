@@ -50,20 +50,26 @@ def make_cont_Ercolano(T_in, case, lam):
     """
     n_lam = len(lam)
     hnu =  CST.CLIGHT * 1e8 / lam * CST.HPLANCK  #!phy.c_ang_sec/lam*!phy.h
-    with open(execution_path('../data/coeff_ercolano.pickle'), 'rb') as handle:
-        # python 3 requires pickle.load(open('coeff_ercolano.pickle', 'rb'), encoding="latin-1")
-        #BE = pickle.load(handle)
-        BE = pickle.load(handle, encoding="latin-1")
 
     if case == 'H':
-        tab_T = 10**BE['th']
-        D = BE['dh']
+        tab_T = 10**np.array([2. , 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3. , 3.1, 3.2,
+                              3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4. , 4.1, 4.2, 4.3, 4.4, 4.5,
+                              4.6, 4.7, 4.8, 4.9, 5. ])
+        D = np.loadtxt(execution_path('../data/coeff_ercolano_H.txt'))
     elif case == 'He1':
-        tab_T = 10**BE['the1']
-        D = BE['dhe1']
+        tab_T = 10**np.array([2.  , 2.04, 2.08, 2.12, 2.16, 2.2 , 2.24, 2.28, 2.32, 2.36, 2.4 ,
+                              2.44, 2.48, 2.52, 2.56, 2.6 , 2.64, 2.68, 2.72, 2.76, 2.8 , 2.84,
+                              2.88, 2.92, 2.96, 3.  , 3.04, 3.08, 3.12, 3.16, 3.2 , 3.24, 3.28,
+                              3.32, 3.36, 3.4 , 3.44, 3.48, 3.52, 3.56, 3.6 , 3.64, 3.68, 3.72,
+                              3.76, 3.8 , 3.84, 3.88, 3.92, 3.96, 4.  , 4.04, 4.08, 4.12, 4.16,
+                              4.2 , 4.24, 4.28, 4.32, 4.36, 4.4 , 4.44, 4.48, 4.52, 4.56, 4.6 ,
+                              4.64, 4.68, 4.72, 4.76, 4.8 , 4.84, 4.88, 4.92, 4.96, 5.  ])
+        D = np.loadtxt(execution_path('../data/coeff_ercolano_He1.txt'))
     elif case == 'He2':
-        tab_T = 10**BE['the2']
-        D = BE['dhe2']
+        tab_T = 10**np.array([2. , 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3. , 3.1, 3.2,
+                              3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4. , 4.1, 4.2, 4.3, 4.4, 4.5,
+                              4.6, 4.7, 4.8, 4.9, 5. ])
+        D = np.loadtxt(execution_path('../data/coeff_ercolano_He2.txt'))
     else:
         pyssn.log_.error('Invalid case {0}'.format(case), calling='make_cont_Ercolano')
         return None
