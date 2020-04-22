@@ -91,7 +91,8 @@ class spectrum(object):
                 
         self.cursor = None
         self.errorMsg = ''
-        self.selected_ions_data = None
+        self.selected_ions_data = None  
+        self.ion_list = []
         
         self.process = { '0' : 'recombination',
                          '1' : 'recombination',
@@ -488,7 +489,7 @@ class spectrum(object):
         self.conf = {}
         init_conf = {}
         execfile(execution_path('./')+'init_defaults.py', self.conf)
-        self.default_keys = self.conf.keys()
+        self.default_keys = list(self.conf.keys())
         if self.config_file is not None:
             if not os.path.exists(self.directory + self.config_file):
                 log_.error('File {} not found'.format(self.directory + self.config_file))
@@ -531,7 +532,7 @@ class spectrum(object):
                     path = 'cont_user_table = [{}]'.format(s)                                        
                     try:
                         user_module = {}
-                        exec(path) in user_module
+                        exec(path, user_module)
                         value = user_module['cont_user_table']
                         self.set_conf('cont_user_table', value)
                         log_.message('\'cont_user_table\' get from \'cont_lambda\' and \'cont_intens\'', calling = self.calling)
@@ -1194,7 +1195,7 @@ class spectrum(object):
             if np.isfinite(aire) and (aire != 0.):
                 max_sp = np.max(sp_tmp)
                 if (np.abs(sp_tmp[0]/max_sp) > 1e-3) or (np.abs(sp_tmp[-1]/max_sp) > 1e-3):
-                    log_.message('Area of {0} {1} could be wrong'.format(raie['id'], raie['lambda']), 
+                    log_.message('Area of {0} {1} could be wrong'.format(raie['id'].decode().strip(), raie['lambda']), 
                                       calling = self.calling)
                 intens_pic = raie['i_rel'] * raie['i_cor'] * self.aire_ref / aire
 
@@ -1230,7 +1231,7 @@ class spectrum(object):
             if np.isfinite(aire) and (aire != 0.):
                 max_sp = np.max(sp_tmp)
                 if (np.abs(sp_tmp[0]/max_sp) > 1e-3) or (np.abs(sp_tmp[-1]/max_sp) > 1e-3):
-                    log_.message('Area of {0} {1} could be wrong'.format(raie['id'], raie['lambda']), 
+                    log_.message('Area of {0} {1} could be wrong'.format(raie['id'].decode().strip(), raie['lambda']), 
                                       calling = self.calling)
                 intens_pic = raie['i_rel'] * raie['i_cor'] * self.aire_ref / aire
                 log_.debug('{} aire = {}'.format(raie['num'], aire), calling=self.calling)
@@ -1470,8 +1471,8 @@ class spectrum(object):
             for isort in sorts:
                 self.print_line(line[isort])
             return
-        print('{0[num]:>14d} {0[id]:9s}{0[lambda]:11.3f}{0[l_shift]:6.3f}{0[i_rel]:10.3e}{0[i_cor]:7.3f}'\
-              ' {0[ref]:>14d}{0[profile]:5d}{0[vitesse]:7.2f}{1:1s}'.format(line, line['comment'].strip()))
+        print('{0[num]:>14d} {1:9s}{0[lambda]:11.3f}{0[l_shift]:6.3f}{0[i_rel]:10.3e}{0[i_cor]:7.3f}'\
+              ' {0[ref]:>14d}{0[profile]:5d}{0[vitesse]:7.2f}{2:1s}'.format(line, line['id'].decode(), line['comment'].decode().strip()))
        
     def get_line_info(self, line_num, sort='lambda', reverse=False):
         line = None
@@ -1702,7 +1703,7 @@ class spectrum(object):
     def get_ref_list(self, ions):
         ref_list = []
         for ion in ions:
-            i_ion = np.where(self.sp_theo['raie_ref']['id'] == ion.ljust(9))[0]
+            i_ion = np.where(self.sp_theo['raie_ref']['id'] == ion.ljust(9).encode())[0]
             if len(i_ion) == 0:
                 ref_list.append(-1)
             for i in i_ion:
@@ -1711,7 +1712,7 @@ class spectrum(object):
     
     def set_ion_list(self):        
         l = list(set(self.sp_theo['raie_ref']['id']))
-        self.ion_list = list(set(self.liste_raies['id']))
+        self.ion_list = [i.decode('utf-8') for i in list(set(self.liste_raies['id']))]
         self.true_ion_list = list(set([self.true_ion(ion) for ion in self.ion_list]))
 
     def get_element_and_int_ion(self, ion):
@@ -1727,7 +1728,8 @@ class spectrum(object):
         return element, int_ion
 
     def get_ion_int_from_ion_str(self, ion_str):
-        k_list = np.where(self.sp_theo['raie_ref']['id'] ==  self.fmt('id', ion_str))[0]
+
+        k_list = np.where(self.sp_theo['raie_ref']['id'] ==  self.fmt('id', ion_str).encode())[0]
         if len(k_list) > 0:
             return self.sp_theo['raie_ref'][k_list][0]['num']/1000000000
         else:
@@ -1773,7 +1775,7 @@ class spectrum(object):
                             label = proc_type[i][1].format(ion)
                             label_list.append([label, [ion], ref_list, i_ion, proc_type[i][0], color, linestyle])
                 else:
-                    i_list = np.where(self.liste_raies['id'] == self.fmt('id', ion))
+                    i_list = np.where(self.liste_raies['id'] == self.fmt('id', ion).encode())
                     if len(i_list) > 0:
                         ref_list = list(set(self.liste_raies['ref'][[i_list][0]]))
                         proc_set = set()
@@ -1791,7 +1793,7 @@ class spectrum(object):
                 all_ions = self.get_all_ions_from_ion(ion)
                 i_ion = set()
                 for subion in all_ions:
-                    i_ion = i_ion.union(np.where(self.sp_theo['raie_ref']['id'] == subion.ljust(9))[0])
+                    i_ion = i_ion.union(np.where(self.sp_theo['raie_ref']['id'] == subion.ljust(9).encode())[0])
                 i_ion = list(i_ion)
                 ref_list = []
                 for i in range(0, len(i_ion)):
@@ -1863,7 +1865,7 @@ class spectrum(object):
                 
         for k in range(0, len(label_list)):
             color = colors[k%len(colors)]
-            linestyle = linestyles[(k/len(colors))%len(linestyles)]
+            linestyle = linestyles[(k//len(colors))%len(linestyles)]
             label_list[k][pos_color] = color
             label_list[k][pos_linestyle] = linestyle
 
@@ -1876,7 +1878,7 @@ class spectrum(object):
         ref_label_list = []
         for ion in ions:
             ion = self.true_ion(ion)
-            i_ion = np.where(self.sp_theo['raie_ref']['id'] == ion.ljust(9))[0]
+            i_ion = np.where(self.sp_theo['raie_ref']['id'] == ion.ljust(9).encode())[0]
             if len(i_ion) == 0:
                 ref_code_list.append(-1)
                 ref_index_list.append(-1)
@@ -1895,7 +1897,7 @@ class spectrum(object):
         ref_index_list = []
         for ion in ions:
             ion = self.true_ion(ion)
-            i_ion = np.where(self.sp_theo['raie_ref']['id'] == ion.ljust(9))[0]
+            i_ion = np.where(self.sp_theo['raie_ref']['id'] == ion.ljust(9).encode())[0]
             for i in i_ion:
                 ref_index_list.append(i)
         return ref_index_list
@@ -1941,21 +1943,14 @@ class spectrum(object):
                 if ch not in ['I', 'V', 'X', 'L']:
                     isRom = False
         return isRom
-        
+
     def roman_to_int(self, s):
         x = {'C': 100, 'L': 50, 'X': 10, 'V': 5, 'I': 1}
         s = s.strip()
         if len(s) == 0:
-            n = -1
-        elif len(s) == 1:
-            if s == 'I':
-                n = 1
-            elif s == 'V':
-                n = 5
-            elif s == 'X':
-                n = 10
-        else:
-            n = sum([x[i] if x[i] >= x[j] else -x[i] for i, j in zip(s, s[1:])]) + x[j]
+            return -1
+        n = x[s[-1]] 
+        n += sum([x[i] if x[i] >= x[j] else -x[i] for i, j in zip(s, s[1:])])
         return n
     
     def isPseudoIon(self, ion):
@@ -2004,6 +1999,7 @@ class spectrum(object):
         ion_list = []
         for line in self.liste_raies:
             ion = str(line['id'])
+            ion = line['id'].decode()
             if elem == self.element(ion):
                 ion_list.append(self.true_ion(ion))
         ion_list = list(set(ion_list))
@@ -2018,7 +2014,7 @@ class spectrum(object):
         ref_list = self.get_ref_list(self.get_conf('selected_ions'))        
         sort_list = [ 'lambda', 'i_rel', 'id' ]
         k = self.get_conf('save_lines_sort')
-        sort = sort_list[k/2]
+        sort = sort_list[k//2]
         filename = self.get_conf('save_lines_filename')
         extension = os.path.splitext(filename)[1][1:].lower()
         sep = ' '
@@ -2255,7 +2251,7 @@ class spectrum(object):
                     ax.axvline( wl, ymin=y1+dy, ymax=y2-dy, color = lcolor, linestyle = 'solid' )
                     #ax.axvline( wl, ymin=y1+dy, ymax=y2, color = lcolor, linestyle = 'solid' )
                 refline = line['ref']
-                ion = line['id'].strip()
+                ion = line['id'].decode().strip()
                 proc = int(str(line['num'])[-9])
                 for item in label_list:
                     label = item[pos_label]
@@ -2437,7 +2433,7 @@ class spectrum(object):
     
     def apply_post_proc(self):
         
-        if self.post_proc_file is not None and self.post_proc_file is not "":
+        if self.post_proc_file is not None and self.post_proc_file != "":
             try:
                 user_module = {}
                 execfile(os.path.abspath(self.directory)+'/'+self.post_proc_file, user_module)

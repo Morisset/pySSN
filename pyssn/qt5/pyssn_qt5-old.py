@@ -12,18 +12,18 @@ Eli Bendersky (eliben@gmail.com)
 """
 import sys, os
 
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 #from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
-from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 
 import numpy as np
 from pyssn import log_, __version__
 from ..core.spectrum import spectrum
-from ..utils.misc import get_parser
+from ..utils.misc import get_parser, execfile_p3
 
 from collections import OrderedDict
 from ..utils.physics import CST
@@ -43,7 +43,7 @@ class NavigationToolbar( NavigationToolbar2QT ):
         # Search through existing buttons
         # next use for placement of custom button
         next=None
-        for c in self.findChildren(QtGui.QToolButton):
+        for c in self.findChildren(QtWidgets.QToolButton):
             if next is None:
                 next=c
             # Don't want to see subplots and customize
@@ -60,13 +60,17 @@ class NavigationToolbar( NavigationToolbar2QT ):
                 next=None
 
         # create custom button
+        #pm=QtWidgets.QPixmap(32,32)  
+        # mvfc
         pm=QtGui.QPixmap(32,32)
-        pm.fill(QtGui.QApplication.palette().color(QtGui.QPalette.Normal,QtGui.QPalette.Button))
-        painter=QtGui.QPainter(pm)
+        """
+        pm.fill(QtWidgets.QApplication.palette().color(QtWidgets.QPalette.Normal,QtWidgets.QPalette.Button))
+        painter=QtWidgets.QPainter(pm)
         painter.fillRect(6,6,20,20,QtCore.Qt.red)
         painter.fillRect(15,3,3,26,QtCore.Qt.blue)
         painter.fillRect(3,15,26,3,QtCore.Qt.blue)
         painter.end()
+"""
         icon=QtGui.QIcon(pm)
         
         ac = self.addAction(icon, "Toggle Curs") 
@@ -79,7 +83,7 @@ class NavigationToolbar( NavigationToolbar2QT ):
         
         self.ac = ac
         
-        #button=QtGui.QToolButton(self)
+        #button=QtWidgets.QToolButton(self)
         #button.setDefaultAction(self.ac)
 
         # Add it to the toolbar, and connect up event
@@ -100,13 +104,13 @@ class NavigationToolbar( NavigationToolbar2QT ):
             self.curs.emit(event.ind)
 
 
-class AppForm(QtGui.QMainWindow):
+class AppForm(QtWidgets.QMainWindow):
 
     def __init__(self, parent=None, init_filename=None, post_proc_file=None, use_workspace=False):
         
         self.calling = 'pySSN GUI'
         self.use_workspace = use_workspace
-        QtGui.QMainWindow.__init__(self, parent)
+        QtWidgets.QMainWindow.__init__(self, parent)
         self.setWindowTitle('pySSN')
         self.sp = None
         self.axes = None
@@ -245,7 +249,7 @@ class AppForm(QtGui.QMainWindow):
         path = self.sp.get_conf('plot_filename')
         extension = os.path.splitext(path)[1][1:].lower()
         file_choices, selectedFilter = self.image_filter(extension)
-        path = unicode(QtGui.QFileDialog.getSaveFileName(self, 'Save plot to file', path, file_choices, selectedFilter))
+        path = str(QtWidgets.QFileDialog.getSaveFileName(self, 'Save plot to file', path, file_choices, selectedFilter))
         if path:
             extension = os.path.splitext(path)[1][1:].lower()
             if extension in self.image_extension_list():
@@ -263,12 +267,12 @@ class AppForm(QtGui.QMainWindow):
                     s = s + extension_list[i] + ', '
                 s = s + extension_list[n] + '.'
                 msg = msg + s
-                QtGui.QMessageBox.critical(self, title, msg, QtGui.QMessageBox.Ok )
+                QtWidgets.QMessageBox.critical(self, title, msg, QtWidgets.QMessageBox.Ok )
     
     def on_about(self):
         msg = """ pySSN (Spectral Synthesis for Nebulae):        
         """
-        QtGui.QMessageBox.about(self, "About the demo", msg.strip())
+        QtWidgets.QMessageBox.about(self, "About the demo", msg.strip())
     
     def set_cursor(self, checked):
         self.cursor_on = checked
@@ -315,9 +319,9 @@ class AppForm(QtGui.QMainWindow):
     def create_main_frame(self):
         
         if self.use_workspace:
-            self.main_frame = QtGui.QWorkspace()
+            self.main_frame = QtWidgets.QWorkspace()
         else:
-            self.main_frame = QtGui.QWidget()
+            self.main_frame = QtWidgets.QWidget()
         # Create the mpl Figure and FigCanvas objects. 
         #
         self.dpi = 100
@@ -346,146 +350,148 @@ class AppForm(QtGui.QMainWindow):
         # Other GUI controls
         # 
         
-        self.fix_axes_cb = QtGui.QCheckBox("fix")
+        self.fix_axes_cb = QtWidgets.QCheckBox("fix")
         self.fix_axes_cb.setChecked(False)
-        self.connect(self.fix_axes_cb, QtCore.SIGNAL('stateChanged(int)'), self.fix_axes)
+        #mvfc self.connect(self.fix_axes_cb, QtCore.SIGNAL('stateChanged(int)'), self.fix_axes)
+        self.fix_axes_cb.stateChanged.connect(self.fix_axes)
 
-        self.xlim_min_box = QtGui.QLineEdit()
+        self.xlim_min_box = QtWidgets.QLineEdit()
         self.xlim_min_box.setMinimumWidth(50)
         #self.connect(self.xlim_min_box, QtCore.SIGNAL('editingFinished()'), self.validate_xlim_min)
-        self.connect(self.xlim_min_box, QtCore.SIGNAL('returnPressed()'), self.set_plot_limits_and_draw)
+        #mvfc self.connect(self.xlim_min_box, QtCore.SIGNAL('returnPressed()'), self.set_plot_limits_and_draw)
+        self.xlim_min_box.returnPressed.connect(self.set_plot_limits_and_draw)
 
-        self.xlim_max_box = QtGui.QLineEdit()
+        self.xlim_max_box = QtWidgets.QLineEdit()
         self.xlim_max_box.setMinimumWidth(50)
         #self.connect(self.xlim_max_box, QtCore.SIGNAL('editingFinished()'), self.validate_xlim_max)
         #self.xlim_max_box.editingFinished.connect(self.validate_xlim_max)
-        self.connect(self.xlim_max_box, QtCore.SIGNAL('returnPressed()'), self.set_plot_limits_and_draw)
+        self.xlim_max_box.returnPressed.connect(self.set_plot_limits_and_draw)
         
-        self.y1lim_min_box = QtGui.QLineEdit()
+        self.y1lim_min_box = QtWidgets.QLineEdit()
         self.y1lim_min_box.setMinimumWidth(50)
         #self.connect(self.y1lim_min_box, QtCore.SIGNAL('editingFinished()'), self.validate_y1lim_min)
-        self.connect(self.y1lim_min_box, QtCore.SIGNAL('returnPressed()'), self.set_plot_limits_and_draw)
+        self.y1lim_min_box.returnPressed.connect(self.set_plot_limits_and_draw)
         
-        self.y1lim_max_box = QtGui.QLineEdit()
+        self.y1lim_max_box = QtWidgets.QLineEdit()
         self.y1lim_max_box.setMinimumWidth(50)
         #self.connect(self.y1lim_max_box, QtCore.SIGNAL('editingFinished()'), self.validate_y1lim_max)
-        self.connect(self.y1lim_max_box, QtCore.SIGNAL('returnPressed()'), self.set_plot_limits_and_draw)
+        self.y1lim_max_box.returnPressed.connect(self.set_plot_limits_and_draw)
         
-        self.y3lim_min_box = QtGui.QLineEdit()
+        self.y3lim_min_box = QtWidgets.QLineEdit()
         self.y3lim_min_box.setMinimumWidth(50)
         #self.connect(self.y3lim_min_box, QtCore.SIGNAL('editingFinished()'), self.validate_y3lim_min)
-        self.connect(self.y3lim_min_box, QtCore.SIGNAL('returnPressed()'), self.set_plot_limits_and_draw)
+        self.y3lim_min_box.returnPressed.connect(self.set_plot_limits_and_draw)
         
-        self.y3lim_max_box = QtGui.QLineEdit()
+        self.y3lim_max_box = QtWidgets.QLineEdit()
         self.y3lim_max_box.setMinimumWidth(50)
         #self.connect(self.y3lim_max_box, QtCore.SIGNAL('editingFinished()'), self.validate_y3lim_max)
-        self.connect(self.y3lim_max_box, QtCore.SIGNAL('returnPressed()'), self.set_plot_limits_and_draw)
+        self.y3lim_max_box.returnPressed.connect(self.set_plot_limits_and_draw)
 
-        self.run_button = QtGui.QPushButton("Run")
-        self.connect(self.run_button, QtCore.SIGNAL('clicked()'), self.rerun)
+        self.run_button = QtWidgets.QPushButton("Run")
+        self.run_button.clicked.connect(self.rerun)
         
-        self.draw_button = QtGui.QPushButton("Draw")
-        self.connect(self.draw_button, QtCore.SIGNAL('clicked()'), self.on_draw)
+        self.draw_button = QtWidgets.QPushButton("Draw")
+        self.draw_button.clicked.connect(self.on_draw)
         
-        self.Command_GroupBox = QtGui.QGroupBox("Execute")
+        self.Command_GroupBox = QtWidgets.QGroupBox("Execute")
         self.Command_GroupBox.setCheckable(False)
         
-        self.ObsSpec_GroupBox = QtGui.QGroupBox("Parameters of the synthetic spectrum")
+        self.ObsSpec_GroupBox = QtWidgets.QGroupBox("Parameters of the synthetic spectrum")
         self.ObsSpec_GroupBox.setCheckable(False)
 
-        self.SpecPlot_GroupBox = QtGui.QGroupBox("Plot of spectra")
+        self.SpecPlot_GroupBox = QtWidgets.QGroupBox("Plot of spectra")
         self.SpecPlot_GroupBox.setCheckable(False)
 
-        self.lineIDs_GroupBox = QtGui.QGroupBox("Show lines")
+        self.lineIDs_GroupBox = QtWidgets.QGroupBox("Show lines")
         self.lineIDs_GroupBox.setCheckable(True)
         self.lineIDs_GroupBox.setChecked(True)
         
-        self.connect(self.lineIDs_GroupBox, QtCore.SIGNAL('clicked()'), self.show_lines_clicked)
+        self.lineIDs_GroupBox.clicked.connect(self.show_lines_clicked)
         self.lineIDs_GroupBox_ToolTip = 'Check to show ticks at the central positions of the spectral lines and plot the lines of selected ions'
 
-        self.residual_GroupBox = QtGui.QGroupBox("Plot of residuals")
+        self.residual_GroupBox = QtWidgets.QGroupBox("Plot of residuals")
         self.residual_GroupBox.setCheckable(True)
         self.residual_GroupBox.setChecked(True)
-        self.connect(self.residual_GroupBox, QtCore.SIGNAL('clicked()'), self.residual_box_clicked)
+        self.residual_GroupBox.clicked.connect(self.residual_box_clicked)
         self.residual_GroupBox_ToolTip = 'Check to display the residual plot'
 
-        self.adjust_button = QtGui.QPushButton("Update")
+        self.adjust_button = QtWidgets.QPushButton("Update")
         self.adjust_button.setChecked(False)
-        self.connect(self.adjust_button, QtCore.SIGNAL('clicked()'), self.adjust)
+        self.adjust_button.clicked.connect(self.adjust)
 
-        self.post_proc_button = QtGui.QPushButton("Post proc")
+        self.post_proc_button = QtWidgets.QPushButton("Post proc")
         self.post_proc_button.setChecked(False)
-        self.connect(self.post_proc_button, QtCore.SIGNAL('clicked()'), self.apply_post_proc)
+        self.post_proc_button.clicked.connect(self.apply_post_proc)
 
-        self.update_profile_button = QtGui.QPushButton("Update profiles")
+        self.update_profile_button = QtWidgets.QPushButton("Update profiles")
         self.update_profile_button.setChecked(False)
-        self.connect(self.update_profile_button, QtCore.SIGNAL('clicked()'), self.update_profile)
+        self.update_profile_button.clicked.connect(self.update_profile)
 
-        self.sp_min_box = QtGui.QLineEdit()
+        self.sp_min_box = QtWidgets.QLineEdit()
         self.sp_min_box.setMinimumWidth(50)
         #self.connect(self.sp_min_box, QtCore.SIGNAL('editingFinished()'), self.set_limit_sp)
-        self.connect(self.sp_min_box, QtCore.SIGNAL('returnPressed()'), self.set_limit_sp_and_run)
+        self.sp_min_box.returnPressed.connect(self.set_limit_sp_and_run)
         
-        self.sp_max_box = QtGui.QLineEdit()
+        self.sp_max_box = QtWidgets.QLineEdit()
         self.sp_max_box.setMinimumWidth(50)
         #self.connect(self.sp_max_box, QtCore.SIGNAL('editingFinished()'), self.set_limit_sp)
-        self.connect(self.sp_max_box, QtCore.SIGNAL('returnPressed()'), self.set_limit_sp_and_run)
+        self.sp_max_box.returnPressed.connect(self.set_limit_sp_and_run)
         
-        self.sp_norm_box = QtGui.QLineEdit()
+        self.sp_norm_box = QtWidgets.QLineEdit()
         self.sp_norm_box.setMinimumWidth(50)
-        self.connect(self.sp_norm_box, QtCore.SIGNAL('returnPressed()'), self.sp_norm)
+        self.sp_norm_box.returnPressed.connect(self.sp_norm)
 
-        self.obj_velo_box = QtGui.QLineEdit()
+        self.obj_velo_box = QtWidgets.QLineEdit()
         self.obj_velo_box.setMinimumWidth(50)
-        self.connect(self.obj_velo_box, QtCore.SIGNAL('returnPressed()'), self.obj_velo)
+        self.obj_velo_box.returnPressed.connect(self.obj_velo)
 
-        self.ebv_box = QtGui.QLineEdit()
+        self.ebv_box = QtWidgets.QLineEdit()
         self.ebv_box.setMinimumWidth(50)
-        self.connect(self.ebv_box, QtCore.SIGNAL('returnPressed()'), self.ebv)
+        self.ebv_box.returnPressed.connect(self.ebv)
         
-        self.resol_box = QtGui.QLineEdit()
+        self.resol_box = QtWidgets.QLineEdit()
         self.resol_box.setMinimumWidth(50)
-        self.connect(self.resol_box, QtCore.SIGNAL('returnPressed()'), self.resol)
+        self.resol_box.returnPressed.connect(self.resol)
         
-        self.cut2_box = QtGui.QLineEdit()
+        self.cut2_box = QtWidgets.QLineEdit()
         self.cut2_box.setMinimumWidth(50)
-        self.connect(self.cut2_box, QtCore.SIGNAL('returnPressed()'), self.cut2)
+        self.cut2_box.returnPressed.connect(self.cut2)
         
-        self.cut_cb = QtGui.QCheckBox('')
+        self.cut_cb = QtWidgets.QCheckBox('')
         self.cut_cb.setChecked(False)
-        self.connect(self.cut_cb, QtCore.SIGNAL('clicked()'), self.cut_cb_changed)
+        self.cut_cb.clicked.connect(self.cut_cb_changed)
         
-        self.ion_box = QtGui.QLineEdit()
+        self.ion_box = QtWidgets.QLineEdit()
         self.ion_box.setMinimumWidth(70)
-        self.connect(self.ion_box, QtCore.SIGNAL('returnPressed()'), self.draw_ion)
+        self.ion_box.returnPressed.connect(self.draw_ion)
         
-        self.ion_cb = QtGui.QCheckBox('')
+        self.ion_cb = QtWidgets.QCheckBox('')
         self.ion_cb.setChecked(False)
-        self.connect(self.ion_cb, QtCore.SIGNAL('clicked()'), self.ion_cb_changed)
+        self.ion_cb.clicked.connect(self.ion_cb_changed)
         
-        self.line_info_box = QtGui.QLineEdit()
+        self.line_info_box = QtWidgets.QLineEdit()
         self.line_info_box.setFixedWidth(130)
-        self.connect(self.line_info_box, QtCore.SIGNAL('returnPressed()'), self.line_info)
+        self.line_info_box.returnPressed.connect(self.line_info)
 
         self.mpl_toolbar.addSeparator()
-        self.mpl_toolbar.addWidget(QtGui.QLabel('   line number '))
+        self.mpl_toolbar.addWidget(QtWidgets.QLabel('   line number '))
         self.mpl_toolbar.addWidget(self.line_info_box)
 
-        self.magenta_box = QtGui.QLineEdit()
+        self.magenta_box = QtWidgets.QLineEdit()
         self.magenta_box.setMinimumWidth(50)
-        self.connect(self.magenta_box, QtCore.SIGNAL('returnPressed()'), self.magenta_line)
+        self.magenta_box.returnPressed.connect(self.magenta_line)
 
-        self.magenta_label_box = QtGui.QLineEdit()
+        self.magenta_label_box = QtWidgets.QLineEdit()
         self.magenta_label_box.setMinimumWidth(50)
-        self.connect(self.magenta_label_box, QtCore.SIGNAL('returnPressed()'), self.magenta_line)
+        self.magenta_label_box.returnPressed.connect(self.magenta_line)
 
-        self.cyan_box = QtGui.QLineEdit()
+        self.cyan_box = QtWidgets.QLineEdit()
         self.cyan_box.setMinimumWidth(50)
-        self.connect(self.cyan_box, QtCore.SIGNAL('returnPressed()'), self.cyan_line)
+        self.cyan_box.returnPressed.connect(self.cyan_line)
         
-        self.cyan_label_box = QtGui.QLineEdit()
+        self.cyan_label_box = QtWidgets.QLineEdit()
         self.cyan_label_box.setMinimumWidth(50)
-        self.connect(self.cyan_label_box, QtCore.SIGNAL('returnPressed()'), self.cyan_line)
+        self.cyan_label_box.returnPressed.connect(self.cyan_line)
 
 
         self.setStyleSheet("""QToolTip { 
@@ -607,7 +613,7 @@ class AppForm(QtGui.QMainWindow):
         # Layout with box sizers
         # 
 
-        CommandLayout = QtGui.QGridLayout()
+        CommandLayout = QtWidgets.QGridLayout()
 
         wList = [self.run_button,self.adjust_button]
         Nrow = 2
@@ -621,14 +627,14 @@ class AppForm(QtGui.QMainWindow):
 
         self.Command_GroupBox.setLayout(CommandLayout)
 
-        ObsSpecLayout = QtGui.QGridLayout()
+        ObsSpecLayout = QtWidgets.QGridLayout()
 
         lList = ['xmin', 'xmax', u'10\u2074/F(H\u03B2)', 'radial vel.', 'E(B-V)', 'N']
         wList = [self.sp_min_box, self.sp_max_box, self.sp_norm_box, self.obj_velo_box, self.ebv_box, self.resol_box ]
         Nrow = 2
 
         for l in lList:
-            w = QtGui.QLabel(l)
+            w = QtWidgets.QLabel(l)
             k = lList.index( l )
             i = k%Nrow
             j = 2*(k/Nrow)
@@ -644,11 +650,11 @@ class AppForm(QtGui.QMainWindow):
 
         self.ObsSpec_GroupBox.setLayout(ObsSpecLayout)
 
-        SpecPlotLayout = QtGui.QGridLayout()
-        SpecPlotLayout.addWidget(QtGui.QLabel('xmin'),0,0)
-        SpecPlotLayout.addWidget(QtGui.QLabel('xmax'),1,0)
-        SpecPlotLayout.addWidget(QtGui.QLabel('ymin'),0,2)
-        SpecPlotLayout.addWidget(QtGui.QLabel('ymax'),1,2)
+        SpecPlotLayout = QtWidgets.QGridLayout()
+        SpecPlotLayout.addWidget(QtWidgets.QLabel('xmin'),0,0)
+        SpecPlotLayout.addWidget(QtWidgets.QLabel('xmax'),1,0)
+        SpecPlotLayout.addWidget(QtWidgets.QLabel('ymin'),0,2)
+        SpecPlotLayout.addWidget(QtWidgets.QLabel('ymax'),1,2)
         SpecPlotLayout.addWidget(self.xlim_min_box,0,1)
         SpecPlotLayout.addWidget(self.xlim_max_box,1,1)
         SpecPlotLayout.addWidget(self.y1lim_min_box,0,3)
@@ -657,25 +663,25 @@ class AppForm(QtGui.QMainWindow):
 
         self.SpecPlot_GroupBox.setLayout(SpecPlotLayout)
 
-        LineIDLayout = QtGui.QGridLayout()
-        LineIDLayout.addWidget(QtGui.QLabel('cut'),0,0)
+        LineIDLayout = QtWidgets.QGridLayout()
+        LineIDLayout.addWidget(QtWidgets.QLabel('cut'),0,0)
         LineIDLayout.addWidget(self.cut2_box,0,1)
         LineIDLayout.addWidget(self.cut_cb,0,2)
-        LineIDLayout.addWidget(QtGui.QLabel('ion'),1,0)
+        LineIDLayout.addWidget(QtWidgets.QLabel('ion'),1,0)
         LineIDLayout.addWidget(self.ion_box,1,1)
         LineIDLayout.addWidget(self.ion_cb,1,2)
 
         self.lineIDs_GroupBox.setLayout(LineIDLayout)
 
-        ResidualLayout = QtGui.QGridLayout()            
-        ResidualLayout.addWidget(QtGui.QLabel('ymin'),0,0)
-        ResidualLayout.addWidget(QtGui.QLabel('ymax'),1,0)
+        ResidualLayout = QtWidgets.QGridLayout()            
+        ResidualLayout.addWidget(QtWidgets.QLabel('ymin'),0,0)
+        ResidualLayout.addWidget(QtWidgets.QLabel('ymax'),1,0)
         ResidualLayout.addWidget(self.y3lim_min_box,0,1)
         ResidualLayout.addWidget(self.y3lim_max_box,1,1)
  
         self.residual_GroupBox.setLayout(ResidualLayout)
         
-        grid = QtGui.QGridLayout()
+        grid = QtWidgets.QGridLayout()
 
         grid.addWidget(self.Command_GroupBox, 0, 1 )
         grid.addWidget(self.ObsSpec_GroupBox, 0, 2 )
@@ -683,7 +689,7 @@ class AppForm(QtGui.QMainWindow):
         grid.addWidget(self.residual_GroupBox, 0, 4 )
         grid.addWidget(self.lineIDs_GroupBox, 0, 5 )
 
-        vbox = QtGui.QVBoxLayout()
+        vbox = QtWidgets.QVBoxLayout()
         vbox.addWidget(self.canvas)
         vbox.addWidget(self.mpl_toolbar)
         vbox.addLayout(grid)        
@@ -693,7 +699,7 @@ class AppForm(QtGui.QMainWindow):
         self.setCentralWidget(self.main_frame)
         
     def create_status_bar(self):
-        self.status_text = QtGui.QLabel("pySSN, v{}".format(__version__))
+        self.status_text = QtWidgets.QLabel("pySSN, v{}".format(__version__))
         self.statusBar().addWidget(self.status_text, 1)
         
     def create_menu(self):        
@@ -719,6 +725,11 @@ class AppForm(QtGui.QMainWindow):
                                               slot=self.save_plot_as,
                                               tip="Save plot to file")
         
+        save_synthesis_action = self.create_action("Save synthesis",
+                                              shortcut="", 
+                                              slot=self.save_synthesis_as, 
+                                              tip="Save synthesis to file")
+
         save_plot_as_action = self.create_action("Save plot as",
                                               shortcut="Ctrl+Shift+P", 
                                               slot=self.save_plot_as, 
@@ -735,7 +746,7 @@ class AppForm(QtGui.QMainWindow):
                                               tip="Select file name and save list of lines")
 
         self.add_actions(self.file_menu, 
-            (open_init_action, save_pars_action, None, self.save_plot_action, None, save_lines_action))
+            (open_init_action, save_pars_action, None, self.save_plot_action, None, save_synthesis_action, None, save_lines_action))
        
         #(open_init_action, save_pars_action, save_pars_as_action, None, self.save_plot_action, save_plot_as_action, None, save_lines_action, save_lines_as_action))
 
@@ -744,13 +755,14 @@ class AppForm(QtGui.QMainWindow):
         for i in range(len(self.line_sort_list)):
             s = s + '    ' + str(i) + ' - ' + self.line_sort_list[i] + '\n'
         s = s + '\nSet with:\n' + '    save_lines_sort = <integer>'
-        self.line_sort_ag = QtGui.QActionGroup(self, exclusive=True)
+        self.line_sort_ag = QtWidgets.QActionGroup(self)
+        self.line_sort_ag.setExclusive(True)
 
         self.line_sort_menu = self.file_menu.addMenu("Sort lines by")
         self.line_sort_menu_ToolTip = ''       
         
         for i in range(len(self.line_sort_list)):
-            a = self.line_sort_ag.addAction(QtGui.QAction(self.line_sort_list[i], self, checkable=True))
+            a = self.line_sort_ag.addAction(QtWidgets.QAction(self.line_sort_list[i], self, checkable=True))
             self.line_sort_menu.addAction(a)
 
         self.line_sort_ag.triggered.connect(self.line_sort)
@@ -883,13 +895,15 @@ class AppForm(QtGui.QMainWindow):
         for i in range(len(self.diff_lines_list)):
             s = s + '    ' + str(i) + ' - ' + self.diff_lines_list[i] + '\n'
         s = s + '\nSet with:\n' + '    diff_lines_by = <integer>'
-        self.diff_lines_ag = QtGui.QActionGroup(self, exclusive=True)
+        self.diff_lines_ag = QtWidgets.QActionGroup(self)
+        self.diff_lines_ag.setExclusive(True)
+
 
         self.diff_lines_menu = self.line_menu.addMenu("Differentiate lines by")
         self.diff_lines_menu_ToolTip = ''        
 
         for i in range(len(self.diff_lines_list)):
-            a = self.diff_lines_ag.addAction(QtGui.QAction(self.diff_lines_list[i], self, checkable=True))
+            a = self.diff_lines_ag.addAction(QtWidgets.QAction(self.diff_lines_list[i], self, checkable=True))
             a.setShortcut('Alt+' + str(i+1))
             self.diff_lines_menu.addAction(a)
         self.diff_lines_ag.triggered.connect(self.diff_lines)
@@ -912,11 +926,12 @@ class AppForm(QtGui.QMainWindow):
         for i in range(len(self.line_tick_ax_list)):
             s = s + '    ' + str(i) + ' - ' + self.line_tick_ax_list[i] + '\n'
         s = s + '\nSet with:\n' + '    line_tick_ax = <integer>'
-        self.line_tick_ax_ag = QtGui.QActionGroup(self, exclusive=True)
+        self.line_tick_ax_ag = QtWidgets.QActionGroup(self)
+        self.line_tick_ax_ag.setExclusive(True)
         self.line_tick_ax_menu_ToolTip = ''        
 
         for i in range(len(self.line_tick_ax_list)):
-            a = self.line_tick_ax_ag.addAction(QtGui.QAction(self.line_tick_ax_list[i], self, checkable=True))
+            a = self.line_tick_ax_ag.addAction(QtWidgets.QAction(self.line_tick_ax_list[i], self, checkable=True))
             self.line_tick_ax_menu.addAction(a)
         self.line_tick_ax_ag.triggered.connect(self.set_plot_ax2)
 
@@ -927,11 +942,12 @@ class AppForm(QtGui.QMainWindow):
         for i in range(len(self.line_tick_pos_list)):
             s = s + '    ' + str(i) + ' - ' + self.line_tick_pos_list[i] + '\n'
         s = s + '\nSet with:\n' + '    line_tick_pos = <integer>'
-        self.line_tick_pos_ag = QtGui.QActionGroup(self, exclusive=True)
+        self.line_tick_pos_ag = QtWidgets.QActionGroup(self)
+        self.line_tick_pos_ag.setExclusive(True)
         self.line_tick_pos_menu_ToolTip = ''        
 
         for i in range(len(self.line_tick_pos_list)):
-            a = self.line_tick_pos_ag.addAction(QtGui.QAction(self.line_tick_pos_list[i], self, checkable=True))
+            a = self.line_tick_pos_ag.addAction(QtWidgets.QAction(self.line_tick_pos_list[i], self, checkable=True))
             self.line_tick_pos_menu.addAction(a)
         self.line_tick_pos_ag.triggered.connect(self.set_plot_ax2)
 
@@ -990,30 +1006,32 @@ class AppForm(QtGui.QMainWindow):
         for i in range(len(self.verbosity_list)):
             s = s + '    ' + str(i) + ' - ' + self.verbosity_list[i] + '\n'
         s = s + '\nSet with:\n' + '    log_level = <integer>'
-        self.verbosity_ag = QtGui.QActionGroup(self, exclusive=True)
+        self.verbosity_ag = QtWidgets.QActionGroup(self)
+        self.verbosity_ag.setExclusive(True)
         
         #self.verbosity_menu = self.menuBar().addMenu("Verbosity")
         self.verbosity_menu = self.settings_menu.addMenu("Verbosity")
         self.verbosity_menu_ToolTip = ''        
 
         for i in range(len(self.verbosity_list)):
-            a = self.verbosity_ag.addAction(QtGui.QAction(self.verbosity_list[i], self, checkable=True))
+            a = self.verbosity_ag.addAction(QtWidgets.QAction(self.verbosity_list[i], self, checkable=True))
             self.verbosity_menu.addAction(a)
         self.verbosity_ag.triggered.connect(self.verbosity)
 
-        self.style_list = list(QtGui.QStyleFactory.keys())
+        self.style_list = list(QtWidgets.QStyleFactory.keys())
         s = 'Widget styles:\n'
         for i in range(len(self.style_list)):
             s = s + '    ' + str(i) + ' - ' + self.style_list[i] + '\n'
         s = s + '\nSet with:\n' + '    qt_style = <integer>'
-        self.style_ag = QtGui.QActionGroup(self, exclusive=True)
+        self.style_ag = QtWidgets.QActionGroup(self)
+        self.style_ag.setExclusive(True)
 
         self.style_menu = self.settings_menu.addMenu('Widget style')
 
         self.style_menu_ToolTip = ''        
 
         for i in range(len(self.style_list)):
-            a = self.style_ag.addAction(QtGui.QAction(self.style_list[i], self, checkable=True))
+            a = self.style_ag.addAction(QtWidgets.QAction(self.style_list[i], self, checkable=True))
             self.style_menu.addAction(a)
         self.style_ag.triggered.connect(self.style)
                 
@@ -1051,18 +1069,19 @@ class AppForm(QtGui.QMainWindow):
                 target.addAction(action)
 
     def create_action(  self, text, slot=None, shortcut=None, 
-                        icon=None, tip=None, checkable=False, 
-                        signal="triggered()"):
-        action = QtGui.QAction(text, self)
+                        icon=None, tip=None, checkable=False):
+        # mvfc               signal="triggered()"):
+        action = QtWidgets.QAction(text, self)
         if icon is not None:
-            action.setIcon(QtGui.QIcon(":/%s.png" % icon))
+            action.setIcon(QtWidgets.QIcon(":/%s.png" % icon))
         if shortcut is not None:
             action.setShortcut(shortcut)
         if tip is not None:
             action.setToolTip(tip)
             action.setStatusTip(tip)
         if slot is not None:
-            self.connect(action, QtCore.SIGNAL(signal), slot)
+            action.triggered.connect(slot)
+            # mvfc self.connect(action, QtCore.SIGNAL(signal), slot)
         if checkable:
             action.setCheckable(True)
         return action          
@@ -1235,7 +1254,7 @@ class AppForm(QtGui.QMainWindow):
     def save_cont_pars(self):
         file_choices = "Python files (*.py) (*.py);;Text files (*.txt *.dat) (*.txt *.dat);;All Files (*) (*)"
         filename = self.sp.config_file.split('/')[-1]
-        path = unicode(QtGui.QFileDialog.getSaveFileName(self, 'Save to file', filename, file_choices))
+        path = str(QtWidgets.QFileDialog.getSaveFileName(self, 'Save to file', filename, file_choices))
         if path:
             if os.path.isfile(path):
                 f = open(path, 'r')
@@ -1353,11 +1372,11 @@ class AppForm(QtGui.QMainWindow):
 
         def get_window_size_and_position():
             if self.line_info_dialog is None:
-                font = QtGui.QFont()
-                width = QtGui.QFontMetrics(font).width('='*120)
+                font = QtWidgets.QFont()
+                width = QtWidgets.QFontMetrics(font).width('='*120)
                 self.line_info_dialog_width = width
                 self.line_info_dialog_height = 470
-                sG = QtGui.QApplication.desktop().screenGeometry()
+                sG = QtWidgets.QApplication.desktop().screenGeometry()
                 self.line_info_dialog_x = sG.width()-self.line_info_dialog_width
                 self.line_info_dialog_y = 0
             else:
@@ -1545,7 +1564,7 @@ class AppForm(QtGui.QMainWindow):
                         s = ''
                     else:
                         s = self.sp.process[s]
-                item = QtGui.QTableWidgetItem(s)
+                item = QtWidgets.QTableWidgetItem(s)
                 if fieldItems[j] in editableCols:
                     item.setBackgroundColor(self.editableCells_bg_color)
                 else:
@@ -1554,7 +1573,7 @@ class AppForm(QtGui.QMainWindow):
                 self.line_info_table.setItem(i,j,item)
 
         def fill_text(i, text):
-            item = QtGui.QTableWidgetItem(text)
+            item = QtWidgets.QTableWidgetItem(text)
             item.setFlags(item.flags() ^ (QtCore.Qt.ItemIsEditable|QtCore.Qt.ItemIsSelectable|QtCore.Qt.ItemIsEnabled))
             item.setBackgroundColor(self.readOnlyCells_bg_color)
             item.setTextAlignment(QtCore.Qt.AlignBottom)
@@ -1645,7 +1664,7 @@ class AppForm(QtGui.QMainWindow):
             if line is None and refline is None:
                 title = 'Error in line info dialog'
                 msg = 'Line number not found.'
-                QtGui.QMessageBox.critical(self, title, msg, QtGui.QMessageBox.Ok )
+                QtWidgets.QMessageBox.critical(self, title, msg, QtWidgets.QMessageBox.Ok )
             self.line = line
             self.subrefline = subrefline
             self.refline = refline
@@ -1763,18 +1782,18 @@ class AppForm(QtGui.QMainWindow):
             s = str(item.text())
             value = self.rightFormat(s, fieldItems[col])
             if value != None:
-                self.line_info_table.setItem(row, col, QtGui.QTableWidgetItem(value.strip()))
+                self.line_info_table.setItem(row, col, QtWidgets.QTableWidgetItem(value.strip()))
                 self.line_info_table.item(row, col).setBackgroundColor(self.editableCells_bg_color)
                 save_change(row,col)
             else:
-                self.line_info_table.item(row, col).setBackgroundColor(QtGui.QColor('red'))
+                self.line_info_table.item(row, col).setBackgroundColor(QtWidgets.QColor('red'))
                 title = 'Invalid format for the ' + self.sp.field_tip[fieldItems[col]]
                 s0 = self.sp.field_format[fieldItems[col]]
                 s0 = s0[2:-1]
                 msg = "'" + s + "' can not be converted into the proper field format: " + s0
                 if col == self.sp.fields.index('vitesse'):
                     msg = msg + '\nor it is not a positive number.'
-                QtGui.QMessageBox.critical(self, title, msg, QtGui.QMessageBox.Ok )
+                QtWidgets.QMessageBox.critical(self, title, msg, QtWidgets.QMessageBox.Ok )
             get_info(self.curr_line_num)
             fill_line_info_table()
             self.line_info_table.blockSignals(False)
@@ -1817,7 +1836,7 @@ class AppForm(QtGui.QMainWindow):
             self.n_subsat = 0
             self.n_subref = 0
 
-        statusBar = QtGui.QStatusBar()
+        statusBar = QtWidgets.QStatusBar()
         s = 'Click on \"Satellites\" to cycle the tri-state display of satellite lines:\n' \
             '   1 - The satellite lines in the spectral range of the synthesis are shown; \n' \
             '   2 - All satellite lines (including subreference lines and lines outside the spectral range of the synthesis) are shown. \n' \
@@ -1827,7 +1846,7 @@ class AppForm(QtGui.QMainWindow):
             'Select or click on a wavelength to draw a tick at that position and recenter the spectrum if necessary. \n' \
             'Click on \"Reset\" to return to the original line and plot settings. \n' \
             'The green fields are editable.'
-        statusBar.addWidget(QtGui.QLabel(s),1)
+        statusBar.addWidget(QtWidgets.QLabel(s),1)
         self.showStatusBar = False
         statusBar.setVisible(self.showStatusBar)
         self.show_satellites = 1
@@ -1837,10 +1856,10 @@ class AppForm(QtGui.QMainWindow):
             self.line_info_dialog.close()
             self.line_info_table.close()
 
-        self.line_info_dialog = QtGui.QDialog()
+        self.line_info_dialog = QtWidgets.QDialog()
         self.line_info_dialog.resize(self.line_info_dialog_width,self.line_info_dialog_height)
         self.line_info_dialog.move(self.line_info_dialog_x,self.line_info_dialog_y)
-        self.line_info_table = QtGui.QTableWidget()
+        self.line_info_table = QtWidgets.QTableWidget()
         fieldItems = self.sp.fields
         fieldNames = [ self.sp.field_abbr[item] for item in fieldItems ]
         col_num = fieldItems.index('num')
@@ -1873,26 +1892,26 @@ class AppForm(QtGui.QMainWindow):
         self.curr_line_num = self.line_info_box.text()
         get_info(self.curr_line_num)
         fill_line_info_table()
-        self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Help|
-                                                QtGui.QDialogButtonBox.Close|
-                                                QtGui.QDialogButtonBox.Reset|
-                                                QtGui.QDialogButtonBox.Apply)
-        self.buttonBox.button(QtGui.QDialogButtonBox.Apply).setText("Satellites")
+        self.buttonBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Help|
+                                                QtWidgets.QDialogButtonBox.Close|
+                                                QtWidgets.QDialogButtonBox.Reset|
+                                                QtWidgets.QDialogButtonBox.Apply)
+        self.buttonBox.button(QtWidgets.QDialogButtonBox.Apply).setText("Satellites")
         if self.enable_tooltips_action.isChecked():
-            self.buttonBox.button(QtGui.QDialogButtonBox.Apply).setToolTip("Click to toggle the satellite lines")
-        self.buttonBox.button(QtGui.QDialogButtonBox.Apply).clicked.connect(toggle_show_satellites)
+            self.buttonBox.button(QtWidgets.QDialogButtonBox.Apply).setToolTip("Click to toggle the satellite lines")
+        self.buttonBox.button(QtWidgets.QDialogButtonBox.Apply).clicked.connect(toggle_show_satellites)
         s = "Click to return to the initial states of the line info dialog and figures"
         if self.enable_tooltips_action.isChecked():
-            self.buttonBox.button(QtGui.QDialogButtonBox.Reset).setToolTip(s)
-        self.buttonBox.button(QtGui.QDialogButtonBox.Reset).clicked.connect(do_reset)
-        self.buttonBox.button(QtGui.QDialogButtonBox.Help).clicked.connect(toggle_statusbar)
+            self.buttonBox.button(QtWidgets.QDialogButtonBox.Reset).setToolTip(s)
+        self.buttonBox.button(QtWidgets.QDialogButtonBox.Reset).clicked.connect(do_reset)
+        self.buttonBox.button(QtWidgets.QDialogButtonBox.Help).clicked.connect(toggle_statusbar)
         self.buttonBox.rejected.connect(self.line_info_dialog.close)
         self.line_info_table.doubleClicked.connect(on_doubleClick)
         self.line_info_table.itemChanged.connect(on_itemChanged)
         self.selected_item = None
         self.line_info_table.itemSelectionChanged.connect(on_itemSelectionChanged)
         self.line_info_table.itemClicked.connect(on_itemClicked)
-        vbox = QtGui.QVBoxLayout()
+        vbox = QtWidgets.QVBoxLayout()
         vbox.addWidget(self.line_info_table)
         vbox.addWidget(self.buttonBox)
         vbox.addWidget(statusBar)
@@ -1942,11 +1961,11 @@ class AppForm(QtGui.QMainWindow):
                 if j == fieldItems.index('id'):
                     if self.show_true_ions: 
                         s = self.sp.true_ion(s).replace('_',' ').strip()    
-                item = QtGui.QTableWidgetItem(s)
+                item = QtWidgets.QTableWidgetItem(s)
                 item.setFlags(item.flags() ^ QtCore.Qt.ItemIsEditable)
                 item.setBackgroundColor(self.readOnlyCells_bg_color)
                 self.nearbyLines_table.setItem(i,j,item)
-            item = QtGui.QTableWidgetItem(proc_str)
+            item = QtWidgets.QTableWidgetItem(proc_str)
             item.setFlags(item.flags() ^ QtCore.Qt.ItemIsEditable)
             item.setBackgroundColor(self.readOnlyCells_bg_color)
             self.nearbyLines_table.setItem(i,jProc,item)
@@ -1958,11 +1977,11 @@ class AppForm(QtGui.QMainWindow):
 
         def get_window_size_and_position():
             if self.nearbyLines_dialog is None:
-                font = QtGui.QFont()
-                width = QtGui.QFontMetrics(font).width('='*120)
+                font = QtWidgets.QFont()
+                width = QtWidgets.QFontMetrics(font).width('='*120)
                 self.nearbyLines_dialog_width = width
                 self.nearbyLines_dialog_height = 470
-                sG = QtGui.QApplication.desktop().screenGeometry()
+                sG = QtWidgets.QApplication.desktop().screenGeometry()
                 self.nearbyLines_dialog_x = sG.width()-self.nearbyLines_dialog_width
                 self.nearbyLines_dialog_y = sG.height()-self.nearbyLines_dialog_height
             else:
@@ -1986,15 +2005,15 @@ class AppForm(QtGui.QMainWindow):
                 get_selected_ions()
                 if len(self.nearbyLines_selected_ions) > 0:
                     self.nearbyDialogFilterIsActive = True
-                    self.buttonBox_nearbyLines.button(QtGui.QDialogButtonBox.RestoreDefaults).setStyleSheet('background-color:red;')
-                    self.buttonBox_nearbyLines.button(QtGui.QDialogButtonBox.RestoreDefaults).setText('Deactivate ion filter')        
+                    self.buttonBox_nearbyLines.button(QtWidgets.QDialogButtonBox.RestoreDefaults).setStyleSheet('background-color:red;')
+                    self.buttonBox_nearbyLines.button(QtWidgets.QDialogButtonBox.RestoreDefaults).setText('Deactivate ion filter')        
 
                 else:        
-                    QtGui.QMessageBox.critical(self, 'nearby lines dialog: ion filter', 'No ion selected.', QtGui.QMessageBox.Ok )
+                    QtWidgets.QMessageBox.critical(self, 'nearby lines dialog: ion filter', 'No ion selected.', QtWidgets.QMessageBox.Ok )
             else:
                 self.nearbyDialogFilterIsActive = False
-                self.buttonBox_nearbyLines.button(QtGui.QDialogButtonBox.RestoreDefaults).setStyleSheet('')
-                self.buttonBox_nearbyLines.button(QtGui.QDialogButtonBox.RestoreDefaults).setText('Filter selected ions')        
+                self.buttonBox_nearbyLines.button(QtWidgets.QDialogButtonBox.RestoreDefaults).setStyleSheet('')
+                self.buttonBox_nearbyLines.button(QtWidgets.QDialogButtonBox.RestoreDefaults).setText('Filter selected ions')        
             self.fill_nearbyLines_table()
 
         def save_initial_plot_pars():
@@ -2131,10 +2150,10 @@ class AppForm(QtGui.QMainWindow):
                 self.line_info()
 
         get_window_size_and_position()
-        self.nearbyLines_dialog = QtGui.QDialog()
+        self.nearbyLines_dialog = QtWidgets.QDialog()
         self.nearbyLines_dialog.resize(self.nearbyLines_dialog_width, self.nearbyLines_dialog_height)
         self.nearbyLines_dialog.move(self.nearbyLines_dialog_x,self.nearbyLines_dialog_y)
-        statusBar = QtGui.QStatusBar()
+        statusBar = QtWidgets.QStatusBar()
         s = 'Double-click on a line number (or select the line number and press \"Apply\") to show line info dialog. \n' \
             'Double-click on an ion to plot line ticks and spectrum for that single ion. \n' \
             'Click or select a wavelength to draw a tick at that position. \n' \
@@ -2143,10 +2162,10 @@ class AppForm(QtGui.QMainWindow):
             'Double-click on a column header to sort the table; Double-click again to toggle between ascending and descending order. \n' \
             'Click on \"Reset\" to return to the original selected ions and plot settings. \n' \
             'Click on \"Filter selected ions\" to activate/deactivate ion selection.'
-        statusBar.addWidget(QtGui.QLabel(s),1)
+        statusBar.addWidget(QtWidgets.QLabel(s),1)
         self.showStatusBar = False
         statusBar.setVisible(self.showStatusBar)
-        self.nearbyLines_table = QtGui.QTableWidget()   
+        self.nearbyLines_table = QtWidgets.QTableWidget()   
         self.nearbyLines_table.setRowCount(len(self.nearbyLines))
         fieldItems = self.sp.fields
         fieldNames = [ self.sp.field_abbr[item] for item in fieldItems ]
@@ -2179,25 +2198,25 @@ class AppForm(QtGui.QMainWindow):
         #self.nearbyDialogFilterIsActive = False
         self.fill_nearbyLines_table()
         save_initial_plot_pars()
-        self.buttonBox_nearbyLines = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Help|
-                                                QtGui.QDialogButtonBox.Reset|
-                                                QtGui.QDialogButtonBox.RestoreDefaults|
-                                                QtGui.QDialogButtonBox.Apply|
-                                                QtGui.QDialogButtonBox.Close)
-        self.buttonBox_nearbyLines.button(QtGui.QDialogButtonBox.RestoreDefaults).setText('Filter selected ions')        
-        self.buttonBox_nearbyLines.button(QtGui.QDialogButtonBox.Apply).setText('Plot selected ions')
+        self.buttonBox_nearbyLines = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Help|
+                                                QtWidgets.QDialogButtonBox.Reset|
+                                                QtWidgets.QDialogButtonBox.RestoreDefaults|
+                                                QtWidgets.QDialogButtonBox.Apply|
+                                                QtWidgets.QDialogButtonBox.Close)
+        self.buttonBox_nearbyLines.button(QtWidgets.QDialogButtonBox.RestoreDefaults).setText('Filter selected ions')        
+        self.buttonBox_nearbyLines.button(QtWidgets.QDialogButtonBox.Apply).setText('Plot selected ions')
         self.buttonBox_nearbyLines.rejected.connect(self.nearbyLines_dialog.close)
-        self.buttonBox_nearbyLines.button(QtGui.QDialogButtonBox.Apply).clicked.connect(do_selection)
-        self.buttonBox_nearbyLines.button(QtGui.QDialogButtonBox.Help).clicked.connect(toggle_statusbar)
-        self.buttonBox_nearbyLines.button(QtGui.QDialogButtonBox.Reset).clicked.connect(do_reset)
-        self.buttonBox_nearbyLines.button(QtGui.QDialogButtonBox.RestoreDefaults).clicked.connect(toggle_filter)
+        self.buttonBox_nearbyLines.button(QtWidgets.QDialogButtonBox.Apply).clicked.connect(do_selection)
+        self.buttonBox_nearbyLines.button(QtWidgets.QDialogButtonBox.Help).clicked.connect(toggle_statusbar)
+        self.buttonBox_nearbyLines.button(QtWidgets.QDialogButtonBox.Reset).clicked.connect(do_reset)
+        self.buttonBox_nearbyLines.button(QtWidgets.QDialogButtonBox.RestoreDefaults).clicked.connect(toggle_filter)
         self.nearbyLines_table.doubleClicked.connect(on_doubleClick)
         self.nearbyLines_table.itemSelectionChanged.connect(on_itemSelectionChanged)
         self.nearbyLines_table.itemClicked.connect(on_itemClicked)
         self.nearbyLines_table.verticalHeader().sectionDoubleClicked.connect(do_selection)
         #self.nearbyLines_table.horizontalHeader().sectionClicked.connect(do_header_clicked)
         self.nearbyLines_table.horizontalHeader().sectionDoubleClicked.connect(do_header_doubleClicked)
-        vbox = QtGui.QVBoxLayout()
+        vbox = QtWidgets.QVBoxLayout()
         vbox.addWidget(self.nearbyLines_table)
         vbox.addWidget(self.buttonBox_nearbyLines)
         vbox.addWidget(statusBar)
@@ -2208,9 +2227,9 @@ class AppForm(QtGui.QMainWindow):
         self.cursor_w1 = self.sp.cursor_w1
         self.cursor_w2 = self.sp.cursor_w2
         if self.nearbyDialogFilterIsActive:
-            self.buttonBox_nearbyLines.button(QtGui.QDialogButtonBox.RestoreDefaults).setStyleSheet('background-color:red;')
+            self.buttonBox_nearbyLines.button(QtWidgets.QDialogButtonBox.RestoreDefaults).setStyleSheet('background-color:red;')
         else:
-            self.buttonBox_nearbyLines.button(QtGui.QDialogButtonBox.RestoreDefaults).setStyleSheet('')
+            self.buttonBox_nearbyLines.button(QtWidgets.QDialogButtonBox.RestoreDefaults).setStyleSheet('')
         self.nearbyLines_dialog.show()
 
     def cont_dialog(self):
@@ -2238,7 +2257,7 @@ class AppForm(QtGui.QMainWindow):
             if self.cont_pars_dialog is None:
                 self.cont_pars_dialog_width = 800
                 self.cont_pars_dialog_height = 460
-                sG = QtGui.QApplication.desktop().screenGeometry()
+                sG = QtWidgets.QApplication.desktop().screenGeometry()
                 self.cont_pars_dialog_x = sG.width()-self.cont_pars_dialog_width
                 self.cont_pars_dialog_y = sG.height()-self.cont_pars_dialog_height
                 self.cont_pars_dialog_x = 0
@@ -2254,9 +2273,9 @@ class AppForm(QtGui.QMainWindow):
             value = self.ConvStrToValidTypes(s)
             if value != None:
                 self.sp.set_conf(Pars[row][0], value)
-                self.table.setItem(row, 1, QtGui.QTableWidgetItem(str(value)))
+                self.table.setItem(row, 1, QtWidgets.QTableWidgetItem(str(value)))
             else:
-                self.table.setItem(row, 1, QtGui.QTableWidgetItem('Error in ' + s))
+                self.table.setItem(row, 1, QtWidgets.QTableWidgetItem('Error in ' + s))
 
         def on_itemChanged():
             self.table.blockSignals(True)
@@ -2266,44 +2285,44 @@ class AppForm(QtGui.QMainWindow):
             value = self.ConvStrToValidTypes(s)
             if value != None:
                 self.sp.set_conf(Pars[row][0], value)
-                #if isinstance(value, basestring):
+                #if isinstance(value, str):
                 #    value = '\'{}\''.format(value)
-                self.table.setItem(row, 1, QtGui.QTableWidgetItem(str(value)))
+                self.table.setItem(row, 1, QtWidgets.QTableWidgetItem(str(value)))
                 self.table.item(row, 1).setBackgroundColor(self.editableCells_bg_color)
                 self.cont_par_changed = True
             else:
-                self.table.setItem(row, 1, QtGui.QTableWidgetItem('Error in ' + s))
-                self.table.item(row, 1).setBackgroundColor(QtGui.QColor('red'))
+                self.table.setItem(row, 1, QtWidgets.QTableWidgetItem('Error in ' + s))
+                self.table.item(row, 1).setBackgroundColor(QtWidgets.QColor('red'))
             self.table.blockSignals(False)
  
         get_window_size_and_position()
-        self.cont_pars_dialog = QtGui.QDialog()
+        self.cont_pars_dialog = QtWidgets.QDialog()
         self.cont_pars_dialog.resize(self.cont_pars_dialog_width, self.cont_pars_dialog_height)
         self.cont_pars_dialog.move(self.cont_pars_dialog_x, self.cont_pars_dialog_y) 
-        statusBar = QtGui.QStatusBar()
+        statusBar = QtWidgets.QStatusBar()
         s = 'Click on \"Save\" to write the continuum parameters to a file. \n' \
             'Click on \"Update\" to adjust the synthesis to the changes in the continuum parameters. \n' \
             'The green fields are editable.'
-        statusBar.addWidget(QtGui.QLabel(s),1)
+        statusBar.addWidget(QtWidgets.QLabel(s),1)
         self.showStatusBar = False
         statusBar.setVisible(self.showStatusBar)
-        self.table = QtGui.QTableWidget()   
+        self.table = QtWidgets.QTableWidget()   
         self.table.setRowCount(len(Pars))
         self.table.setColumnCount(3)
         self.table.setHorizontalHeaderLabels([ 'parameter', 'value', 'help' ])
         for j in range(0,len(Pars)):
-            item = QtGui.QTableWidgetItem(Pars[j][0])
+            item = QtWidgets.QTableWidgetItem(Pars[j][0])
             item.setFlags(item.flags() ^ QtCore.Qt.ItemIsEditable)
             item.setBackgroundColor(self.readOnlyCells_bg_color)
             self.table.setItem(j,0,item)
             value = self.sp.get_conf(Pars[j][0])
-            #if isinstance(value, basestring):
+            #if isinstance(value, str):
             #    value = '\'{}\''.format(value)
-            item = QtGui.QTableWidgetItem(str(value))
-            #item = QtGui.QTableWidgetItem(str(self.sp.get_conf(Pars[j][0])))
+            item = QtWidgets.QTableWidgetItem(str(value))
+            #item = QtWidgets.QTableWidgetItem(str(self.sp.get_conf(Pars[j][0])))
             item.setBackgroundColor(self.editableCells_bg_color)
             self.table.setItem(j,1,item)
-            item = QtGui.QTableWidgetItem(Pars[j][1])
+            item = QtWidgets.QTableWidgetItem(Pars[j][1])
             item.setFlags(item.flags() ^ QtCore.Qt.ItemIsEditable)
             item.setBackgroundColor(self.readOnlyCells_bg_color)
             self.table.setItem(j,2,item)
@@ -2312,19 +2331,19 @@ class AppForm(QtGui.QMainWindow):
         if self.table.columnWidth(1) > 300:
             self.table.setColumnWidth(1,300) 
         self.table.itemChanged.connect(on_itemChanged)
-        self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Help|
-                                                QtGui.QDialogButtonBox.Save|
-                                                QtGui.QDialogButtonBox.Apply|
-                                                QtGui.QDialogButtonBox.Close)
-        self.buttonBox.button(QtGui.QDialogButtonBox.Help).setDefault(True)
-        self.buttonBox.button(QtGui.QDialogButtonBox.Apply).setText('Update')
+        self.buttonBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Help|
+                                                QtWidgets.QDialogButtonBox.Save|
+                                                QtWidgets.QDialogButtonBox.Apply|
+                                                QtWidgets.QDialogButtonBox.Close)
+        self.buttonBox.button(QtWidgets.QDialogButtonBox.Help).setDefault(True)
+        self.buttonBox.button(QtWidgets.QDialogButtonBox.Apply).setText('Update')
         if self.enable_tooltips_action.isChecked():
-            self.buttonBox.button(QtGui.QDialogButtonBox.Apply).setToolTip('Click to update synthesis with changes in the continuum parameters.')
-        self.buttonBox.button(QtGui.QDialogButtonBox.Apply).clicked.connect(self.adjust)
+            self.buttonBox.button(QtWidgets.QDialogButtonBox.Apply).setToolTip('Click to update synthesis with changes in the continuum parameters.')
+        self.buttonBox.button(QtWidgets.QDialogButtonBox.Apply).clicked.connect(self.adjust)
         self.buttonBox.rejected.connect(self.cont_pars_dialog.close)
-        self.buttonBox.button(QtGui.QDialogButtonBox.Save).clicked.connect(self.save_cont_pars)
-        self.buttonBox.button(QtGui.QDialogButtonBox.Help).clicked.connect(toggle_statusbar)
-        vbox = QtGui.QVBoxLayout()
+        self.buttonBox.button(QtWidgets.QDialogButtonBox.Save).clicked.connect(self.save_cont_pars)
+        self.buttonBox.button(QtWidgets.QDialogButtonBox.Help).clicked.connect(toggle_statusbar)
+        vbox = QtWidgets.QVBoxLayout()
         vbox.addWidget(self.table)
         vbox.addWidget(self.buttonBox)
         vbox.addWidget(statusBar)
@@ -2445,7 +2464,7 @@ class AppForm(QtGui.QMainWindow):
         self.make_axes()
         
     def line_tick_color_clicked(self):
-        color = QtGui.QColorDialog.getColor()
+        color = QtWidgets.QColorDialog.getColor()
         self.sp.set_conf('line_tick_color', str(color.name()))
         if self.show_line_ticks_action.isChecked():
             self.make_axes()
@@ -2656,7 +2675,7 @@ class AppForm(QtGui.QMainWindow):
             path = ''
         else:
             path = self.tick_file
-        path = unicode(QtGui.QFileDialog.getOpenFileName(self, 'Open file', path, file_choices))
+        path = str(QtWidgets.QFileDialog.getOpenFileName(self, 'Open file', path, file_choices))
         if path:
             self.tick_file = path
         else:
@@ -2845,7 +2864,7 @@ class AppForm(QtGui.QMainWindow):
             self.get_init_filename()
         if self.init_file_name:
             self.statusBar().showMessage('Running synthesis ...') 
-            QtGui.QApplication.processEvents() 
+            QtWidgets.QApplication.processEvents() 
             self.start_spectrum()
             self.do_save = False
             self.on_draw()
@@ -2860,7 +2879,7 @@ class AppForm(QtGui.QMainWindow):
     def get_init_filename(self):
         file_choices = "Python initialization files (*init.py) (*init.py);;Python files (*.py) (*.py);;All files (*) (*)"
         title = 'Open pySSN initialization file'
-        init_file = str(QtGui.QFileDialog.getOpenFileName(self, title, self.init_file_name, file_choices))
+        init_file = str(QtWidgets.QFileDialog.getOpenFileName(self, title, self.init_file_name, file_choices))
         if init_file and os.path.isfile(init_file):
             self.init_file_name = init_file
         else:
@@ -2883,7 +2902,7 @@ class AppForm(QtGui.QMainWindow):
         with open(path, 'w') as f:
             for key in keys:
                 value = self.sp.conf[key]
-                if isinstance(value, basestring):
+                if isinstance(value, str):
                     value = '\"{}\"'.format(value)
                 f.write('{} = {}\n'.format(key, value))
         self.statusBar().showMessage('Parameters saved to file %s' % path, 4000)
@@ -2902,7 +2921,7 @@ class AppForm(QtGui.QMainWindow):
         file_choices = "pySSN initialization files (*init.py) (*init.py);;Python files (*.py) (*.py);;All files (*) (*)"
         title = 'Save synthesis and plot parameters'
         selectedFilter = 'pySSN initialization files (*init.py) (*init.py)'
-        path = unicode(QtGui.QFileDialog.getSaveFileName(self, title, path, file_choices, selectedFilter))
+        path = str(QtWidgets.QFileDialog.getSaveFileName(self, title, path, file_choices, selectedFilter))
         if path:
             with open(path, 'w') as f:
                 for key in keys:
@@ -2910,7 +2929,7 @@ class AppForm(QtGui.QMainWindow):
                         value = self.sp.format_instr_prof()
                     else:
                         value = self.sp.conf[key]
-                        if isinstance(value, basestring):
+                        if isinstance(value, str):
                             value = '\"{}\"'.format(value)
                     f.write('{} = {}\n'.format(key, value))
             self.save_parameters_file = path
@@ -2947,7 +2966,7 @@ class AppForm(QtGui.QMainWindow):
                 msg = 'Unable to read instrumental profile'
                 path = None
                 if self.showErrorBox:
-                    QtGui.QMessageBox.critical(self, title, msg, QtGui.QMessageBox.Ok)
+                    QtWidgets.QMessageBox.critical(self, title, msg, QtWidgets.QMessageBox.Ok)
                 else:
                     log_.warn(msg, calling = self.calling)
                 return
@@ -2957,7 +2976,7 @@ class AppForm(QtGui.QMainWindow):
             else:
                 title = 'Error in the instrument profile'
                 if self.showErrorBox:
-                    QtGui.QMessageBox.critical(self, title, msg, QtGui.QMessageBox.Ok)
+                    QtWidgets.QMessageBox.critical(self, title, msg, QtWidgets.QMessageBox.Ok)
                 else:
                     log_.warn(msg, calling = self.calling)            
             
@@ -2971,12 +2990,12 @@ class AppForm(QtGui.QMainWindow):
                 
         def get_window_size_and_position():
             if self.instr_prof_dialog is None:
-                font = QtGui.QFont("Courier")
-                width = QtGui.QFontMetrics(font).width('='*80)
-                height = 15*QtGui.QFontMetrics(font).height()
+                font = QtWidgets.QFont("Courier")
+                width = QtWidgets.QFontMetrics(font).width('='*80)
+                height = 15*QtWidgets.QFontMetrics(font).height()
                 self.instr_prof_dialog_width = width
                 self.instr_prof_dialog_height = height
-                sG = QtGui.QApplication.desktop().screenGeometry()
+                sG = QtWidgets.QApplication.desktop().screenGeometry()
                 self.instr_prof_dialog_x = sG.width()-self.instr_prof_dialog_width
                 self.instr_prof_dialog_y = sG.height()
             else:
@@ -2988,17 +3007,17 @@ class AppForm(QtGui.QMainWindow):
             
         self.showHelpBrowser = False
         get_window_size_and_position()
-        self.instr_prof_dialog = QtGui.QDialog()
+        self.instr_prof_dialog = QtWidgets.QDialog()
         self.instr_prof_dialog.setWindowFlags(self.instr_prof_dialog.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
         self.instr_prof_dialog.resize(self.instr_prof_dialog_width, self.instr_prof_dialog_height)
         self.instr_prof_dialog.move(self.instr_prof_dialog_x,self.instr_prof_dialog_y)
         self.instr_prof_dialog.setWindowTitle('instrument profile dialog')
-        prof_box = QtGui.QTextEdit()
+        prof_box = QtWidgets.QTextEdit()
         prof_box.setFontFamily("Courier")
         prof_box.setText('instr_prof = ' + self.sp.format_instr_prof())
-        linkLabel = QtGui.QLabel('<a href="https://github.com/Morisset/pySSN/wiki">More help online</a>')
+        linkLabel = QtWidgets.QLabel('<a href="https://github.com/Morisset/pySSN/wiki">More help online</a>')
         linkLabel.setOpenExternalLinks(True)
-        helpBrowser = QtGui.QTextBrowser()
+        helpBrowser = QtWidgets.QTextBrowser()
         
         # text=open('instr_prof.html').read()
         # This text should go to a file open with text=open('instr_prof.html').read()
@@ -3038,17 +3057,17 @@ Special cases for the optional components:
         policy = helpBrowser.sizePolicy()
         policy.setVerticalStretch(20)
         helpBrowser.setSizePolicy(policy)
-        vbox = QtGui.QVBoxLayout()
-        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Help|
-                                           QtGui.QDialogButtonBox.Close|
-                                           QtGui.QDialogButtonBox.Apply)
-        buttonBox.button(QtGui.QDialogButtonBox.Apply).setText("Update")
+        vbox = QtWidgets.QVBoxLayout()
+        buttonBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Help|
+                                           QtWidgets.QDialogButtonBox.Close|
+                                           QtWidgets.QDialogButtonBox.Apply)
+        buttonBox.button(QtWidgets.QDialogButtonBox.Apply).setText("Update")
         vbox.addWidget(prof_box,0)
         vbox.addWidget(buttonBox)
         vbox.addWidget(linkLabel)
         vbox.addWidget(helpBrowser)
-        buttonBox.button(QtGui.QDialogButtonBox.Help).clicked.connect(toggle_statusbar)
-        buttonBox.button(QtGui.QDialogButtonBox.Apply).clicked.connect(do_update)
+        buttonBox.button(QtWidgets.QDialogButtonBox.Help).clicked.connect(toggle_statusbar)
+        buttonBox.button(QtWidgets.QDialogButtonBox.Apply).clicked.connect(do_update)
         buttonBox.rejected.connect(self.instr_prof_dialog.close)
         self.instr_prof_dialog.setLayout(vbox)
         self.instr_prof_dialog.setWindowModality(QtCore.Qt.NonModal)
@@ -3069,7 +3088,7 @@ Special cases for the optional components:
                         title = 'Error in table'
                         msg = 'Error in line \'{}\'.\nEach line must have two numbers separated by whitespaces.'.format(text[i])
                         if self.showErrorBox:
-                            QtGui.QMessageBox.critical(self, title, msg, QtGui.QMessageBox.Ok)
+                            QtWidgets.QMessageBox.critical(self, title, msg, QtWidgets.QMessageBox.Ok)
                         else:
                             log_.warn(msg, calling = self.calling)
                         return ''
@@ -3093,7 +3112,7 @@ Special cases for the optional components:
                     line = line.split(',')
                     line = '{:<7} {}'.format(line[0].strip(),line[1].strip())
                     edit_box.append(line)
-                buttonBox.button(QtGui.QDialogButtonBox.RestoreDefaults).setText("Show as list")
+                buttonBox.button(QtWidgets.QDialogButtonBox.RestoreDefaults).setText("Show as list")
             else:
                 text = table2list(edit_box.toPlainText())
                 if text == '':
@@ -3101,7 +3120,7 @@ Special cases for the optional components:
                     return
                 edit_box.clear()
                 edit_box.setText(text)
-                buttonBox.button(QtGui.QDialogButtonBox.RestoreDefaults).setText("Show as table")
+                buttonBox.button(QtWidgets.QDialogButtonBox.RestoreDefaults).setText("Show as table")
 
         def do_update():
             old_value = self.sp.get_conf('lambda_shift_table')
@@ -3122,7 +3141,7 @@ Special cases for the optional components:
                 msg = 'Unable to read \'lambda_shit_table\''
                 path = None
                 if self.showErrorBox:
-                    QtGui.QMessageBox.critical(self, title, msg, QtGui.QMessageBox.Ok)
+                    QtWidgets.QMessageBox.critical(self, title, msg, QtWidgets.QMessageBox.Ok)
                 else:
                     log_.warn(msg, calling = self.calling)
                 return
@@ -3133,7 +3152,7 @@ Special cases for the optional components:
                 if self.showErrorBox:
                     title = 'Error'
                     msg = self.sp.read_obs_error
-                    QtGui.QMessageBox.critical(self, title, msg, QtGui.QMessageBox.Ok)
+                    QtWidgets.QMessageBox.critical(self, title, msg, QtWidgets.QMessageBox.Ok)
                 else:
                     log_.warn(msg, calling = self.calling)
             else:
@@ -3151,12 +3170,12 @@ Special cases for the optional components:
                 
         def get_window_size_and_position():
             if self.refine_wave_dialog is None:
-                font = QtGui.QFont("Courier")
-                width = QtGui.QFontMetrics(font).width('='*80)
-                height = 15*QtGui.QFontMetrics(font).height()
+                font = QtWidgets.QFont("Courier")
+                width = QtWidgets.QFontMetrics(font).width('='*80)
+                height = 15*QtWidgets.QFontMetrics(font).height()
                 self.refine_wave_dialog_width = width
                 self.refine_wave_dialog_height = height
-                sG = QtGui.QApplication.desktop().screenGeometry()
+                sG = QtWidgets.QApplication.desktop().screenGeometry()
                 self.refine_wave_dialog_x = sG.width()-self.refine_wave_dialog_width
                 self.refine_wave_dialog_y = sG.height()
             else:
@@ -3168,18 +3187,18 @@ Special cases for the optional components:
             
         self.showHelpBrowser = False
         get_window_size_and_position()
-        self.refine_wave_dialog = QtGui.QDialog()
+        self.refine_wave_dialog = QtWidgets.QDialog()
         self.refine_wave_dialog.setWindowFlags(self.refine_wave_dialog.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
         self.refine_wave_dialog.resize(self.refine_wave_dialog_width, self.refine_wave_dialog_height)
         self.refine_wave_dialog.move(self.refine_wave_dialog_x,self.refine_wave_dialog_y)
         self.refine_wave_dialog.setWindowTitle('wavelength-refining dialog')
-        edit_box = QtGui.QTextEdit()
+        edit_box = QtWidgets.QTextEdit()
         edit_box.setFontFamily("Courier")
         self.refine_wave_as_table = False
         edit_box.setText('lambda_shift_table = ' + str(self.sp.get_conf('lambda_shift_table')))
-        linkLabel = QtGui.QLabel('<a href="https://github.com/Morisset/pySSN/wiki">More help online</a>')
+        linkLabel = QtWidgets.QLabel('<a href="https://github.com/Morisset/pySSN/wiki">More help online</a>')
         linkLabel.setOpenExternalLinks(True)
-        helpBrowser = QtGui.QTextBrowser()
+        helpBrowser = QtWidgets.QTextBrowser()
         
         # text=open('wave_refining.html').read()
         # This text should go to a file open with text=open('wave-refining').read()
@@ -3214,20 +3233,20 @@ Outside the range of wavelenghts given in <b>lambda_shit_table</b>, the correcti
         policy = helpBrowser.sizePolicy()
         policy.setVerticalStretch(20)
         helpBrowser.setSizePolicy(policy)
-        vbox = QtGui.QVBoxLayout()
-        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Help|
-                                           QtGui.QDialogButtonBox.RestoreDefaults|
-                                           QtGui.QDialogButtonBox.Close|
-                                           QtGui.QDialogButtonBox.Apply)
-        buttonBox.button(QtGui.QDialogButtonBox.Apply).setText("Update")
-        buttonBox.button(QtGui.QDialogButtonBox.RestoreDefaults).setText("Show as table")
+        vbox = QtWidgets.QVBoxLayout()
+        buttonBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Help|
+                                           QtWidgets.QDialogButtonBox.RestoreDefaults|
+                                           QtWidgets.QDialogButtonBox.Close|
+                                           QtWidgets.QDialogButtonBox.Apply)
+        buttonBox.button(QtWidgets.QDialogButtonBox.Apply).setText("Update")
+        buttonBox.button(QtWidgets.QDialogButtonBox.RestoreDefaults).setText("Show as table")
         vbox.addWidget(edit_box,0)
         vbox.addWidget(buttonBox)
         vbox.addWidget(linkLabel)
         vbox.addWidget(helpBrowser)
-        buttonBox.button(QtGui.QDialogButtonBox.Help).clicked.connect(toggle_help)
-        buttonBox.button(QtGui.QDialogButtonBox.RestoreDefaults).clicked.connect(toggle_table)
-        buttonBox.button(QtGui.QDialogButtonBox.Apply).clicked.connect(do_update)
+        buttonBox.button(QtWidgets.QDialogButtonBox.Help).clicked.connect(toggle_help)
+        buttonBox.button(QtWidgets.QDialogButtonBox.RestoreDefaults).clicked.connect(toggle_table)
+        buttonBox.button(QtWidgets.QDialogButtonBox.Apply).clicked.connect(do_update)
         buttonBox.rejected.connect(self.refine_wave_dialog.close)
         self.refine_wave_dialog.setLayout(vbox)
         self.refine_wave_dialog.setWindowModality(QtCore.Qt.NonModal)
@@ -3253,7 +3272,7 @@ Outside the range of wavelenghts given in <b>lambda_shit_table</b>, the correcti
                     title = 'Error in table'
                     msg = 'Error in line \'{}\'.\nEach line must have two numbers separated by whitespaces.'.format(text[i])
                     if self.showErrorBox:
-                        QtGui.QMessageBox.critical(self, title, msg, QtGui.QMessageBox.Ok)
+                        QtWidgets.QMessageBox.critical(self, title, msg, QtWidgets.QMessageBox.Ok)
                     else:
                         log_.warn(msg, calling = self.calling)
                     return ''
@@ -3293,7 +3312,7 @@ Outside the range of wavelenghts given in <b>lambda_shit_table</b>, the correcti
             title = 'Error'
             msg = 'Problem in user-defined continuum interpolation.\n{}'.format(msg)
             if self.showErrorBox:
-                QtGui.QMessageBox.critical(self, title, msg, QtGui.QMessageBox.Ok)
+                QtWidgets.QMessageBox.critical(self, title, msg, QtWidgets.QMessageBox.Ok)
             else:
                 log_.warn(msg, calling = self.calling)
             return
@@ -3360,12 +3379,12 @@ Outside the range of wavelenghts given in <b>lambda_shit_table</b>, the correcti
                     line = line.split(',')
                     line = '{:<7} {}'.format(line[0].strip(),line[1].strip())
                     self.user_cont_editBox.append(line)
-                buttonBox.button(QtGui.QDialogButtonBox.RestoreDefaults).setText("Show as list")
+                buttonBox.button(QtWidgets.QDialogButtonBox.RestoreDefaults).setText("Show as list")
             else:
                 self.get_user_cont_points = False
-                buttonBox.button(QtGui.QDialogButtonBox.Retry).setStyleSheet('')
+                buttonBox.button(QtWidgets.QDialogButtonBox.Retry).setStyleSheet('')
                 self.del_user_cont_points = False
-                buttonBox.button(QtGui.QDialogButtonBox.Ignore).setStyleSheet('')
+                buttonBox.button(QtWidgets.QDialogButtonBox.Ignore).setStyleSheet('')
                 self.on_draw()
                 text = self.user_cont_table2list(self.user_cont_editBox.toPlainText())
                 if text == '':
@@ -3373,7 +3392,7 @@ Outside the range of wavelenghts given in <b>lambda_shit_table</b>, the correcti
                     return
                 self.user_cont_editBox.clear()
                 self.user_cont_editBox.setText(text)                
-                buttonBox.button(QtGui.QDialogButtonBox.RestoreDefaults).setText("Show as table")
+                buttonBox.button(QtWidgets.QDialogButtonBox.RestoreDefaults).setText("Show as table")
 
         def toggle_help():
             self.showHelpBrowser = not self.showHelpBrowser
@@ -3385,12 +3404,12 @@ Outside the range of wavelenghts given in <b>lambda_shit_table</b>, the correcti
                 
         def get_window_size_and_position():
             if self.interpol_cont_dialog is None:
-                font = QtGui.QFont("Courier")
-                width = QtGui.QFontMetrics(font).width('='*80)
-                height = 15*QtGui.QFontMetrics(font).height()
+                font = QtWidgets.QFont("Courier")
+                width = QtWidgets.QFontMetrics(font).width('='*80)
+                height = 15*QtWidgets.QFontMetrics(font).height()
                 self.interpol_cont_dialog_width = width
                 self.interpol_cont_dialog_height = height
-                sG = QtGui.QApplication.desktop().screenGeometry()
+                sG = QtWidgets.QApplication.desktop().screenGeometry()
                 self.interpol_cont_dialog_x = sG.width()-self.interpol_cont_dialog_width
                 self.interpol_cont_dialog_y = sG.height()
             else:
@@ -3403,30 +3422,30 @@ Outside the range of wavelenghts given in <b>lambda_shit_table</b>, the correcti
         def get_points():
             self.get_user_cont_points = not self.get_user_cont_points
             self.del_user_cont_points = False
-            buttonBox.button(QtGui.QDialogButtonBox.Ignore).setStyleSheet('')
+            buttonBox.button(QtWidgets.QDialogButtonBox.Ignore).setStyleSheet('')
             if self.get_user_cont_points:
-                buttonBox.button(QtGui.QDialogButtonBox.Retry).setStyleSheet('background-color:red;')
+                buttonBox.button(QtWidgets.QDialogButtonBox.Retry).setStyleSheet('background-color:red;')
                 self.set_plot_limits_and_draw()
                 self.sp.plot_conts(self.axes, ['user'])
                 self.canvas.draw()
                 if self.interpol_cont_as_table == False:
                     toggle_table()
             else:
-                buttonBox.button(QtGui.QDialogButtonBox.Retry).setStyleSheet('')
+                buttonBox.button(QtWidgets.QDialogButtonBox.Retry).setStyleSheet('')
 
         def del_points():
             self.del_user_cont_points = not self.del_user_cont_points
             self.get_user_cont_points = False
-            buttonBox.button(QtGui.QDialogButtonBox.Retry).setStyleSheet('')
+            buttonBox.button(QtWidgets.QDialogButtonBox.Retry).setStyleSheet('')
             if self.del_user_cont_points:
-                buttonBox.button(QtGui.QDialogButtonBox.Ignore).setStyleSheet('background-color:red;')
+                buttonBox.button(QtWidgets.QDialogButtonBox.Ignore).setStyleSheet('background-color:red;')
                 self.set_plot_limits_and_draw()
                 self.sp.plot_conts(self.axes, ['user'])
                 self.canvas.draw()
                 if self.interpol_cont_as_table == False:
                     toggle_table()
             else:
-                buttonBox.button(QtGui.QDialogButtonBox.Ignore).setStyleSheet('')
+                buttonBox.button(QtWidgets.QDialogButtonBox.Ignore).setStyleSheet('')
 
         def on_close():
             redo_initial_plot()
@@ -3435,8 +3454,8 @@ Outside the range of wavelenghts given in <b>lambda_shit_table</b>, the correcti
         def do_update():
             self.get_user_cont_points = False
             self.del_user_cont_points = False
-            buttonBox.button(QtGui.QDialogButtonBox.Retry).setStyleSheet('')
-            buttonBox.button(QtGui.QDialogButtonBox.Ignore).setStyleSheet('')
+            buttonBox.button(QtWidgets.QDialogButtonBox.Retry).setStyleSheet('')
+            buttonBox.button(QtWidgets.QDialogButtonBox.Ignore).setStyleSheet('')
             self.update_user_cont()
         
         self.showHelpBrowser = False
@@ -3446,22 +3465,22 @@ Outside the range of wavelenghts given in <b>lambda_shit_table</b>, the correcti
         self.selected_ions_action.setChecked(True)
         self.selected_lines_clicked()
         self.set_plot_limits_and_draw()
-        self.interpol_cont_dialog = QtGui.QDialog()
+        self.interpol_cont_dialog = QtWidgets.QDialog()
         self.interpol_cont_dialog.setWindowFlags(self.interpol_cont_dialog.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
         #self.interpol_cont_dialog.setWindowFlags(QtCore.Qt.WindowMinimizeButtonHint | QtCore.Qt.WindowMaximizeButtonHint | QtCore.Qt.WindowStaysOnTopHint)
         self.interpol_cont_dialog.resize(self.interpol_cont_dialog_width, self.interpol_cont_dialog_height)
         self.interpol_cont_dialog.move(self.interpol_cont_dialog_x,self.interpol_cont_dialog_y)
         self.interpol_cont_dialog.setWindowTitle('user-defined continuum dialog')
-        self.user_cont_editBox = QtGui.QTextEdit()
+        self.user_cont_editBox = QtWidgets.QTextEdit()
         self.user_cont_editBox.setFontFamily("Courier")
         self.interpol_cont_as_table = False
         self.get_user_cont_points = False
         self.del_user_cont_points = False
         text = 'cont_user_func = \'{}\'\n\ncont_user_table = {}'.format(str(self.sp.get_conf('cont_user_func')), self.sp.get_conf('cont_user_table'))
         self.user_cont_editBox.setText(text)
-        linkLabel = QtGui.QLabel('<a href="https://github.com/Morisset/pySSN/wiki">More help online</a>')
+        linkLabel = QtWidgets.QLabel('<a href="https://github.com/Morisset/pySSN/wiki">More help online</a>')
         linkLabel.setOpenExternalLinks(True)
-        helpBrowser = QtGui.QTextBrowser()
+        helpBrowser = QtWidgets.QTextBrowser()
         
         # text=open('user_continuum.html').read()
         # This text should go to a file open with text=open('user_continuum').read()
@@ -3510,26 +3529,26 @@ figure. Each time a new control point is included, the interpolation is automati
         policy = helpBrowser.sizePolicy()
         policy.setVerticalStretch(20)
         helpBrowser.setSizePolicy(policy)
-        vbox = QtGui.QVBoxLayout()
-        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Help|
-                                           QtGui.QDialogButtonBox.RestoreDefaults|
-                                           QtGui.QDialogButtonBox.Retry|
-                                           QtGui.QDialogButtonBox.Ignore|
-                                           QtGui.QDialogButtonBox.Close|
-                                           QtGui.QDialogButtonBox.Apply)
-        buttonBox.button(QtGui.QDialogButtonBox.Apply).setText("Update")
-        buttonBox.button(QtGui.QDialogButtonBox.RestoreDefaults).setText("Show as table")
-        buttonBox.button(QtGui.QDialogButtonBox.Retry).setText("Add points")
-        buttonBox.button(QtGui.QDialogButtonBox.Ignore).setText("Del points")
+        vbox = QtWidgets.QVBoxLayout()
+        buttonBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Help|
+                                           QtWidgets.QDialogButtonBox.RestoreDefaults|
+                                           QtWidgets.QDialogButtonBox.Retry|
+                                           QtWidgets.QDialogButtonBox.Ignore|
+                                           QtWidgets.QDialogButtonBox.Close|
+                                           QtWidgets.QDialogButtonBox.Apply)
+        buttonBox.button(QtWidgets.QDialogButtonBox.Apply).setText("Update")
+        buttonBox.button(QtWidgets.QDialogButtonBox.RestoreDefaults).setText("Show as table")
+        buttonBox.button(QtWidgets.QDialogButtonBox.Retry).setText("Add points")
+        buttonBox.button(QtWidgets.QDialogButtonBox.Ignore).setText("Del points")
         vbox.addWidget(self.user_cont_editBox,0)
         vbox.addWidget(buttonBox)
         vbox.addWidget(linkLabel)
         vbox.addWidget(helpBrowser)
-        buttonBox.button(QtGui.QDialogButtonBox.Help).clicked.connect(toggle_help)
-        buttonBox.button(QtGui.QDialogButtonBox.RestoreDefaults).clicked.connect(toggle_table)
-        buttonBox.button(QtGui.QDialogButtonBox.Apply).clicked.connect(do_update)
-        buttonBox.button(QtGui.QDialogButtonBox.Retry).clicked.connect(get_points)
-        buttonBox.button(QtGui.QDialogButtonBox.Ignore).clicked.connect(del_points)
+        buttonBox.button(QtWidgets.QDialogButtonBox.Help).clicked.connect(toggle_help)
+        buttonBox.button(QtWidgets.QDialogButtonBox.RestoreDefaults).clicked.connect(toggle_table)
+        buttonBox.button(QtWidgets.QDialogButtonBox.Apply).clicked.connect(do_update)
+        buttonBox.button(QtWidgets.QDialogButtonBox.Retry).clicked.connect(get_points)
+        buttonBox.button(QtWidgets.QDialogButtonBox.Ignore).clicked.connect(del_points)
         buttonBox.rejected.connect(on_close)
         #self.interpol_cont_dialog.onCloseEvet(on_close)
         self.interpol_cont_dialog.setLayout(vbox)
@@ -3552,10 +3571,10 @@ figure. Each time a new control point is included, the interpolation is automati
     def set_cosmetic_file(self):
         file_choices = "Line cosmetic files (*cosm*.dat) (*cosm*.dat);;Data files (*.dat) (*.dat);;All files (*) (*)"
         title = 'Set the line cosmetic file'
-        cosmetic_file = str(QtGui.QFileDialog.getSaveFileName(self, title, '', file_choices, options=QtGui.QFileDialog.DontConfirmOverwrite))
+        cosmetic_file = str(QtWidgets.QFileDialog.getSaveFileName(self, title, '', file_choices, options=QtWidgets.QFileDialog.DontConfirmOverwrite))
         msg = "Line cosmetic file '{}' not valid!".format(cosmetic_file)
         if cosmetic_file and not self.isValidFilename(cosmetic_file):
-            QtGui.QMessageBox.critical(self, 'pySSN', msg, QtGui.QMessageBox.Ok )  
+            QtWidgets.QMessageBox.critical(self, 'pySSN', msg, QtWidgets.QMessageBox.Ok )  
             cosmetic_file = None
         if cosmetic_file:
             self.sp.set_conf('do_cosmetik', True)
@@ -3575,8 +3594,8 @@ figure. Each time a new control point is included, the interpolation is automati
             return
         title = 'pySSN: cosmetic file'
         msg = 'All lines in the cosmetic file will be removed.\nConfirm?'
-        ret = QtGui.QMessageBox.question(self, title, msg, QtGui.QMessageBox.Ok, QtGui.QMessageBox.Cancel )
-        if ret == QtGui.QMessageBox.Ok:
+        ret = QtWidgets.QMessageBox.question(self, title, msg, QtWidgets.QMessageBox.Ok, QtWidgets.QMessageBox.Cancel )
+        if ret == QtWidgets.QMessageBox.Ok:
             f = open(self.sp.fic_cosmetik, 'w')
             f.close()
     
@@ -3634,8 +3653,8 @@ figure. Each time a new control point is included, the interpolation is automati
                 s1 = 's'
                 s2 = 'were'
                 s3 = 'these lines'
-            msgBox = QtGui.QMessageBox()
-            msgBox.setIcon(QtGui.QMessageBox.Question)
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setIcon(QtWidgets.QMessageBox.Question)
             msgBox.title = 'pySSN: cosmetic file'
             msg = '{0:} unchanged line{1:} in the cosmetic file {2:} found.'.format(nUL, s1, s2)
             msgBox.setText(msg)
@@ -3644,11 +3663,11 @@ figure. Each time a new control point is included, the interpolation is automati
             for i in UnchangedLineList:
                 detailedText = detailedText + str(i) + '\n'
             msgBox.setDetailedText(detailedText)
-            DelButton = msgBox.addButton(self.tr("Delete"), QtGui.QMessageBox.ActionRole)
+            DelButton = msgBox.addButton(self.tr("Delete"), QtWidgets.QMessageBox.ActionRole)
             s = 'Delete from the cosmetic file all unchanged lines'
             if self.enable_tooltips_action.isChecked():
                 DelButton.setToolTip(s)
-            msgBox.addButton(QtGui.QMessageBox.Cancel)
+            msgBox.addButton(QtWidgets.QMessageBox.Cancel)
             answer = msgBox.exec_()
             if msgBox.clickedButton() == DelButton:
                 answer = True
@@ -3691,19 +3710,19 @@ figure. Each time a new control point is included, the interpolation is automati
         def ShowErrorMessage():
             msg = 'The wavelength or intensity in the cosmetic file does not match that in the atomic database.\n\n' \
                   'Do you want to try to automatically correct the cosmetic file?'
-            msgBox = QtGui.QMessageBox()
+            msgBox = QtWidgets.QMessageBox()
             msgBox.setText("Error in cosmetic file for line: " + str(line_num))
             msgBox.setInformativeText(msg)
-            msgBox.addButton(QtGui.QMessageBox.Yes)
-            msgBox.addButton(QtGui.QMessageBox.YesToAll)
-            msgBox.addButton(QtGui.QMessageBox.No)
-            msgBox.addButton(QtGui.QMessageBox.NoToAll)
-            msgBox.setDefaultButton(QtGui.QMessageBox.Yes)
+            msgBox.addButton(QtWidgets.QMessageBox.Yes)
+            msgBox.addButton(QtWidgets.QMessageBox.YesToAll)
+            msgBox.addButton(QtWidgets.QMessageBox.No)
+            msgBox.addButton(QtWidgets.QMessageBox.NoToAll)
+            msgBox.setDefaultButton(QtWidgets.QMessageBox.Yes)
             answer = msgBox.exec_()
             return answer
     
         def ShowFinalMessage(nErr, nCor, nUnCor, nNfd, UnCorList, NotFound):
-            msgBox = QtGui.QMessageBox()
+            msgBox = QtWidgets.QMessageBox()
             msgBox.setText('pySSN: error in cosmetic file')
             if nCor > 0:
                 s0 = 'Rerun the synthesis to take into account the changes.\n\n'
@@ -3732,9 +3751,9 @@ figure. Each time a new control point is included, the interpolation is automati
                 for i in UnCorList:
                     detailedText = detailedText + i + '\n'
             msgBox.setDetailedText(detailedText)
-            DelAllButton = msgBox.addButton(self.tr("Delete all"), QtGui.QMessageBox.ActionRole)
-            DelNotFndButton = msgBox.addButton(self.tr("delete not found"), QtGui.QMessageBox.ActionRole)
-            DelUncorButton = msgBox.addButton(self.tr("delete uncorrected"), QtGui.QMessageBox.ActionRole)
+            DelAllButton = msgBox.addButton(self.tr("Delete all"), QtWidgets.QMessageBox.ActionRole)
+            DelNotFndButton = msgBox.addButton(self.tr("delete not found"), QtWidgets.QMessageBox.ActionRole)
+            DelUncorButton = msgBox.addButton(self.tr("delete uncorrected"), QtWidgets.QMessageBox.ActionRole)
             if self.enable_tooltips_action.isChecked():
                 s = 'Delete from the cosmetic file all lines that still have problems'
                 DelAllButton.setToolTip(s)
@@ -3742,11 +3761,11 @@ figure. Each time a new control point is included, the interpolation is automati
                 DelNotFndButton.setToolTip(s)
                 s = 'Delete from the cosmetic file the uncorrected lines'
                 DelUncorButton.setToolTip(s)
-            msgBox.addButton(QtGui.QMessageBox.Cancel)
+            msgBox.addButton(QtWidgets.QMessageBox.Cancel)
             msgBox.setMaximumHeight(16777215)
             msgBox.setMinimumHeight(800)
             # It does not expand! Why?
-            msgBox.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+            msgBox.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
             msgBox.setSizeGripEnabled(True)
             if nUnCor == 0:
                 DelUncorButton.setEnabled(False)
@@ -3775,7 +3794,7 @@ figure. Each time a new control point is included, the interpolation is automati
                 title = 'Error in cosmetic file: '
                 msg = 'Unable to read cosmetic data from file \'{}\':{}\n\nLine cosmetics will be disabled!'.format(self.sp.get_conf('fic_cosmetik'), errorMsg)
                 if self.showErrorBox:
-                    QtGui.QMessageBox.critical(self, title, msg, QtGui.QMessageBox.Ok )
+                    QtWidgets.QMessageBox.critical(self, title, msg, QtWidgets.QMessageBox.Ok )
                 else:
                     log_.warn('{}: {}'.format(title, msg), calling=self.calling)
                 return
@@ -3798,9 +3817,9 @@ figure. Each time a new control point is included, the interpolation is automati
                     ErrorList.append(line_c[:k])
                 elif cosmeticLineOk == False:
                     ErrorList.append(line_c[:k])
-                    if ret != QtGui.QMessageBox.YesToAll and ret != QtGui.QMessageBox.NoToAll:
+                    if ret != QtWidgets.QMessageBox.YesToAll and ret != QtWidgets.QMessageBox.NoToAll:
                             ret = ShowErrorMessage()
-                    if ret == QtGui.QMessageBox.Yes or ret == QtGui.QMessageBox.YesToAll:
+                    if ret == QtWidgets.QMessageBox.Yes or ret == QtWidgets.QMessageBox.YesToAll:
                         CorrectedList.append(line_c[:k])
                         line = self.sp.read_line(self.sp.phyat_file, line_num)
                         line = line.rstrip()
@@ -3919,10 +3938,10 @@ figure. Each time a new control point is included, the interpolation is automati
                 msg = msg + '\n' + line
             if self.showErrorBox:
                 if self.sp == None:
-                    buttom = QtGui.QMessageBox.Abort
+                    buttom = QtWidgets.QMessageBox.Abort
                 else:
-                    buttom = QtGui.QMessageBox.Cancel
-                QtGui.QMessageBox.critical(self, title, msg, buttom)
+                    buttom = QtWidgets.QMessageBox.Cancel
+                QtWidgets.QMessageBox.critical(self, title, msg, buttom)
             else:
                 log_.warn('{}: {}'.format(title, msg), calling=self.calling)
             return False
@@ -3945,15 +3964,15 @@ figure. Each time a new control point is included, the interpolation is automati
             if self.showErrorBox:
                 msg = 'Synthesis not possible. \n\n{}'.format(self.sp.errorMsg)
                 msg = self.sp.errorMsg
-                ret = QtGui.QMessageBox.critical(self, 'Critical Error', msg, QtGui.QMessageBox.Abort, QtGui.QMessageBox.Ignore)
-                if ret == QtGui.QMessageBox.Abort:
+                ret = QtWidgets.QMessageBox.critical(self, 'Critical Error', msg, QtWidgets.QMessageBox.Abort, QtWidgets.QMessageBox.Ignore)
+                if ret == QtWidgets.QMessageBox.Abort:
                     sys.exit()
             self.sp.errorMsg = ''
         if len(self.sp.read_obs_error) > 0:
             title = 'Error reading observations'
             msg = self.sp.read_obs_error
             if self.showErrorBox:
-                QtGui.QMessageBox.critical(self, title, msg, QtGui.QMessageBox.Ok )
+                QtWidgets.QMessageBox.critical(self, title, msg, QtWidgets.QMessageBox.Ok )
             else:
                 log_.warn('{}: {}'.format(title, msg), calling=self.calling)
 
@@ -4020,8 +4039,8 @@ figure. Each time a new control point is included, the interpolation is automati
         self.show_header_action.setChecked(self.sp.get_conf('save_lines_header', False))
         self.get_line_fields_to_print()
 
-        self.readOnlyCells_bg_color = QtGui.QColor('white')
-        self.editableCells_bg_color = QtGui.QColor('lightgreen')
+        self.readOnlyCells_bg_color = QtWidgets.QColor('white')
+        self.editableCells_bg_color = QtWidgets.QColor('lightgreen')
 
         if 'linux' in sys.platform and 'Plastique' in self.style_list:
             default_style = 'Plastique'
@@ -4042,7 +4061,7 @@ figure. Each time a new control point is included, the interpolation is automati
                 self.sp.set_conf('qt_style', default_style)  
         index_style = self.style_list.index(self.sp.get_conf('qt_style'))
         self.style_ag.actions()[index_style].setChecked(True)
-        QtGui.qApp.setStyle(self.sp.get_conf('qt_style'))
+        QtWidgets.qApp.setStyle(self.sp.get_conf('qt_style'))
         self.enable_tooltips_action.setChecked(self.sp.get_conf('qt_enable_tooltips', True))
         self.enable_tooltips_action_clicked()
         self.adjust_fig_action.setChecked(self.sp.get_conf('fig_adjust', True))
@@ -4058,7 +4077,7 @@ figure. Each time a new control point is included, the interpolation is automati
             return
         log_.message('Changing sp_norm. Old: {}, New: {}'.format(old_sp_norm, new_sp_norm), calling=self.calling)
         self.statusBar().showMessage('Changing intensity scale of the observed spectrum ...') 
-        QtGui.QApplication.processEvents() 
+        QtWidgets.QApplication.processEvents() 
         self.sp.renorm(new_sp_norm)
         self.on_draw()
 
@@ -4075,7 +4094,7 @@ figure. Each time a new control point is included, the interpolation is automati
         self.sp.set_conf('obj_velo', new_obj_velo)
         log_.message('Changing obj_velo. Old: {}, New: {}'.format(old_obj_velo, new_obj_velo), calling=self.calling)
         self.statusBar().showMessage('Executing doppler correction of the observed spectrum ...') 
-        QtGui.QApplication.processEvents() 
+        QtWidgets.QApplication.processEvents() 
         self.sp.init_obs(obj_velo=new_obj_velo)
         self.sp.init_red_corr()
         self.sp.make_continuum()
@@ -4094,7 +4113,7 @@ figure. Each time a new control point is included, the interpolation is automati
         log_.message('Changing E B-V. Old: {}, New: {}'.format(old_ebv, new_ebv), calling=self.calling)
         self.statusBar().showMessage('Changing color excess E(B-V) ...', 4000) 
         self.statusBar().showMessage('Executing reddening correction of the synthetic spectrum ...') 
-        QtGui.QApplication.processEvents() 
+        QtWidgets.QApplication.processEvents() 
         self.sp.set_conf('e_bv', new_ebv)
         self.sp.init_red_corr()
         self.sp.make_continuum()
@@ -4110,7 +4129,7 @@ figure. Each time a new control point is included, the interpolation is automati
             self.xlim_min_box.setText(self.sp_min_box.text())
             self.xlim_max_box.setText(self.sp_max_box.text())
         self.statusBar().showMessage('Rerunning synthesis ...') 
-        QtGui.QApplication.processEvents() 
+        QtWidgets.QApplication.processEvents() 
         self.sp.set_conf('limit_sp', (np.float(self.sp_min_box.text()), np.float(self.sp_max_box.text())))
         self.sp.set_conf('resol', np.int(self.resol_box.text()))
         self.sp.set_conf('obj_velo', np.float(self.obj_velo_box.text()))
@@ -4127,14 +4146,14 @@ figure. Each time a new control point is included, the interpolation is automati
             return
         self.sp.errorMsg = ''
         self.statusBar().showMessage('Running update ...')
-        QtGui.QApplication.processEvents() 
+        QtWidgets.QApplication.processEvents() 
         self.sp_norm()
         self.obj_velo()
         self.ebv()
         if self.sp.errorMsg:
             if self.showErrorBox:
                 msg = self.sp.errorMsg
-                QtGui.QMessageBox.warning(self, 'Update error', msg, QtGui.QMessageBox.Ok)
+                QtWidgets.QMessageBox.warning(self, 'Update error', msg, QtWidgets.QMessageBox.Ok)
                 return 0
         ndiff, errorMsg = self.sp.adjust()
         if ndiff == -1:
@@ -4145,7 +4164,7 @@ figure. Each time a new control point is included, the interpolation is automati
             title = 'Error in cosmetic file'
             msg = 'Unable to read from file \'{}\'\nChanging to \'no cosmetic\':\n{}'.format(self.sp.get_conf('fic_cosmetik'), errorMsg)
             if self.showErrorBox:
-                QtGui.QMessageBox.critical(self, title, msg, QtGui.QMessageBox.Ok )
+                QtWidgets.QMessageBox.critical(self, title, msg, QtWidgets.QMessageBox.Ok )
             else:
                 log_.warn('{}: {}'.format(title, msg), calling=self.calling)
         if ndiff > 0:
@@ -4157,13 +4176,13 @@ figure. Each time a new control point is included, the interpolation is automati
         path = str(self.post_proc_file or '')
         file_choices = "Python files (*.py) (*.py);;All files (*) (*)"
         title = 'Open post-process file'
-        path = unicode(QtGui.QFileDialog.getOpenFileName(self, title, path, file_choices))
+        path = str(QtWidgets.QFileDialog.getOpenFileName(self, title, path, file_choices))
         path = path.split('/')[-1]
         if not path:
             return
         try:
             user_module = {}
-            execfile(path, user_module)
+            execfile_p3(path, user_module)
             self.post_proc = user_module['post_proc']
             self.post_proc_file = path
             log_.message('function post_proc read from {}'.format(self.post_proc_file))
@@ -4172,7 +4191,7 @@ figure. Each time a new control point is included, the interpolation is automati
             title = 'Error reading post-process file'
             msg = 'Unable to read post-process file \'{}\''.format(path)
             if self.showErrorBox:
-                QtGui.QMessageBox.critical(self, title, msg, QtGui.QMessageBox.Ok)
+                QtWidgets.QMessageBox.critical(self, title, msg, QtWidgets.QMessageBox.Ok)
             else:
                 log_.warn(msg, calling = self.calling)
             return
@@ -4183,7 +4202,7 @@ figure. Each time a new control point is included, the interpolation is automati
             title = 'Error executing post-process'
             msg = 'Error in post-process file \'{}\''.format(self.post_proc_file)
             if self.showErrorBox:
-                QtGui.QMessageBox.critical(self, title, msg, QtGui.QMessageBox.Ok)
+                QtWidgets.QMessageBox.critical(self, title, msg, QtWidgets.QMessageBox.Ok)
             else:
                 log_.warn(msg, calling = self.calling)
 
@@ -4306,7 +4325,7 @@ figure. Each time a new control point is included, the interpolation is automati
                 self.sp.line_info(new_ref, sort='i_rel')
         else:
             title = 'Error in line number'
-            QtGui.QMessageBox.critical(self, title, msg, QtGui.QMessageBox.Ok )
+            QtWidgets.QMessageBox.critical(self, title, msg, QtWidgets.QMessageBox.Ok )
         
     def magenta_line(self):
         if self.sp is None:
@@ -4370,7 +4389,7 @@ figure. Each time a new control point is included, the interpolation is automati
         if new_style_str == old_style_str:
             return
         self.sp.set_conf('qt_style', new_style_str)
-        QtGui.qApp.setStyle(new_style_str)
+        QtWidgets.qApp.setStyle(new_style_str)
         log_.debug('Widget style changed from {} to {}'.format(old_style_str, new_style_str), calling=self.calling)
             
     def update_lim_boxes(self):
@@ -4431,7 +4450,7 @@ figure. Each time a new control point is included, the interpolation is automati
             editBox.setFocus()
             if showError:
                 if self.showErrorBox:
-                    QtGui.QMessageBox.critical(self, title, msg, QtGui.QMessageBox.Ok )
+                    QtWidgets.QMessageBox.critical(self, title, msg, QtWidgets.QMessageBox.Ok )
                 else:
                     log_.warn('{}: {}'.format(title, msg), calling=self.calling)
             return False
@@ -4484,8 +4503,8 @@ figure. Each time a new control point is included, the interpolation is automati
             return True
         else:
             if self.showErrorBox:
-                QtGui.QMessageBox.critical(self, 'Invalid synthesis limits', 'The acceptable values are:\n\n xmax - xmin > 10,\n xmin > 0,\n xmax < 200000000.', 
-                                           QtGui.QMessageBox.Ok )
+                QtWidgets.QMessageBox.critical(self, 'Invalid synthesis limits', 'The acceptable values are:\n\n xmax - xmin > 10,\n xmin > 0,\n xmax < 200000000.', 
+                                           QtWidgets.QMessageBox.Ok )
             else:
                 log_.warn('Invalid synthesis limits', 'The acceptable values are:\n\n xmax - xmin > 10,\n xmin > 0,\n xmax < 200000000.', calling=self.calling)
             return False
@@ -4555,7 +4574,7 @@ figure. Each time a new control point is included, the interpolation is automati
         self.sp.set_conf('limit_sp', new_limit_sp)
         log_.message('Changing limit_sp. Old: {}, New: {}'.format(old_limit_sp, new_limit_sp), calling=self.calling)
         self.statusBar().showMessage('Changing the synthesis wavelength limits ...') 
-        QtGui.QApplication.processEvents() 
+        QtWidgets.QApplication.processEvents() 
         self.sp.init_obs()
         self.sp.init_red_corr()
         self.sp.make_continuum()
@@ -4574,7 +4593,7 @@ figure. Each time a new control point is included, the interpolation is automati
         self.sp.set_conf('resol', new_resol)
         log_.message('Changing resol. Old: {}, New: {}'.format(old_resol, new_resol), calling=self.calling)
         self.statusBar().showMessage('Changing rebinning factor ...') 
-        QtGui.QApplication.processEvents() 
+        QtWidgets.QApplication.processEvents() 
         self.sp.set_conf('resol', new_resol)
         self.sp.init_obs()
         self.sp.init_red_corr()
@@ -4638,25 +4657,44 @@ figure. Each time a new control point is included, the interpolation is automati
             selectedFilter = 'CSV files (*.csv) (*.csv)'
         else:
             selectedFilter = 'All Files (*) (*)'
-        path = unicode(QtGui.QFileDialog.getSaveFileName(self, 'Save lines to file', filename, file_choices, selectedFilter))
+        path = str(QtWidgets.QFileDialog.getSaveFileName(self, 'Save lines to file', filename, file_choices, selectedFilter))
         if path:
             self.sp.set_conf('save_lines_filename', path)
             self.sp.save_lines()
             self.statusBar().showMessage('Lines saved to file %s' % path, 4000)
+
+    def save_synthesis_as(self):
+        file_choices = "Text files (*.txt *.dat) (*.txt *.dat);;Tex files (*.tex) (*.tex);;CSV files (*.csv) (*.csv);;All Files (*) (*)"
+        filename = self.sp.get_conf('synthesis_filename')
+        extension = os.path.splitext(filename)[1][1:].lower()
+        if extension in ['txt','dat']:
+            selectedFilter = 'Text files (*.txt *.dat) (*.txt *.dat)'
+        elif extension in ['tex']:
+            selectedFilter = 'Tex files (*.tex) (*.tex)'
+        elif extension in ['csv']:
+            selectedFilter = 'CSV files (*.csv) (*.csv)'
+        else:
+            selectedFilter = 'All Files (*) (*)'
+        path = str(QtWidgets.QFileDialog.getSaveFileName(self, 'Save synthesis to file', filename, file_choices, selectedFilter))
+        with open(path, 'w') as f:
+            for w, fl in zip(self.sp.w_ori, self.sp.sp_synth_lr):
+                f.write('{} {} \n'.format(w, fl))
+        self.statusBar().showMessage('Synhtesis saved to file %s' % path, 2000)
+        
 
     def line_sort(self):
         k = self.line_sort_list.index(self.line_sort_ag.checkedAction().text())
         self.sp.set_conf('save_lines_sort',k)
 
 def main_loc(init_filename=None, post_proc_file=None):
-    app = QtGui.QApplication(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)
     form = AppForm(init_filename=init_filename, post_proc_file=post_proc_file)
     form.show()
     app.exec_()
     return form.fig
         
 def main_loc_obj(init_filename=None, post_proc_file=None):
-    app = QtGui.QApplication(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)
     form = AppForm(init_filename=init_filename, post_proc_file=post_proc_file)
     form.show()
     app.exec_()
@@ -4666,7 +4704,7 @@ def main():
     parser = get_parser()
     args = parser.parse_args()
     log_.level = args.verbosity    
-    app = QtGui.QApplication(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)
     form = AppForm(init_filename=args.file, post_proc_file=args.post_proc)
     #import pdb
     #pdb.set_trace()

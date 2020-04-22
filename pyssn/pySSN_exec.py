@@ -11,8 +11,11 @@ def main():
         pyssn.config.INSTALLED['Qt4'] = False
         pyssn.config.INSTALLED['Qt5'] = False
 
-    if pyssn.config.INSTALLED['Qt4'] or pyssn.config.INSTALLED['Qt5']:
+    if pyssn.config.INSTALLED['Qt4'] :
         from pyssn.qt.pyssn_qt import main
+        sys.exit(main())
+    elif pyssn.config.INSTALLED['Qt5']:
+        from pyssn.qt5.pyssn_qt5 import main
         sys.exit(main())
     else:
         from pyssn.core.spectrum import main
