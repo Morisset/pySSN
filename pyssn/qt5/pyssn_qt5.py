@@ -2925,7 +2925,7 @@ class AppForm(QtWidgets.QMainWindow):
     def teste_instr_prof(self, prof):
         if prof is None:
             return 'not defined'
-        keys = prof.keys()
+        keys = list(prof.keys())
         keys.remove('comment')
         if not 'width' in keys:
             return 'The parameter \'width\' was not found.'       
@@ -2933,7 +2933,7 @@ class AppForm(QtWidgets.QMainWindow):
             return 'The value of \'width\' can not be zero'
         if not (self.sp.get_key_indexes('Bb', prof)==self.sp.get_key_indexes('Br', prof)==
            self.sp.get_key_indexes('beta', prof)==self.sp.get_key_indexes('alpha', prof)):
-           return 'Invalid indexes por the parameters \'Bb\', \'Br\', \'alpha\', or \'beta\''  
+           return 'Invalid indexes for the parameters \'Bb\', \'Br\', \'alpha\', or \'beta\''  
         if not all((type(prof[key])==float or type(prof[key])==int) for key in keys):
             return 'The values of parameters must be numbers.'
         return ''
@@ -2944,7 +2944,7 @@ class AppForm(QtWidgets.QMainWindow):
             path = str(prof_box.toPlainText()).strip()
             try:
                 user_module = {}
-                exec(path) in user_module
+                exec(path, user_module)
                 prof = user_module['instr_prof']
                 self.sp.set_conf('instr_prof', prof)
                 log_.message('new instrumental profile is ok', calling = self.calling)
@@ -2995,7 +2995,7 @@ class AppForm(QtWidgets.QMainWindow):
         self.showHelpBrowser = False
         get_window_size_and_position()
         self.instr_prof_dialog = QtWidgets.QDialog()
-        self.instr_prof_dialog.setWindowFlags(self.instr_prof_dialog.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+        #self.instr_prof_dialog.setWindowFlags(self.instr_prof_dialog.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
         self.instr_prof_dialog.resize(self.instr_prof_dialog_width, self.instr_prof_dialog_height)
         self.instr_prof_dialog.move(self.instr_prof_dialog_x,self.instr_prof_dialog_y)
         self.instr_prof_dialog.setWindowTitle('instrument profile dialog')
@@ -3174,7 +3174,7 @@ Special cases for the optional components:
         self.showHelpBrowser = False
         get_window_size_and_position()
         self.refine_wave_dialog = QtWidgets.QDialog()
-        self.refine_wave_dialog.setWindowFlags(self.refine_wave_dialog.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+        #self.refine_wave_dialog.setWindowFlags(self.refine_wave_dialog.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
         self.refine_wave_dialog.resize(self.refine_wave_dialog_width, self.refine_wave_dialog_height)
         self.refine_wave_dialog.move(self.refine_wave_dialog_x,self.refine_wave_dialog_y)
         self.refine_wave_dialog.setWindowTitle('wavelength-refining dialog')
@@ -3452,7 +3452,7 @@ Outside the range of wavelenghts given in <b>lambda_shit_table</b>, the correcti
         self.selected_lines_clicked()
         self.set_plot_limits_and_draw()
         self.interpol_cont_dialog = QtWidgets.QDialog()
-        self.interpol_cont_dialog.setWindowFlags(self.interpol_cont_dialog.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+        #self.interpol_cont_dialog.setWindowFlags(self.interpol_cont_dialog.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
         #self.interpol_cont_dialog.setWindowFlags(QtCore.Qt.WindowMinimizeButtonHint | QtCore.Qt.WindowMaximizeButtonHint | QtCore.Qt.WindowStaysOnTopHint)
         self.interpol_cont_dialog.resize(self.interpol_cont_dialog_width, self.interpol_cont_dialog_height)
         self.interpol_cont_dialog.move(self.interpol_cont_dialog_x,self.interpol_cont_dialog_y)
