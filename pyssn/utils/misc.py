@@ -85,7 +85,8 @@ def rebin(tab, fact):
         pyssn.log_.error('Dimension of modified tab ({0}) is not a multiple of fact ({1})'.format(len(tab), fact), 
                          calling = 'pyssn.misc.rebin')
         return None
-    return tab.reshape(len(tab)/fact, fact).sum(1) / fact
+
+    return tab.reshape(len(tab)//fact, fact).sum(1) / fact
     
 def convol(array, kernel, method='numpy'):
     
@@ -290,5 +291,10 @@ def extract_line_type(filename, ltype=0):
             if l[5] == ltype:
                 print(l[:-1])
                 
-    
+def execfile_p3(file_, g_vars=None, l_vars=None):
+    with open(file_) as f:
+        code = compile(f.read(), file_, 'exec')
+        exec(code, g_vars, l_vars)
+        
+
     

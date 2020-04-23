@@ -55,7 +55,13 @@ class _Config(object):
             self.INSTALLED['Qt4'] = True
         except:
             self.INSTALLED['Qt4'] = False
-            self.log_.message('pySSN Qt not available', calling=self.calling)
+            self.log_.message('pySSN Qt4 not available', calling=self.calling)
+        try:
+            from PyQt5 import QtGui, QtCore  
+            self.INSTALLED['Qt5'] = True
+        except:
+            self.INSTALLED['Qt5'] = False
+            self.log_.message('pySSN Qt5 not available', calling=self.calling)
         try:
             import pyneb
             self.INSTALLED['PyNeb'] = True
