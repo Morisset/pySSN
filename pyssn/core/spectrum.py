@@ -712,13 +712,20 @@ class spectrum(object):
             else:
                 if obs_file.split('.')[-1] == 'fits':
                     from astropy.io import fits
-                    try:
-                        self.f, header = fits.getdata(obs_file, header=True)
+                    self.f, header = fits.getdata(obs_file, header=True)
+                    if header['NAXIS'] == 1:
                         dispersion_start = header['CRVAL1'] - (header['CRPIX1'] - 1) * header['CDELT1']
                         self.w = dispersion_start + np.arange(len(self.f)) * header['CDELT1']
-                    except:
-                        self.read_obs_error = 'Observations NOT read from {0}'.format(obs_file)
-                        log_.warn(self.read_obs_error, calling = self.calling)
+                    else:
+                        try:
+                            self.f, header = fits.getdata(obs_file, header=True)
+                            self.f = np.mean(self.f, 1)
+                            dispersion_start = header['CRVAL2'] - (header['CRPIX2'] - 1) * header['CDELT2']
+                            self.w = dispersion_start + np.arange(len(self.f)) * header['CDELT2']
+                            
+                        except:
+                            self.read_obs_error = 'Observations NOT read from {0}'.format(obs_file)
+                            log_.warn(self.read_obs_error, calling = self.calling)
                 else:
                     try:                
                         self.obs = np.loadtxt(obs_file)
@@ -738,7 +745,7 @@ class spectrum(object):
                 
         if self.get_conf('spectr_obs') is None or len(self.read_obs_error) > 0:
             n_pix = (self.limit_sp[1] - self.limit_sp[0]) / self.conf['lambda_pix']
-            self.w = np.linspace(self.limit_sp[0], self.limit_sp[1], n_pix)
+            self.w = np.linspace(self.limit_sp[0], self.limit_sp[1], int(n_pix))
             self.f = np.ones_like(self.w)
             self.set_conf('plot_residuals', False)   
 

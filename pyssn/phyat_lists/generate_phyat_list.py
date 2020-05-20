@@ -724,6 +724,7 @@ def make_all_lists():
     parser.add_argument("-D", "--pynebdatafiles", help="PyNeb datafiles file", default=None)
     parser.add_argument("-O", "--phyat_file", help="Output phyat file")
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose")
+    parser.add_argument("-t", "--notry", action="store_true", help="NoTry")
     
     
     args = parser.parse_args()
@@ -760,7 +761,7 @@ def make_all_lists_args(args):
         else:
             atoms = ['{}{}'.format(args.ion_only.strip().split('_')[0],roman_to_int(args.ion_only.strip().split('_')[1]))]
     make_phyat_list(filename=execution_path('liste_phyat_coll.dat'), atoms=atoms, cut=1e-4, E_cut=20,
-          verbose=False, notry=False, NLevels=50, 
+          verbose=args.verbose, notry=args.notry, NLevels=50, 
           ref_lines_dic=ref_lines_dic,
           NLevels_dic=NLevels_dic,
           up_lev_rule_dic=up_lev_rule_dic,

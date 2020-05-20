@@ -88,7 +88,7 @@ def print_phyat_list(atom, tem, den, cut=1e-3, cut_inter=1e-5, ij_ref = None, fi
         str_print += '\n'
         if type(filename) is str:
             f = open(filename, 'w')
-        elif type(filename) is file:
+        elif hasattr(filename, 'write'):
             f = filename
 
     if filename is None:
@@ -105,7 +105,7 @@ def print_phyat_list(atom, tem, den, cut=1e-3, cut_inter=1e-5, ij_ref = None, fi
         lf = open(log_file, 'w')
         def logprint(s):
             lf.write(s)
-    elif type(log_file) is file:
+    elif hasattr(log_file, 'write'):
         lf = log_file            
         def logprint(s):
             lf.write(s)
@@ -117,7 +117,7 @@ def print_phyat_list(atom, tem, den, cut=1e-3, cut_inter=1e-5, ij_ref = None, fi
         hf = open(log_file, 'w')
         def hprint(s):
             hf.write(s)
-    elif type(help_file) is file:
+    elif hasattr(help_file, 'write'):
         hf = help_file            
         def hprint(s):
             hf.write(s)
@@ -374,10 +374,9 @@ def make_phyat_list(filename, cut=1e-4, E_cut=20, cut_inter=1e-5,
                        'Mg4':45,
                        'Si7':45,
                        'Na3':45,
-                       'Si6':45,
+                       'Si6':45, #25
                        'Ar10':45,
                        'Ar9':45,
-                       'Si6':25,
                        'P9':3,
                        'Si10':3,
                        'Cl11':3,
@@ -387,7 +386,7 @@ def make_phyat_list(filename, cut=1e-4, E_cut=20, cut_inter=1e-5,
                        'Mg2':3,
                        'Al3':3,
                        'Si4':3,
-                       'Ca7':15
+                       'Ca7':5
                        }
     if NLevels_dic is None:
         NLevels_dic = NLevels_dic_def
@@ -440,7 +439,7 @@ def make_phyat_list(filename, cut=1e-4, E_cut=20, cut_inter=1e-5,
             if ion not in Del_ion_def:
                 Del_ion.append(ion)
     
-    phycond = np.genfromtxt(phy_cond_file, dtype=None, names='name, value, RC, temp, dens')
+    phycond = np.genfromtxt(phy_cond_file, dtype='U3, float,U4, float, float', names='name, value, RC, temp, dens')
     dic_temp_ion = {}
     dic_dens_ion = {}
     tab_ips = []
@@ -455,7 +454,7 @@ def make_phyat_list(filename, cut=1e-4, E_cut=20, cut_inter=1e-5,
             else:
                 dic_temp_ion['{}{}'.format(record['name'], int(record['value']))] = record['temp']
                 dic_dens_ion['{}{}'.format(record['name'], int(record['value']))] = record['dens']
-    tab_temp_dens = np.array(zip(tab_ips, tab_temps, tab_denss), dtype=[('IP', float), ('temp', float), ('dens', float)])
+    tab_temp_dens = np.array(list(zip(tab_ips, tab_temps, tab_denss)), dtype=[('IP', float), ('temp', float), ('dens', float)])
     tab_temp_dens.sort()
     
     def get_tem_den(atom):
@@ -529,7 +528,7 @@ def make_phyat_list(filename, cut=1e-4, E_cut=20, cut_inter=1e-5,
                     try:
                         atom_str = '{}-{}'.format(atom.atomFile, atom.collFile)
                     except:
-                        atom_str = 'atom {} not build'.format(a)
+                        atom_str = 'atom {}, Nlevels {} not build'.format(a)
                     if atom.NLevels > 0:
                         do_it = True
                     else:
@@ -567,10 +566,10 @@ def phyat2model(phyat_file, model_file, ion_frac_file, norm_hbeta=1e4,
     generate a model_file file from a phyat_file, setting all the master lines to I=i_rel/norm
     norm by default corresponds to Hbeta = 1e4
     """
-        
-    ab_data = np.genfromtxt(abund_file, dtype=None, names = 'elem, abund, foo')
+    
+    ab_data = np.genfromtxt(abund_file, dtype='U3, float', names = 'elem, abund')
                 
-    ion_frac_data = np.genfromtxt(ion_frac_file, dtype=None, names = 'ion, ion_frac')
+    ion_frac_data = np.genfromtxt(ion_frac_file, dtype='U4,float', names = 'ion, ion_frac')
     ion_frac_dic = {}
     for record in ion_frac_data:
         ion_frac_dic[record['ion']] = record['ion_frac']
@@ -783,7 +782,7 @@ def make_ionrec_file(phy_cond_file = 'phy_cond.dat', abund_file='asplund_2009.da
     Z['3He'] = 2
     IP['3He'] = IP['He']
     IP['D'] = IP['H']
-    phycond = np.genfromtxt(phy_cond_file_full, dtype=None, names='name, value, RC, temp, dens')
+    phycond = np.genfromtxt(phy_cond_file_full, dtype='U3, float,U4, float, float', names='name, value, RC, temp, dens')
     dic_temp_ion = {}
     dic_dens_ion = {}
     tab_ips = []
@@ -798,17 +797,17 @@ def make_ionrec_file(phy_cond_file = 'phy_cond.dat', abund_file='asplund_2009.da
             else:
                 dic_temp_ion['{}{}'.format(record['name'], int(record['value']))] = record['temp']
                 dic_dens_ion['{}{}'.format(record['name'], int(record['value']))] = record['dens']
-    tab_temp_dens = np.array(zip(tab_ips, tab_temps, tab_denss), dtype=[('IP', float), ('temp', float), ('dens', float)])
+    tab_temp_dens = np.array(list(zip(tab_ips, tab_temps, tab_denss)), dtype=[('IP', float), ('temp', float), ('dens', float)])
     tab_temp_dens.sort()
 
-    ab_data = np.genfromtxt(abund_file_full, dtype=None, names = 'elem, abund', usecols=(0,1))
+    ab_data = np.genfromtxt(abund_file_full, dtype='U2, float', names = 'elem, abund', usecols=(0,1))
     ab_dic = {}
     for record in ab_data:
         ab_dic[record['elem']] = record['abund']
     ab_dic['3He'] = 1e-3
                 
     try:
-        ion_frac_data = np.genfromtxt(ion_frac_file_full, dtype=None, names = 'ion, ion_frac')
+        ion_frac_data = np.genfromtxt(ion_frac_file_full, dtype='U4, float', names = 'ion, ion_frac')
     except:
         raise NameError('File not found {}'.format(ion_frac_file_full))
     ion_frac_dic = {}
@@ -860,19 +859,19 @@ def make_ionrec_file(phy_cond_file = 'phy_cond.dat', abund_file='asplund_2009.da
 def get_models_3MdB():
     import pandas as pd
     import pymysql
-    from pyneb.utils.physics import IP, sym2name, Z
+    from pyneb.utils.physics import sym2name
     from ..utils.physics import make_ion_frac
     
     sym2name['S'] = 'sulphur'
     
-    co = pymysql.connect(host='132.248.1.102', db='3MdB', user='OVN_user', passwd='oiii5007')
+    co = pymysql.connect(host='3mdb.astro.unam.mx', db='3MdB_17', user='OVN_user', passwd='oiii5007')
     
     for cut in ('R', 'M60'):
         for logU in (-3, -2, -1):
             for Teff in (25, 50, 75, 100, 150, 300):
                 res1 = pd.read_sql("""SELECT N
-    FROM tab 
-    WHERE com1='BB' AND com2='C' AND com3='{}' AND com4='S' AND com5='N' AND ref = 'PNe_2014' AND abs(atm1/1e3 - {}) < 1 
+    FROM tab_17 
+    WHERE com1='BB' AND com2='C' AND com3='{}' AND com4='S' AND com5='N' AND ref = 'PNe_2020' AND abs(atm1/1e3 - {}) < 1 
     ORDER BY  abs(logU_mean-{})
     LIMIT 1
 """.format(cut, Teff, logU), con=co)

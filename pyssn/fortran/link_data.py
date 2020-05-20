@@ -12,7 +12,7 @@ def make_link2data(datadir):
         os.unlink(link_name)
     try:
         os.symlink(datadir, link_name)
-    except OSError, e:
+    except OSError as e:
         if e.errno != os.errno.EEXIST:
             raise 
         pass

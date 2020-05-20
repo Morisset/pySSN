@@ -13,8 +13,18 @@ import pyssn
 from pyneb.utils.physics import vactoair
 from pyneb.utils.misc import roman_to_int
 
+def b(x):
+    if sys.version_info < (3,):
+        return x
+    else:
+        import codecs
+        return codecs.latin_1_encode(x)[0]
+
 def read_data(filename, NF=True):
-    dtype = 'i8, a1, a9, float64, float64, float64, float64, a1, i8, i4, f, a100'
+    if sys.version_info < (3,):
+        dtype = 'i8, a1, a9, float64, float64, float64, float64, a1, i8, i4, f, a100'
+    else:
+        dtype = 'i8, a1, U9, float64, float64, float64, float64, a1, i8, i4, f, U100'
     if NF:
         delimiter = [14, 1, 9, 11, 6, 10, 7, 1, 14, 4, 7, 100]
     else:
