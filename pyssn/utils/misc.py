@@ -130,7 +130,7 @@ def convolgauss(spectrum, w, lambda_0, fwhm):
     nres = 21
     while True:
         nres = nres * 2 + 1
-        wkernel = np.arange(nres) - nres / 2
+        wkernel = np.arange(nres) - nres // 2
         kernel = np.exp(-(wkernel / (np.sqrt(2.) * sig))**2)
         if (np.min(kernel) < 1e-9) or ((nres * 2 - 3) > len(w)):
             break

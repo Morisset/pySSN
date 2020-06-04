@@ -1354,7 +1354,8 @@ class spectrum(object):
         
         while True:
             filter_size = int(filter_size * increm)
-            if filter_size/2*2 == filter_size:
+#            if filter_size/2*2 == filter_size:
+            if filter_size%2 == 0:
                 filter_size += 1
             if filter_size > self.n_lambda:
                 break
