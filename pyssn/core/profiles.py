@@ -60,7 +60,7 @@ def translate_intr_prof(prof):
 def profil_instr(filter_size, prof, lambda_pix):
     
     prof = translate_intr_prof(prof)
-    w_norm = np.arange(filter_size)-filter_size/2
+    w_norm = np.arange(filter_size)-filter_size//2
     w_norm_abs = np.abs(w_norm)
     profil = np.zeros(filter_size)
     prof_add = lambda dec, alpha, Bl, Br: (Bl*winf + Br*wsup)*np.exp(-(w_norm_abs/dec*lambda_pix)**alpha)
@@ -69,7 +69,7 @@ def profil_instr(filter_size, prof, lambda_pix):
         profil = np.exp(-(w_norm/prof['width']*lambda_pix)**2)
     else:
         profil[filter_size/2] = 1.0
-        profil[w_norm_abs <= abs(prof['width']/lambda_pix)] = 1.0
+        profil[w_norm_abs <= abs(prof['width']//lambda_pix)] = 1.0
     
     winf = np.zeros(filter_size)
     wsup = np.zeros(filter_size)
