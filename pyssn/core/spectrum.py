@@ -404,16 +404,16 @@ class spectrum(object):
                                                   'params' : prof_params}
                         key, T4_vel = l.split(':')
                         T4_vel = T4_vel.split()
-                        T4 = np.float(T4_vel[0].strip())
+                        T4 = np.float64(T4_vel[0].strip())
                         if len(T4_vel) == 2:
-                            vel = np.float(T4_vel[1].strip())
+                            vel = np.float64(T4_vel[1].strip())
                         else:
                             vel = 0.0
                         prof_params = []
                     else:
                         if l.split() != []:
                             params = l.split()
-                            params[1::] = [np.float(p.strip()) for p in params[1::]]
+                            params[1::] = [np.float64(p.strip()) for p in params[1::]]
                             prof_params.append(params)
         emis_profiles[key] = {'T4': T4, 
                               'vel': vel,
@@ -722,7 +722,6 @@ class spectrum(object):
                             self.f = np.mean(self.f, 1)
                             dispersion_start = header['CRVAL2'] - (header['CRPIX2'] - 1) * header['CDELT2']
                             self.w = dispersion_start + np.arange(len(self.f)) * header['CDELT2']
-                            
                         except:
                             self.read_obs_error = 'Observations NOT read from {0}'.format(obs_file)
                             log_.warn(self.read_obs_error, calling = self.calling)
@@ -742,6 +741,9 @@ class spectrum(object):
                     except:
                         self.read_obs_error = 'Observations NOT read from {0}'.format(obs_file)
                         log_.warn(self.read_obs_error, calling = self.calling)
+                log_.message('Obs read from {}.'.format(obs_file), calling=self.calling)
+                log_.message('WL limits: {:.2e} - {:.2e}'.format(np.min(self.w),np.max(self.w)), calling=self.calling)
+                log_.message('FL limits: {:.2e} - {:.2e}'.format(np.min(self.f),np.max(self.f)), calling=self.calling)
                 
         if self.get_conf('spectr_obs') is None or len(self.read_obs_error) > 0:
             n_pix = (self.limit_sp[1] - self.limit_sp[0]) / self.conf['lambda_pix']
@@ -1152,7 +1154,7 @@ class spectrum(object):
                             log_.warn('Satellite sans raie de reference:{0} looking for {1}'.format(raie_synth['num'], raie_synth['ref']), 
                                         calling=self.calling)
                         raie_synth['i_rel'] = 0.0
-                        raie_synth['comment'] = '!pas de ref' + raie_synth['comment']
+                        raie_synth['comment'] = '!pas de ref {}'.format(raie_synth['comment'])
                     else:
                         main_line = liste_in[i_main_line]
                         if main_line['ref'] != 0:
@@ -1521,8 +1523,8 @@ class spectrum(object):
         else:    
             line = line.rstrip()
             keys = ['l_shift', 'i_cor', 'i_rel', 'profile', 'vitesse']
-            v0 = {i: np.float(self.fieldStrFromLine(line, i)) for i in keys}
-            v1 = {i: np.float(self.fieldStrFromLine(line_c, i)) for i in keys}
+            v0 = {i: np.float64(self.fieldStrFromLine(line, i)) for i in keys}
+            v1 = {i: np.float64(self.fieldStrFromLine(line_c, i)) for i in keys}
             if v0 == v1:
                 return True
             else:
@@ -1538,8 +1540,8 @@ class spectrum(object):
             return None
         else:    
             keys = ['l_shift', 'i_cor', 'i_rel', 'profile', 'vitesse']
-            v0 = {i: np.float(line[i]) for i in keys}
-            v1 = {i: np.float(self.fieldStrFromLine(line_c, i)) for i in keys}
+            v0 = {i: np.float64(line[i]) for i in keys}
+            v1 = {i: np.float64(self.fieldStrFromLine(line_c, i)) for i in keys}
             if v0 == v1:
                 return True
             else:
@@ -1556,8 +1558,8 @@ class spectrum(object):
         else:    
             line = line.rstrip()
             keys = [ 'lambda', 'i_rel' ]
-            v0 = {i: np.float(self.fieldStrFromLine(line, i)) for i in keys}
-            v1 = {i: np.float(self.fieldStrFromLine(line_c, i)) for i in keys}
+            v0 = {i: np.float64(self.fieldStrFromLine(line, i)) for i in keys}
+            v1 = {i: np.float64(self.fieldStrFromLine(line_c, i)) for i in keys}
             if v0['i_rel'] != v1['i_rel'] or v0['lambda'] != v1['lambda']:
                 log_.warn('Error in cosmetic file for line {}\n'.format(str(line_num)), calling=self.calling)
                 log_.warn('(cosmetic)   ' + line_c, calling=self.calling)
@@ -1575,8 +1577,8 @@ class spectrum(object):
             log_.warn('Error in cosmetic file: line {0:} does not exist in the atomic database\n'.format(str(line_num)), calling=self.calling)
             return None
         else:
-            line_c_i_rel = np.float(self.fieldStrFromLine(line_c, 'i_rel'))
-            line_c_lambda = np.float(self.fieldStrFromLine(line_c, 'lambda'))
+            line_c_i_rel = np.float64(self.fieldStrFromLine(line_c, 'i_rel'))
+            line_c_lambda = np.float64(self.fieldStrFromLine(line_c, 'lambda'))
             if line['i_rel'] != line_c_i_rel or line['lambda'] != line_c_lambda:
                 log_.warn('Error in cosmetic file for line {}\n'.format(str(line_num)), calling=self.calling)
                 log_.warn('(cosmetic) {}'.format(line_c), calling=self.calling)
@@ -2288,14 +2290,14 @@ class spectrum(object):
     def plot_line_ticks_for(self, satellites, ion, line_num, refline, ax, y1, y2, wmin=0., wmax=20000., addGreenTickToLegend=True):
         if self.sp_synth_lr is None:
             return
-        l_shift_refline = np.float(self.fieldStrFromLine(refline,'l_shift'))
+        l_shift_refline = np.float64(self.fieldStrFromLine(refline,'l_shift'))
         ion = ion.replace('_',' ').strip()
         line_num = line_num.strip().strip('0')
         label = ion + ' (' + line_num + ')'
         color = 'green'
         for line in satellites:
-            wl = np.float(self.fieldStrFromLine(line,'lambda')) + \
-                 np.float(self.fieldStrFromLine(line,'l_shift')) + \
+            wl = np.float64(self.fieldStrFromLine(line,'lambda')) + \
+                 np.float64(self.fieldStrFromLine(line,'l_shift')) + \
                  self.conf['lambda_shift'] + l_shift_refline
             if (wmin < wl) and (wl < wmax): 
                 ax.axvline( wl, ymin=y1, ymax=y2, color = color, linestyle = 'solid', linewidth = 2.5 )

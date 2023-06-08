@@ -1095,7 +1095,7 @@ class AppForm(QtWidgets.QMainWindow):
 
     def isFloat(self, str_):
         try:
-            np.float(str_)
+            np.float64(str_)
             return True
         except ValueError:
             return False
@@ -1149,7 +1149,7 @@ class AppForm(QtWidgets.QMainWindow):
             if field == 'profile':
                 r = int(s)
             else:
-                r = np.float(s)
+                r = np.float64(s)
             fmt = self.sp.field_format[field]
             if 'f' in fmt:
                 s = self.floatFixFormat(r, fmt)
@@ -1174,7 +1174,7 @@ class AppForm(QtWidgets.QMainWindow):
         elif str_.isdigit():
             result = int(str_)
         elif self.isFloat(str_):
-            result = np.float(str_)
+            result = np.float64(str_)
         elif str_.capitalize() == 'True':
             result = True
         elif str_.capitalize() == 'False':
@@ -1281,8 +1281,8 @@ class AppForm(QtWidgets.QMainWindow):
         par_list = self.sp.emis_profiles[profile_key]['params']
         shift_list = []
         for item in par_list:
-            shift = np.float(item[2])
-            intensity = np.float(item[1])
+            shift = np.float64(item[2])
+            intensity = np.float64(item[1])
             if item[0]=='G' and ( intensity > 0.2 ):
                 shift_list.append(shift)
         shift_list.sort()
@@ -1293,7 +1293,7 @@ class AppForm(QtWidgets.QMainWindow):
             self.on_draw()
         color = 'green'
         ion = ion.replace('_',' ').strip()
-        to_select = (self.sp.liste_raies['num'] == np.int(line_num))
+        to_select = (self.sp.liste_raies['num'] == np.int64(line_num))
         vitesse = self.sp.liste_raies[to_select]['vitesse']
         profile_key = str(self.sp.liste_raies[to_select]['profile'][0])
         shift_list, vel = self.get_shifts_from_profile(profile_key)
@@ -1460,15 +1460,15 @@ class AppForm(QtWidgets.QMainWindow):
             row = item.row()
             col = item.column()
             s = item.text()
-            l_shift_refline = np.float(self.sp.fieldStrFromLine(self.refline,'l_shift'))
+            l_shift_refline = np.float64(self.sp.fieldStrFromLine(self.refline,'l_shift'))
             if col == col_wave:
-                wavelength = np.float(s)
+                wavelength = np.float64(s)
                 ion = str(self.line_info_table.item(row, col_ion).text())
                 line_num = str(self.line_info_table.item(row, col_num).text())
-                max_wave = np.float(self.sp_max_box.text())
-                min_wave = np.float(self.sp_min_box.text())
+                max_wave = np.float64(self.sp_max_box.text())
+                min_wave = np.float64(self.sp_min_box.text())
                 if wavelength > min_wave and wavelength < max_wave:
-                    l_shift = np.float(self.line_info_table.item(row, col_lshift).text())
+                    l_shift = np.float64(self.line_info_table.item(row, col_lshift).text())
                     wavelength = wavelength + l_shift + l_shift_refline
                     r =  (self.x_plot_lims[1] - self.x_plot_lims[0])/2
                     f = 0.05
@@ -1490,10 +1490,10 @@ class AppForm(QtWidgets.QMainWindow):
                         satellites = self.sp.read_satellites(self.sp.phyat_file, int(line_num))
                         satellites = add_satellites_of_subreferences(satellites)
                     SelectedSatellites = []
-                    max_wave = np.float(self.sp_max_box.text())
-                    min_wave = np.float(self.sp_min_box.text())
+                    max_wave = np.float64(self.sp_max_box.text())
+                    min_wave = np.float64(self.sp_min_box.text())
                     for i in range(0, len(satellites)):
-                        wavelength = np.float(self.sp.fieldStrFromLine(satellites[i],'lambda'))
+                        wavelength = np.float64(self.sp.fieldStrFromLine(satellites[i],'lambda'))
                         if (wavelength > min_wave) and (wavelength < max_wave):
                             SelectedSatellites.append(satellites[i])
                     satellites = SelectedSatellites
@@ -1507,7 +1507,7 @@ class AppForm(QtWidgets.QMainWindow):
                 return False
 
         def isSubRefLine(line):
-            wavelength = np.float(self.sp.fieldStrFromLine(line,'lambda'))
+            wavelength = np.float64(self.sp.fieldStrFromLine(line,'lambda'))
             if not isRefLine(line) and (wavelength < 2.0):
                 return True
             else:
@@ -1679,15 +1679,15 @@ class AppForm(QtWidgets.QMainWindow):
                 n_sat = 0
                 n_subsat = 0
             else:
-                max_wave = np.float(self.sp_max_box.text())
-                min_wave = np.float(self.sp_min_box.text())
+                max_wave = np.float64(self.sp_max_box.text())
+                min_wave = np.float64(self.sp_min_box.text())
                 for i in range(0, len(satellites)):
-                    wavelength = np.float(self.sp.fieldStrFromLine(satellites[i],'lambda'))
+                    wavelength = np.float64(self.sp.fieldStrFromLine(satellites[i],'lambda'))
                     if self.show_satellites == 2 or \
                        (self.show_satellites == 1 and (wavelength > min_wave) and (wavelength < max_wave)):
                         SelectedSatellites.append(satellites[i])
                 for i in range(0, len(subsatellites)):
-                    wavelength = np.float(self.sp.fieldStrFromLine(subsatellites[i],'lambda'))
+                    wavelength = np.float64(self.sp.fieldStrFromLine(subsatellites[i],'lambda'))
                     if self.show_satellites == 2 or \
                       (self.show_satellites == 1 and (wavelength > min_wave) and (wavelength < max_wave)):
                         SelectedSubSatellites.append(subsatellites[i])
@@ -2058,13 +2058,13 @@ class AppForm(QtWidgets.QMainWindow):
             row = item.row()
             col = item.column()
             if col == col_wave:
-                wavelength = np.float(item.text())
-                l_shift = np.float(self.nearbyLines_table.item(row,col_lshift).text())
+                wavelength = np.float64(item.text())
+                l_shift = np.float64(self.nearbyLines_table.item(row,col_lshift).text())
                 wavelength = wavelength + l_shift
                 line_num = str(self.nearbyLines_table.item(row,col_num).text())
                 ion = str(self.nearbyLines_table.item(row,col_ion).text())
-                max_wave = np.float(self.sp_max_box.text())
-                min_wave = np.float(self.sp_min_box.text())
+                max_wave = np.float64(self.sp_max_box.text())
+                min_wave = np.float64(self.sp_min_box.text())
                 r =  (self.x_plot_lims[1] - self.x_plot_lims[0])/2
                 f = 0.05
                 if (wavelength < self.x_plot_lims[0] + f*r) or (wavelength > self.x_plot_lims[1] - f*r):
@@ -2689,7 +2689,7 @@ class AppForm(QtWidgets.QMainWindow):
             line = line.strip()
             line = line.split(' ')[0]
             if self.isFloat(line):
-                wavelength = np.float(line)
+                wavelength = np.float64(line)
                 if wavelength > self.x_plot_lims[0] and wavelength < self.x_plot_lims[1]:
                     self.fig.axes[k].axvline( wavelength, y1+dy, y2-dy, color = color, linestyle = 'solid', linewidth = 1.5 ) 
         self.fig.axes[k].step( [0,0], [0,100], color = color, linestyle = 'solid', linewidth = 1.5, label = self.tick_file.split('/')[-1] )
@@ -3807,8 +3807,8 @@ figure. Each time a new control point is included, the interpolation is automati
                         CorrectedList.append(line_c[:k])
                         line = self.sp.read_line(self.sp.phyat_file, line_num)
                         line = line.rstrip()
-                        v0 = {i: np.float(self.sp.fieldStrFromLine(line, i)) for i in keys}
-                        v1 = {i: np.float(self.sp.fieldStrFromLine(line_c, i)) for i in keys}
+                        v0 = {i: np.float64(self.sp.fieldStrFromLine(line, i)) for i in keys}
+                        v1 = {i: np.float64(self.sp.fieldStrFromLine(line_c, i)) for i in keys}
                         l_shift = v1['lambda'] + v1['l_shift'] - v0['lambda']
                         i_cor =  v1['i_cor'] * v1['i_rel'] / v0['i_rel']
                         l_shift_str = self.rightFormat(str(l_shift), 'l_shift')
@@ -4057,7 +4057,7 @@ figure. Each time a new control point is included, the interpolation is automati
         if not self.validate_sp_norm():
             return
         old_sp_norm = self.sp.get_conf('sp_norm')
-        new_sp_norm = np.float(self.sp_norm_box.text())
+        new_sp_norm = np.float64(self.sp_norm_box.text())
         if old_sp_norm == new_sp_norm:
             return
         log_.message('Changing sp_norm. Old: {}, New: {}'.format(old_sp_norm, new_sp_norm), calling=self.calling)
@@ -4072,7 +4072,7 @@ figure. Each time a new control point is included, the interpolation is automati
         if not self.validate_obj_velo():
             return
         old_obj_velo = self.sp.get_conf('obj_velo')
-        new_obj_velo = np.float(self.obj_velo_box.text())
+        new_obj_velo = np.float64(self.obj_velo_box.text())
         if old_obj_velo == new_obj_velo:
             return
         self.sp.iterpolate_velocity = False
@@ -4092,7 +4092,7 @@ figure. Each time a new control point is included, the interpolation is automati
         if not self.validate_ebv():
             return
         old_ebv = self.sp.get_conf('e_bv')
-        new_ebv = np.float(self.ebv_box.text())
+        new_ebv = np.float64(self.ebv_box.text())
         if old_ebv == new_ebv and not self.cont_par_changed:
             return
         log_.message('Changing E B-V. Old: {}, New: {}'.format(old_ebv, new_ebv), calling=self.calling)
@@ -4109,17 +4109,17 @@ figure. Each time a new control point is included, the interpolation is automati
     def rerun(self):
         if not self.validate_synthesis_parameters():
             return
-        if ( self.x_plot_lims[0] < np.float(self.sp_min_box.text()) or
-             self.x_plot_lims[1] > np.float(self.sp_max_box.text()) ):
+        if ( self.x_plot_lims[0] < np.float64(self.sp_min_box.text()) or
+             self.x_plot_lims[1] > np.float64(self.sp_max_box.text()) ):
             self.xlim_min_box.setText(self.sp_min_box.text())
             self.xlim_max_box.setText(self.sp_max_box.text())
         self.statusBar().showMessage('Rerunning synthesis ...') 
         QtWidgets.QApplication.processEvents() 
-        self.sp.set_conf('limit_sp', (np.float(self.sp_min_box.text()), np.float(self.sp_max_box.text())))
-        self.sp.set_conf('resol', np.int(self.resol_box.text()))
-        self.sp.set_conf('obj_velo', np.float(self.obj_velo_box.text()))
-        self.sp.set_conf('sp_norm', np.float(self.sp_norm_box.text()))
-        self.sp.set_conf('e_bv', np.float(self.ebv_box.text()))
+        self.sp.set_conf('limit_sp', (np.float64(self.sp_min_box.text()), np.float64(self.sp_max_box.text())))
+        self.sp.set_conf('resol', np.int64(self.resol_box.text()))
+        self.sp.set_conf('obj_velo', np.float64(self.obj_velo_box.text()))
+        self.sp.set_conf('sp_norm', np.float64(self.sp_norm_box.text()))
+        self.sp.set_conf('e_bv', np.float64(self.ebv_box.text()))
         self.sp.init_obs()
         self.sp.init_red_corr()
         self.sp.make_continuum()
@@ -4271,7 +4271,7 @@ figure. Each time a new control point is included, the interpolation is automati
     def draw_ion(self):
         if self.cut_cb.isChecked():
             if self.validate_cut():
-                self.sp.set_conf('cut_plot2', np.float(self.cut2_box.text()))
+                self.sp.set_conf('cut_plot2', np.float64(self.cut2_box.text()))
             else:
                 return
         self.set_ion()
@@ -4322,7 +4322,7 @@ figure. Each time a new control point is included, the interpolation is automati
             self.sp.label_magenta = ''
             self.on_draw()
         else:
-            new_ref = np.int(ref_str)
+            new_ref = np.int64(ref_str)
             self.sp.plot_magenta = new_ref
             self.sp.label_magenta = ref_txt
             self.on_draw()
@@ -4337,7 +4337,7 @@ figure. Each time a new control point is included, the interpolation is automati
             self.sp.label_cyan = ''
             self.on_draw()
         else:
-            new_ref = np.int(ref_str)
+            new_ref = np.int64(ref_str)
             self.sp.plot_cyan = new_ref
             self.sp.label_cyan = ref_txt
             self.on_draw()
@@ -4398,27 +4398,27 @@ figure. Each time a new control point is included, the interpolation is automati
             y3_lims = (m - min_diff/2,m + min_diff/2)
         else:
             y3_lims = self.y3_plot_lims
-        if self.x_plot_lims[0] != np.float(self.xlim_min_box.text()):
+        if self.x_plot_lims[0] != np.float64(self.xlim_min_box.text()):
             self.xlim_min_box.setText(xformat.format(x_lims[0]))
-        if self.x_plot_lims[1] != np.float(self.xlim_max_box.text()):
+        if self.x_plot_lims[1] != np.float64(self.xlim_max_box.text()):
             self.xlim_max_box.setText(xformat.format(x_lims[1]))
         delta = abs(y1_lims[1]-y1_lims[0])
         if delta < 2:
             precision = 2
         else:
             precision = 1
-        if self.y1_plot_lims[0] != np.float(self.y1lim_min_box.text()):
+        if self.y1_plot_lims[0] != np.float64(self.y1lim_min_box.text()):
             self.y1lim_min_box.setText(yformat.format(precision, y1_lims[0]))
-        if self.y1_plot_lims[1] != np.float(self.y1lim_max_box.text()):
+        if self.y1_plot_lims[1] != np.float64(self.y1lim_max_box.text()):
             self.y1lim_max_box.setText(yformat.format(precision, y1_lims[1]))
         delta = abs(y3_lims[1]-y3_lims[0])
         if delta < 2:
             precision = 2
         else:
             precision = 1
-        if self.y3_plot_lims[0] != np.float(self.y3lim_min_box.text()):
+        if self.y3_plot_lims[0] != np.float64(self.y3lim_min_box.text()):
             self.y3lim_min_box.setText(yformat.format(precision, y3_lims[0]))
-        if self.y3_plot_lims[1] != np.float(self.y3lim_max_box.text()):
+        if self.y3_plot_lims[1] != np.float64(self.y3lim_max_box.text()):
             self.y3lim_max_box.setText(yformat.format(precision, y3_lims[1]))
         self.set_plot_limits_and_draw()
 
@@ -4482,8 +4482,8 @@ figure. Each time a new control point is included, the interpolation is automati
         return self.validate_input(self.cut2_box, 'cut', 'Input error', 'float')  
 
     def sp_lim_in_range(self):
-        xmin = np.float(self.sp_min_box.text())
-        xmax = np.float(self.sp_max_box.text())
+        xmin = np.float64(self.sp_min_box.text())
+        xmax = np.float64(self.sp_max_box.text())
         if ( xmin < xmax - 9.999 ) and ( xmin > 0. ) and ( xmax < 200000000.):
             return True
         else:
@@ -4514,9 +4514,9 @@ figure. Each time a new control point is included, the interpolation is automati
     def set_plot_limits_and_draw(self):
         if not self.validate_plot_parameters():
             return
-        self.x_plot_lims = (np.float(self.xlim_min_box.text()), np.float(self.xlim_max_box.text()))
-        self.y1_plot_lims = (np.float(self.y1lim_min_box.text()), np.float(self.y1lim_max_box.text()))
-        self.y3_plot_lims = (np.float(self.y3lim_min_box.text()), np.float(self.y3lim_max_box.text()))
+        self.x_plot_lims = (np.float64(self.xlim_min_box.text()), np.float64(self.xlim_max_box.text()))
+        self.y1_plot_lims = (np.float64(self.y1lim_min_box.text()), np.float64(self.y1lim_max_box.text()))
+        self.y3_plot_lims = (np.float64(self.y3lim_min_box.text()), np.float64(self.y3lim_max_box.text()))
         self.sp.set_conf('x_plot_lims', self.x_plot_lims)
         self.sp.set_conf('y1_plot_lims', self.y1_plot_lims)
         self.sp.set_conf('y3_plot_lims', self.y3_plot_lims)
@@ -4528,7 +4528,7 @@ figure. Each time a new control point is included, the interpolation is automati
                  self.validate_sp_max() and
                  self.sp_lim_in_range() ):
             return
-        limit_sp = (np.float(self.sp_min_box.text()), np.float(self.sp_max_box.text()))
+        limit_sp = (np.float64(self.sp_min_box.text()), np.float64(self.sp_max_box.text()))
         self.sp.set_conf('limit_sp', limit_sp)
     
     def set_limit_sp_and_run(self):
@@ -4541,7 +4541,7 @@ figure. Each time a new control point is included, the interpolation is automati
                  self.sp_lim_in_range() ):
             return
         old_limit_sp = self.sp.get_conf('limit_sp')
-        new_limit_sp = (np.float(self.sp_min_box.text()), np.float(self.sp_max_box.text()))
+        new_limit_sp = (np.float64(self.sp_min_box.text()), np.float64(self.sp_max_box.text()))
         if old_limit_sp == new_limit_sp:
             if not self.axes_fixed:
                 self.xlim_min_box.setText(self.sp_min_box.text())
@@ -4552,8 +4552,8 @@ figure. Each time a new control point is included, the interpolation is automati
             self.xlim_min_box.setText(self.sp_min_box.text())
         if not self.validate_xlim_max(False):
             self.xlim_max_box.setText(self.sp_max_box.text())            
-        if ( np.float(self.xlim_min_box.text()) >= new_limit_sp[1] or
-             np.float(self.xlim_max_box.text()) <= new_limit_sp[0] ):
+        if ( np.float64(self.xlim_min_box.text()) >= new_limit_sp[1] or
+             np.float64(self.xlim_max_box.text()) <= new_limit_sp[0] ):
             self.xlim_min_box.setText(self.sp_min_box.text())
             self.xlim_max_box.setText(self.sp_max_box.text())
         self.sp.set_conf('limit_sp', new_limit_sp)
@@ -4572,7 +4572,7 @@ figure. Each time a new control point is included, the interpolation is automati
         if not self.validate_resol():
             return
         old_resol = self.sp.get_conf('resol')
-        new_resol = np.int(self.resol_box.text())
+        new_resol = np.int64(self.resol_box.text())
         if old_resol == new_resol:
             return
         self.sp.set_conf('resol', new_resol)
