@@ -1404,7 +1404,7 @@ class spectrum(object):
         log_.debug('{} differences in profile'.format(len(ref_diff)),
                            calling=self.calling + ' adjust')
         for im, l in enumerate(new_liste_raies.profile):
-            if np.str(l) in ref_diff:
+            if str(l) in ref_diff:
                 mask_diff[im] = True
         if mask_diff.sum() > 0 and len(mask_diff) == len(self.liste_raies):
             old_sp_theo = self.sp_theo.copy()
