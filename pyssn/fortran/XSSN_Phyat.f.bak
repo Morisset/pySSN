@@ -219,7 +219,7 @@ c
       endif
 c
       if(nomion.eq.'LiII   ') then
-      Call XSSN_Hlike(Te,Ne,'LiII_3.lab','LiII_3.res',PHYAT) ! first
+      Call XSSN_Hlike(Te,Ne,'LiII_3.lab','LiII_3.res',PHYAT) ! en 1er
       Call XSSN_Hlike(Te,Ne,'LiII_1.lab','LiII_1.res',PHYAT)
         indice=1
       endif
@@ -241,7 +241,7 @@ c SUPPR 1/12: Call XSSN_Hlike(Te,Ne,'CII_2D5.lab','CII_2D5.res',PHYAT) !prev
 c SUPPR 1/12: Call XSSN_Hlike(Te,Ne,'CII_2D3.lab','CII_2D3.res',PHYAT) !obso
 c
       if(nomion.eq.'CIII   ') then
-      Call XSSN_Hlike(Te,Ne,'CIII_3F4.lab','CIII_3F4.res',PHYAT) ! first
+      Call XSSN_Hlike(Te,Ne,'CIII_3F4.lab','CIII_3F4.res',PHYAT) ! en 1er
       Call XSSN_Hlike(Te,Ne,'CIII_3F3.lab','CIII_3F3.res',PHYAT)
       Call XSSN_Hlike(Te,Ne,'CIII_3F2.lab','CIII_3F2.res',PHYAT)
       Call XSSN_Hlike(Te,Ne,'CIII_1F3.lab','CIII_1F3.res',PHYAT)
@@ -272,13 +272,13 @@ c
       endif
 c
       if(nomion.eq.'NIII   ') then
-      Call XSSN_Hlike(Te,Ne,'NIII_2F7.lab','NIII_2F7.res',PHYAT) ! first
+      Call XSSN_Hlike(Te,Ne,'NIII_2F7.lab','NIII_2F7.res',PHYAT) ! en 1er
       Call XSSN_Hlike(Te,Ne,'NIII_2F5.lab','NIII_2F5.res',PHYAT)
         indice=1
       endif
 c
       if(nomion.eq.'NIV    ') then
-      Call XSSN_Hlike(Te,Ne,'NIV_3.lab','NIV_3.res',PHYAT) ! first
+      Call XSSN_Hlike(Te,Ne,'NIV_3.lab','NIV_3.res',PHYAT) ! en 1er
       Call XSSN_Hlike(Te,Ne,'NIV_1.lab','NIV_1.res',PHYAT)
         indice=1
       endif
@@ -289,11 +289,6 @@ c
       endif
 c
 c *** OI TBD
-c
-      if(nomion.eq.'OI     ') then
-      Call XSSN_Hlike(Te,Ne,'OI_flu.lab','OI_flu.res',PHYAT)
-        indice=1
-      endif
 c
       if(nomion.eq.'OII    ') then
       Call OII_Sto(Te,Ne,'OII_24.lab','OII_24.res',PHYAT)
@@ -307,13 +302,13 @@ c *** full OIII TBD
       endif
 c
       if(nomion.eq.'OIV    ') then
-      Call XSSN_Hlike(Te,Ne,'OIV_2.lab','OIV_2.res',PHYAT) ! first
+      Call XSSN_Hlike(Te,Ne,'OIV_2.lab','OIV_2.res',PHYAT) ! en 1er
       Call XSSN_di(Te,Ne,'OIV_di.lab','OIV_di.res',PHYAT)
         indice=1
       endif
 c
       if(nomion.eq.'OV     ') then
-      Call XSSN_Hlike(Te,Ne,'OV_3G5.lab','OV_3G5.res',PHYAT) ! first
+      Call XSSN_Hlike(Te,Ne,'OV_3G5.lab','OV_3G5.res',PHYAT) ! en 1er
       Call XSSN_Hlike(Te,Ne,'OV_3G4.lab','OV_3G4.res',PHYAT)
       Call XSSN_Hlike(Te,Ne,'OV_3G3.lab','OV_3G3.res',PHYAT)
       Call XSSN_Hlike(Te,Ne,'OV_1G4.lab','OV_1G4.res',PHYAT)
@@ -370,11 +365,11 @@ c
 c
 c *** MgI TBD
 c
-      if(nomion.eq.'MgII   ') then
-      Call XSSN_Hlike(Te,Ne,'MgII_2_P4.lab','MgII_2_P4.res',PHYAT) ! first
-      Call XSSN_Hlike(Te,Ne,'MgII_2_P2.lab','MgII_2_P2.res',PHYAT)
-        indice=1
-      endif
+c      if(nomion.eq.'MgII   ') then
+c      Call XSSN_Hlike(Te,Ne,'MgII_2_P4.lab','MgII_2_P4.res',PHYAT) ! first
+c      Call XSSN_Hlike(Te,Ne,'MgII_2_P2.lab','MgII_2_P2.res',PHYAT)
+c        indice=1
+c      endif
 c
 c *** MgIII, IV, V, VI, VII TBD
 c
@@ -495,7 +490,7 @@ c IV) Outputs .res, including relative intensities in X-SSN format.
 c  Possibility to group together several orbitals l (narrow blends), 
 c   cf notations 'regr'.
 c
-c V) The .res are transfered into PHYAT (= liste_phyat... for X-SSN) by:
+c V) The .res are transfered in PHYAT (= liste_phyat... for X-SSN) by:
 c                 Subr Write_Phyat
 c
 c VI) Treatments in separate Subr: HI_HeII, HeI, ... OIII_5g, etc. 
@@ -549,9 +544,8 @@ cc      INTEGER lc1,lc2    ! check string tables
       CHARACTER*1 nom(21),nom2
       CHARACTER zero*1,nc1*1,nc2*2
       CHARACTER ns_alph*2,ni_alph*2,lp1_alph*2,ns_alph3*3  ! (Q: *3? H He+ ?)
-      CHARACTER lp1_alph_d*2,lp1_alph_dd*2
-      CHARACTER ni_alph_3*2,ni_alph_4*2,ni_alph_5*2
-      INTEGER ifre1,ifre2,ifre2b,ifre1_ref !complements to define X-SSN line labels
+      CHARACTER lp1_alph_d*2,ni_alph_3*2,ni_alph_4*2,ni_alph_5*2
+      INTEGER ifre1,ifre2,ifre2b,ifre1_ref !supplementary caracteristics of X-SSN line label
 c  add leakage NIV 4f-5g1 'by hand':
       DOUBLE PRECISION BrNIV5g1,wlNIV5g1fu
 c  add split NeIII 4d-5f 3D-3F 'by hand':
@@ -1297,10 +1291,9 @@ c
           iecr=1
        endif
 c
-c *&**  MgII lines that must not be inhibited here: 
+c     MgII lines that must not be inhibited here: 
              if((numion.eq.'1202').and.
-     $          ((l.lt.2).and.(ns.lt.7)).or.
-     $          ((l.eq.0).and.(ns.gt.6))) then
+     $       (l.lt.2).and.(ns.lt.7)) then
           iecr=1
              endif
 c*****##
@@ -1505,14 +1498,9 @@ c End Li_like
 c
 c F) Na_like (similar to Li-like) MgII: (split np treated by imult=0, 1)
 c   ALL transitions (incl. non H-like and k=2) from upper levels ns, np and nd (n<7):
-c
-c *&**   MgII special treatment l<2, n<7 or l<1 7<n<11
-c *&**
-                Elseif((numion.eq.'1202').and.
-     $           ((l.lt.2).and.(ns.lt.7)).or.
-     $           ((l.eq.0).and.(ns.gt.6))) Then
-c NOTE: 'ns' is the principal quantum number of the upper level of the transition.
-c        However 'ns' is also used in comments to describe the level ns^2S of MgII.
+c     
+                 Elseif((numion.eq.'1202').and.
+     $           (l.lt.2).and.(ns.lt.7)) Then
 c     
                 If(l.eq.1.and.ni.eq.3.and.ns.eq.4) Then  ! (MgII 3p-4d UV)
 c
@@ -1525,7 +1513,7 @@ c   air refraction wl > 2000A AND wl < 20000A:
              wlp=wlp/A(wlp/1.d4)
             ENDIF
 c   feeding 3d:
-c *reminder: effective alf(nu,lup), lup=lu+1 idem lp1+1
+c *recall: effective alf(nu,lup), lup=lu+1 idem lp1+1
           vc=alf(ni,3)*cmult*hc8/int_ref ! (*Br/wl to get line intensity)
 c *Note: no intensity check (no iecr)
             ifre2=ifre2+1
@@ -1736,7 +1724,6 @@ c
         ni_alph_5=zero//nc1
 c     3s-6p is relatively weak (or 0 in Case B),
 c      while 4s-6p 5s-6p are negligible: replaced by 6s-6p
-c     nd-6p added here
 c
 c   feeding 6p:
 c alf(nu,lup), lup=lu+1 idem lp1+1
@@ -1772,17 +1759,17 @@ c   air refraction wl > 2000A AND wl < 20000A:
 c  Add 3p-6s, 4p-6s and 5p-6s:
           vc=alf(ns,1)*cmult*hc8/int_ref ! (*Br/wl to get line intensity)
                 iraies=iraies+1
-             wlp=1.d8/(E(ns,l)-E(ni-1,l+1)) ! (3p-6s) (here, ni=4)
+             wlp=1.d8/(E(ns,l)-E(ni,l+1)) ! (3p-6s)
 c   air refraction wl > 2000A AND wl < 20000A:
             IF(wlp.gt.2.d3.and.wlp.lt.2.d4)THEN
              wlp=wlp/A(wlp/1.d4)
             ENDIF
             ifre2=ifre2+1
-        Write(out_niv,187) numion,ifre1,imult,ifre2,ni_alph_3,ns_alph,
+        Write(out_niv,187) numion,ifre1,imult,ifre2,ni_alph,ns_alph,
      $    lp1_alph,nomion,wlp,vc*0.50/wlp,numion,ifre1,
      $    imult,ifre2b,ns-3,nom(1),mult,ns,nom(21) ! (3p-6s)
                 iraies=iraies+1
-             wlp=1.d8/(E(ns,l)-E(ni,l+1)) ! (4p-6s)
+             wlp=1.d8/(E(ns,l)-E(ni+1,l+1)) ! (4p-6s)
 c   air refraction wl > 2000A AND wl < 20000A:
             IF(wlp.gt.2.d3.and.wlp.lt.2.d4)THEN
              wlp=wlp/A(wlp/1.d4)
@@ -1792,7 +1779,7 @@ c   air refraction wl > 2000A AND wl < 20000A:
      $    lp1_alph,nomion,wlp,vc*0.28/wlp,numion,ifre1,
      $    imult,ifre2b,ns-2,nom(1),mult,ns,nom(21) ! (4p-6s)
                 iraies=iraies+1
-             wlp=1.d8/(E(ns,l)-E(ni+1,l+1)) ! (5p-6s)
+             wlp=1.d8/(E(ns,l)-E(ni+2,l+1)) ! (5p-6s)
 c   air refraction wl > 2000A AND wl < 20000A:
             IF(wlp.gt.2.d3.and.wlp.lt.2.d4)THEN
              wlp=wlp/A(wlp/1.d4)
@@ -1803,74 +1790,13 @@ c   air refraction wl > 2000A AND wl < 20000A:
      $    imult,ifre2b,ns-1,nom(1),mult,ns,nom(21) ! (5p-6s)
             ifre2=ifre2b
 c
-                 Elseif((l.eq.0).and.(ni.eq.4).and.
-     $           (ns.gt.6).and.(ns.lt.14)) Then  ! (MgII n's-np)
+                Endif  ! end MgII special treatment l<2, n<7
 c
-c  Consider only 4d-np and 5d-np (optical range). (n's-np negl, except far ir).
-c  Br .15 and .10 fairly stable (x1.5 for n=10 and beyond).
-                   nn=7
-       write(nc1,'(I1)') 3
-       lp1_alph_d=zero//nc1
-       write(nc1,'(I1)') 4
-        ni_alph_4=zero//nc1
-       write(nc1,'(I1)') 5
-        ni_alph_5=zero//nc1
-c   feeding np:
-c alf(nu,lup), lup=lu+1 idem lp1+1
-          vc=alf(ns,2)*cmult*hc8/int_ref ! (*Br/wl to get line intensity)
-          if(ns.gt.9) then
-            vc=vc*1.5
-          endif
-c     redistribution: Br's from NIST/PvH
-            ifre2=ifre2+1
-             wlp=wk(4,2,ns) ! (4d-np)
-       Write(out_niv,187) numion,ifre1,imult,ifre2,ni_alph_4,ns_alph,
-     $    lp1_alph_d,nomion,wlp,vc*0.15/wlp,numion,ifre1,
-     $    imult,ifre2b,4,nom(2),mult,ns,nom(1)  ! (4d-np)
-            ifre2=ifre2+1
-             wlp=wk(5,2,ns) ! (5d-np)
-       Write(out_niv,187) numion,ifre1,imult,ifre2,ni_alph_5,ns_alph,
-     $    lp1_alph_d,nomion,wlp,vc*0.10/wlp,numion,ifre1,
-     $    imult,ifre2b,5,nom(2),mult,ns,nom(1)  ! (5d-np)
-               iraies=iraies+1
-c
-c ns: Consider only 5p-ns (Br .10 fairly stable); add 4p-ns for n=7 (Br .16).
-c
-       write(nc1,'(I1)') 2
-       lp1_alph_dd=zero//nc1
-c   feeding ns:
-          vc=alf(ns,1)*cmult*hc8/int_ref ! (*Br/wl to get line intensity)
-                iraies=iraies+1
-             wlp=1.d8/(E(ns,0)-E(5,1)) ! (5p-ns)
-c   air refraction wl > 2000A AND wl < 20000A:
-            IF(wlp.gt.2.d3.and.wlp.lt.2.d4)THEN
-             wlp=wlp/A(wlp/1.d4)
-            ENDIF
-            ifre2=ifre2+1
-        Write(out_niv,187) numion,ifre1,imult,ifre2,ni_alph_5,ns_alph,
-     $    lp1_alph_dd,nomion,wlp,vc*0.10/wlp,numion,ifre1,
-     $    imult,ifre2b,5,nom(1),mult,ns,nom(21) ! (5p-ns)
-           IF(ns.eq.7) then
-                iraies=iraies+1
-             wlp=1.d8/(E(ns,0)-E(4,1)) ! (4p-7s)
-c   air refraction wl > 2000A AND wl < 20000A:
-            IF(wlp.gt.2.d3.and.wlp.lt.2.d4)THEN
-             wlp=wlp/A(wlp/1.d4)
-            ENDIF
-            ifre2=ifre2+1
-       Write(out_niv,187) numion,ifre1,imult,ifre2,ni_alph_4,ns_alph,
-     $    lp1_alph_dd,nomion,wlp,vc*0.16/wlp,numion,ifre1,
-     $    imult,ifre2b,4,nom(1),mult,ns,nom(21) ! (4p-7s)
-           ENDIF
-            ifre2=ifre2b
-c *&**
-                Endif  ! end MgII special treatment l<2, n<7 or (l=0 ni=4)
-c *&**
 c
 c     G)  GENERAL CASE:
                  Else  ! END SPECIAL CASES: back to general case write
 c
-                   nn=8
+                   nn=7
         Write(out_niv,187) numion,ifre1,imult,ifre2,ni_alph,ns_alph,
      $    lp1_alph,nomion,wl(ni,l,ns),vb,numion,ifre1,imult,ifre2b,
      $    ni,nom(lmin_wr),mult,ns,nom(l+1)
@@ -1881,6 +1807,50 @@ c
 c
       Endif                     ! END ALTERNATIVE SPECIAL CASES / GENERAL CASE
 c
+c Complement MgII: p-s and d-p, i.e. k=2, n>6:
+             If((numion.eq.'1202').and.
+     $           ((l.lt.2).and.(ns.gt.6))) Then ! (does not interfere with k=1 lines)
+c
+                   nn=8
+          k=2
+           vc=Int_Hlike(iz,Mat,ni,l,ns,k,Te)*comult(ni,l)/int_ref
+           k=1
+c corr departure wl H-like:
+           vc=vc*wlhydrostr(ni,ns)/wk(ni,l,ns) 
+c lim int p-s and d-p:
+              iecrb=iecr
+c Rem: provisional modif of iecr within the 'IF' of the 1st iecr=1:
+          iecr=0
+         iw=1
+         if(wk(ni,l,ns).le.wlim(iw).and.vc.ge.Irelmin(iw)) then
+          iecr=1
+         endif
+        do iw=2,iwlim
+         if(wk(ni,l,ns).gt.wlim(iw-1).and.wk(ni,l,ns).le.wlim(iw)
+     $     .and.vc.ge.Irelmin(iw)) then
+          iecr=1
+         endif
+        enddo
+        if(wk(ni,l,ns).gt.wlim(iwlim).and.vc.ge.Irelmin(iwlim+1)) then
+          iecr=1
+        endif
+           if(iecr.eq.1) then ! iecr=1
+               iraies=iraies+1
+               ifre2=ifre2+1
+             if(lmin_wr.eq.1) then
+        Write(out_niv,187) numion,ifre1,imult,ifre2,ni_alph,ns_alph,
+     $    lp1_alph,nomion,wk(ni,l,ns),vc,numion,
+     $    ifre1,imult,ifre2b,ni,nom(lmin_wr),mult,ns,nom(21) !nom(21) for 's'
+             else  ! lmin_wr=2
+        Write(out_niv,187) numion,ifre1,imult,ifre2,ni_alph,ns_alph,
+     $    lp1_alph,nomion,wk(ni,l,ns),vc,numion,
+     $    ifre1,imult,ifre2b,ni,nom(lmin_wr),mult,ns,nom(lmin_wr-1)
+             endif
+           endif
+              ifre2=ifre2b
+              iecr=iecrb  !end provisional modif
+c                ! end add MgII trans p-s (k=2), d-p (k=2) ns>6
+              Endif
 c
 c*****##
              ENDIF              ! end 1st iecr=1
@@ -1908,7 +1878,7 @@ ccc
            vb=vb*wlhydrostr(ni,ns)/wl(ni,l,ns) !ATT: with air refraction
 ccc
 c
-c  (***1/15 ATT: origin ni, ns, l to be clarified here?)
+c  (***1/15 ATT origin ni ns l to be clarified here)
           iecr=0
 c
          iw=1
@@ -1934,7 +1904,7 @@ c
      $     ni,nom(lmax_int),nom(lmin_wr),mult,ns
  178      Format(1x,A4,3I1,3A2,1x,A7,f13.3,' 0.   ',1p,e10.3,'  1.     ',
      $      A4,3I1,'000000  -1   1.00 ',I2,A1,'_',A1,I1,'-',I2)
-             ENDIF             ! end 2nd iecr=1
+             ENDIF             ! end 2e iecr=1
 c***###***
            Endif   ! end else indregr.ne.0 (grouping)
 c***###***
@@ -2295,7 +2265,6 @@ c
       If(lup.eq.0) then
 c impossible transition:
          Int_Hlike=0.d0
-       print *,'*** in Int_Hlike: iz,Mat,nl,ll,nu,k',iz,Mat,nl,ll,nu,k
       Else
       Eline=chi_Hli*(1.d0/dble(nl*nl)-1.d0/dble(nu*nu))
 c
@@ -2368,25 +2337,18 @@ c
 c
       REWIND(out_niv)
 c
-      inil=ntot-iraies-1        !inil 1st emission line for PHYAT (liste_phyat..)
-      print *,' ntot, iraies, inil=',ntot, iraies, inil
-           print *,'**imult',imult
+      inil=ntot-iraies-1 !inil 1st emission line for PHYAT (liste_phyat..)
        if(imult.eq.0) then
         Do n=1,inil-3
          read(out_niv,*) ligne
-           print *,ligne
         Enddo
         read(out_niv,101) ligne_ref_modele !for liste_modele
-           print *, 'ligne_ref_modele ', ligne_ref_modele
         read(out_niv,*) ligne  !title
-           print *,ligne
        else
         Do n=1,inil-1
-           read(out_niv,*) ligne
-           print *,ligne
+         read(out_niv,*) ligne
         Enddo
        endif
-           print *,' **** out ***'
 c 1st line: read ion label (i6)
 c  made of numion, ifre1 and imult for liste_phyat :
        read(out_niv,190) label_ion
