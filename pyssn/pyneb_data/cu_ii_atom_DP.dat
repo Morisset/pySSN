@@ -1,15 +1,15 @@
 Energy Stat_Weight Aij 
      cm-1     none   1/s       1/s       1/s       1/s      1/s
       0.0000    1  0.000e+0  0.000e+0  0.000e+0  0.000e+0 0.000e+0
-  21928.7326    7  1.000e-8  0.000e+0  0.000e+0  0.000e+0 0.000e+0
+  21928.7326    7  1.000e-9  0.000e+0  0.000e+0  0.000e+0 0.000e+0
   22847.1176    5  1.200e-1  1.700e-2  0.000e+0  0.000e+0 0.000e+0
-  23998.3718    3  0.000e+0  8.000e-8  5.500e-2  0.000e+0 0.000e+0
-  26264.5502    5  1.900e-0  2.300e-1  1.800e-2  3.100e-2 0.000e+0
+  23998.3718    3  1.000e-2  8.100e-8  5.500e-2  0.000e+0 0.000e+0
+  26264.5502    5  1.580e-0  2.300e-1  1.800e-2  3.100e-2 0.000e+0
 *** Cu II       'Energy and transition probability data'
 *** N_LEVELS 5
-*** SOURCE1	'Kramida, A., Nave, G. & Reader, J. 2017, Atoms 5, 9' 
+*** SOURCE1	'Kramida, A., Nave, G., Reader, J. 2017, Atoms, 5, 9' 
 *** NOTE1 	'Energy levels 3d10 1S, 3d9.(2D).4s 3D 1D' 
 *** SOURCE2	'Garstang, R. H. 1964, J. Res. Nat. Bur. Stand., A 68, 61' 
-*** NOTE2	'Transition Probabilities, Aij' 
-*** NOTE3	'DP: 1S0-3D3 1e-8 arbitrary' 
+*** NOTE2	'Transition Probabilities' 
+*** NOTE3	'Aij 1.9-->1.58 NIST_2018; DP: 2-1 1e-9 & 4-1 1e-2 arbitrary)' 
 *** GSCONFIG d10
