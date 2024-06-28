@@ -1,4 +1,4 @@
 """
 This is the version of the pySSN library
 """
-__version__ = '0.3.3b1'
+__version__ = '0.3.3b2'
